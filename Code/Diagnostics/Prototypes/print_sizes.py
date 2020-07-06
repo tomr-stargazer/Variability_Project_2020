@@ -17,10 +17,12 @@ for filename in data_files:
     print(filename)
 print("")
 
+data_files_without_prefix = [ x[len(data_location):] for x in data_files]
+
 # first, sanity check, get the actual filesizes in bytes
-print("Here are their sizes, in bytes")
-for filename in data_files:
-    print(os.path.getsize(filename))
+print("Here are their sizes, in MB:")
+for filename, filename_sans_prefix in zip(data_files, data_files_without_prefix):
+    print(f"{filename_sans_prefix}: {os.path.getsize(filename) / 1e6:.1f} MB")
 
 # # now, load each file, print its size (as a length), then close it
 # for filename in data_files:
