@@ -20,9 +20,9 @@ data_files = glob.glob(data_location + "*.fits.gz")
 
 print([x[len(data_location) :] for x in data_files])
 
-fig = plt.figure(figsize=(10,4))
+fig = plt.figure(figsize=(10, 4))
 
-# I want the 
+# I want them to go in order of first observation. This is an ad-hoc ordering list.
 top_to_bottom_order = (0, 3, 4, 1, 2)
 plot_labels = ["WSERV1", "WSERV5", "WSERV7", "WSERV8", "WSERV11"]
 
@@ -54,12 +54,12 @@ for i, filename in enumerate([data_files[x] for x in top_to_bottom_order][::-1])
 ax = plt.gca()
 ax.set_xlabel("Modified Julian Date")
 ax.set_yticks(np.arange(5))
-ax.set_yticklabels(plot_labels[::-1], rotation='horizontal')
+ax.set_yticklabels(plot_labels[::-1], rotation="horizontal")
 
 # some vertical lines marking january 1 of various years:
-for i in range(11): # goes from 0 to 10
+for i in range(11):  # goes from 0 to 10
     # MJD 54101 is January 1, 2007
-    ax.axvline(54101 + 365.25*i, color='k', alpha=0.5, lw=0.5)
+    ax.axvline(54101 + 365.25 * i, color="k", alpha=0.5, lw=0.5)
 
 plt.show()
 fig.savefig("date_coverage_by_program.png")
