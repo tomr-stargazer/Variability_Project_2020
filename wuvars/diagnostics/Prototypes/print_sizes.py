@@ -7,7 +7,7 @@ import time
 import astropy.table as tab
 
 data_location = os.path.expanduser(
-    "~/Documents/Variability_Project_2020/Data/Raw_Downloads/"
+    "~/Documents/Variability_Project_2020/wuvars/Data/Raw_Downloads/"
 )
 
 data_files = glob.glob(data_location + "*.fits.gz")
