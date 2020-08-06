@@ -6,9 +6,8 @@ There will be some troubleshooting here.
 
 """
 
-from collections import namedtuple
-
 import numpy as np
+import pandas as pd
 
 # one idea:
 # given a pandas dataframe that's indexed by SOURCEID, MEANMJDOBS etc,
@@ -20,9 +19,72 @@ import numpy as np
 #  changed in-place at an earlier stage of the data processing? etc)
 
 # Tom, you need to do this! (Okay, I think we figured out an approach here that works for me.)
-# We're gonna do laundry now. [ ] and maybe a walk?
+# We're gonna do laundry now. [X] and maybe a walk?
 
-Spreadsheet = namedtuple("mean", "median", "std", "min", "max", "range")
+# let's write up the variability functions - I think I implemented these recently in
+# stetson_2020.py. (in Variability_2019)
+# From c. 2012.
+
+
+def delta(m, sigma_m, mean_m, n):
+    """
+    Normalized residual / "relative error" for one observation.
+    Used in Stetson's J variability index.
+
+    INPUTS:
+        m: a single magnitude measurement in a certain band
+        sigma_m: the uncertainty on that measurement
+        mean_m: the mean magnitude in that band
+        n: the number of observations in that band
+
+    OUTPUTS:
+        d: the "relative error"
+    """
+
+    d = np.sqrt(n / (n - 1)) * (m - mean_m) / sigma_m
+
+    return d
+
+
+# From c. 2012.
+def S_threeband(j, sigma_j, h, sigma_h, k, sigma_k):
+    """
+    Computes the Stetson variability index for one star that has
+    3 observations on each night. Uses Carpenter et al.'s notation.
+    Simplified from the general expression assuming 3 observations every
+      night.
+
+    INPUTS:
+        j: an array of J-band magnitudes
+        sigma_j: an array of corresponding J-band uncertainties
+        h: an array of H-band magnitudes
+        sigma_h: an array of corresponding H-band uncertainties
+        k: an array of K-band magnitudes
+        sigma_k: an array of corresponding K-band uncertainties
+
+    OUTPUTS:
+        s: the Stetson variability index for 3 bands
+
+    """
+
+    n = j.size
+
+    # Perhaps hackish
+    if n < 2:
+        return 0
+
+    d_j = delta(j, sigma_j, np.nanmean(j), n)
+    d_h = delta(h, sigma_h, np.nanmean(h), n)
+    d_k = delta(k, sigma_k, np.nanmean(k), n)
+
+    P_i = np.array([d_j * d_h, d_h * d_k, d_j * d_k])
+
+    # I originally had two sums going: one over P_i, and one over all the
+    # elements of n, but then I realized that a single sum over all axes
+    # did the exact same thing (I tested it) so now it's back to one sum.
+    s = np.nansum(np.sign(P_i) * np.sqrt(np.abs(P_i))) / (n * 1.0)
+
+    return s
 
 
 def spreadsheet_maker(df):
@@ -33,14 +95,14 @@ def spreadsheet_maker(df):
     - std / rms
     - min
     - max
-    - range
+    - range (total, and 90/10)
 
     and also the following columns:
     - J_counts
     - H_counts
     - K_counts
     (possibly sorted by "good/noflag", "warn", "error" / from the ppErrBits)
-    (see, for example, how )
+    (see, for example, how Nicholas Cross's WSA databases handle this.)
 
     and some specifically variability-related columns:
     - chisq (J, H, K)
@@ -55,16 +117,71 @@ def spreadsheet_maker(df):
     spread
 
 
+    # JK! we're doing this entirely in pandas, no extra structs like a NamedTuple.
+    spreadsheet['mean']['JAPERMAG3']
+
     """
 
-    # let's prototype this!
-    # what does it look like to do this for a single data array?
+    single_column_functions = [
+        np.nanmean,
+        np.nanmedian,
+        np.nanmin,
+        np.nanmax,
+        np.nanstd,
+        lambda x: np.nanmax(x) - np.nanmin(x),
+        lambda x: np.nanpercentile(x, 90) - np.nanpercentile(x, 10),
+    ]
 
-    df.groupby("SOURCEID").apply(np.nanmean)
+    single_column_function_names = [
+        "mean",
+        "median",
+        "min",
+        "max",
+        "std",
+        "range",
+        "range_9010",
+    ]
 
-    summary_functions = [np.nanmean, np.nanmedian]
+    count_functions = [
+        lambda x, y: np.sum(~np.isnan(x)),
+        lambda x, y: np.sum(~np.isnan(x[y == 0])),
+        lambda x, y: np.sum(~np.isnan(x[(0 < y) & (y < 256)])),
+        lambda x, y: np.sum(~np.isnan(x[(256 <= y) & (y < 65536)])),
+        lambda x, y: np.sum(~np.isnan(x[y >= 65536])),
+    ]
 
-    return this_goofy_namedtuple
+    bands = ["J", "H", "K"]
+    count_names = [
+        lambda x: f"N_{x}",
+        lambda x: f"N_{x}_good",
+        lambda x: f"N_{x}_info",
+        lambda x: f"N_{x}_warn",
+        lambda x: f"N_{x}_severe",
+    ]
+
+    # rename this function.
+    def f_mi(x):
+        d = []
+        primary_index = []
+        secondary_index = []
+        for fn, fn_name in zip(single_column_functions, single_column_function_names):
+            for column in df.columns[1:]:
+
+                d.append(fn(x[column]))
+                primary_index.append(fn_name)
+                secondary_index.append(column)
+
+        for fn, fn_name in zip(count_functions, count_names):
+            for band in bands:
+                d.append(fn(x[f"{band}APERMAG3"], x[f"{band}PPERRBITS"]))
+                primary_index.append("count")
+                secondary_index.append(fn_name(band))
+
+        return pd.Series(d, index=[primary_index, secondary_index])
+
+    df_spreadsheet = df.groupby("SOURCEID").apply(f_mi)
+
+    return df_spreadsheet
 
 
 # Here's another thing we want: the ability to select variable stars, given the above "spreadsheet" / summary properties.
