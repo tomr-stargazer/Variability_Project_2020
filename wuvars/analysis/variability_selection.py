@@ -18,15 +18,11 @@ import pandas as pd
 #  will that be handled here in the stats calculations or will the NaN-type values be
 #  changed in-place at an earlier stage of the data processing? etc)
 
-# Tom, you need to do this! (Okay, I think we figured out an approach here that works for me.)
-# We're gonna do laundry now. [X] and maybe a walk?
-
 # let's write up the variability functions - I think I implemented these recently in
 # stetson_2020.py. (in Variability_2019)
-# From c. 2012.
 
 
-def delta(m, sigma_m, mean_m, n):
+def delta(m, sigma_m):
     """
     Normalized residual / "relative error" for one observation.
     Used in Stetson's J variability index.
@@ -34,14 +30,14 @@ def delta(m, sigma_m, mean_m, n):
     INPUTS:
         m: a single magnitude measurement in a certain band
         sigma_m: the uncertainty on that measurement
-        mean_m: the mean magnitude in that band
-        n: the number of observations in that band
 
     OUTPUTS:
         d: the "relative error"
+
     """
 
-    d = np.sqrt(n / (n - 1)) * (m - mean_m) / sigma_m
+    n = m[~np.isnan(m)].size
+    d = np.sqrt(n / (n - 1)) * (m - np.nanmean(m)) / sigma_m
 
     return d
 
@@ -49,7 +45,7 @@ def delta(m, sigma_m, mean_m, n):
 # From c. 2012.
 def S_threeband(j, sigma_j, h, sigma_h, k, sigma_k):
     """
-    Computes the Stetson variability index for one star that has
+    Computes the Stetson variability index J (renamed S) for one star that has
     3 observations on each night. Uses Carpenter et al.'s notation.
     Simplified from the general expression assuming 3 observations every
       night.
@@ -69,13 +65,13 @@ def S_threeband(j, sigma_j, h, sigma_h, k, sigma_k):
 
     n = j.size
 
-    # Perhaps hackish
+    # Perhaps hackish - let's test this to see if it's needed tbh
     if n < 2:
         return 0
 
-    d_j = delta(j, sigma_j, np.nanmean(j), n)
-    d_h = delta(h, sigma_h, np.nanmean(h), n)
-    d_k = delta(k, sigma_k, np.nanmean(k), n)
+    d_j = delta(j, sigma_j)
+    d_h = delta(h, sigma_h)
+    d_k = delta(k, sigma_k)
 
     P_i = np.array([d_j * d_h, d_h * d_k, d_j * d_k])
 
@@ -85,6 +81,55 @@ def S_threeband(j, sigma_j, h, sigma_h, k, sigma_k):
     s = np.nansum(np.sign(P_i) * np.sqrt(np.abs(P_i))) / (n * 1.0)
 
     return s
+
+
+def S_twoband(a, sigma_a, b, sigma_b):
+    """
+    Computes the Stetson variability index J for one star that has
+    2 observations on each night. Uses Carpenter et al.'s notation.
+    Simplified from the general expression assuming 2 observations every
+      night.
+
+    INPUTS:
+        a: an array of magnitudes in arbitrary photometric band "A"
+        sigma_a: an array of corresponding uncertainties
+        b: an array of magnitudes in arbitrary photometric band "B"
+        sigma_b: an array of corresponding uncertainties
+
+    OUTPUTS:
+        s: the Stetson variability index for 2 bands
+
+    """
+
+    n = a.size
+
+    # Perhaps hackish
+    if n < 2:
+        return 0
+
+    d_j = delta(a, sigma_j)
+    d_h = delta(h, sigma_h)
+    d_k = delta(k, sigma_k)
+
+    P_i = np.array([d_j * d_h, d_h * d_k, d_j * d_k])
+
+    # I originally had two sums going: one over P_i, and one over all the
+    # elements of n, but then I realized that a single sum over all axes
+    # did the exact same thing (I tested it) so now it's back to one sum.
+    s = np.nansum(np.sign(P_i) * np.sqrt(np.abs(P_i))) / (n * 1.0)
+
+    return s
+
+
+def chisq(mag, err):
+    """
+    Difference between each value x_i and the mean of x, squared,
+    divided by each error xerr_i, squared, summed for all i.
+
+    https://en.wikipedia.org/wiki/Chi-squared_test#Pearson's_%CF%872_test
+
+    """
+    return np.nansum((mag - np.nanmean(mag)) ** 2 / err ** 2)
 
 
 def spreadsheet_maker(df):
@@ -176,6 +221,31 @@ def spreadsheet_maker(df):
                 d.append(fn(x[f"{band}APERMAG3"], x[f"{band}PPERRBITS"]))
                 primary_index.append("count")
                 secondary_index.append(fn_name(band))
+
+        # now we do the variability statistics!
+        # one-band variability: just chisq on each band
+        for band in bands:
+            mag = x[f"{band}APERMAG3"]
+            err = x[f"{band}APERMAG3ERR"]
+            d.append(chisq(mag, err))
+            primary_index.append("variability")
+            secondary_index.append(band + "_chisq")
+
+        # two-band variability: two-band Stetson
+        for band in bands:
+            # clever: iterate over permutation pairs of JHK by removing each
+            band_pair = "JHK".replace(band, "")
+            band_A, band_B = band_pair
+
+            d.append()
+
+        # three-band variability: three-band Stetson
+        stetson_arguments = (
+            x["{band}APERMAG3{err}"] for band in bands for err in ["", "ERR"]
+        )
+        d.append(S_threeband(*stetson_arguments))
+        primary_index.append("variability")
+        secondary_index.append("JHK_Stetson")
 
         return pd.Series(d, index=[primary_index, secondary_index])
 
