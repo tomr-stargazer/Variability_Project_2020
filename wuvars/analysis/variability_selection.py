@@ -63,15 +63,15 @@ def S_threeband(j, sigma_j, h, sigma_h, k, sigma_k):
 
     """
 
-    n = j.size
+    n = np.sum(~np.isnan(j) & ~np.isnan(h) & ~np.isnan(k))
 
-    # Perhaps hackish - let's test this to see if it's needed tbh
+    # Perhaps hackish - but tests show it's needed to avoid np.inf when n==1.
     if n < 2:
-        return 0
+        return np.nan
 
-    d_j = delta(j, sigma_j)
-    d_h = delta(h, sigma_h)
-    d_k = delta(k, sigma_k)
+    d_j = np.sqrt(n / (n - 1)) * (j - np.nanmean(j)) / sigma_j
+    d_h = np.sqrt(n / (n - 1)) * (h - np.nanmean(h)) / sigma_h
+    d_k = np.sqrt(n / (n - 1)) * (k - np.nanmean(k)) / sigma_k
 
     P_i = np.array([d_j * d_h, d_h * d_k, d_j * d_k])
 
