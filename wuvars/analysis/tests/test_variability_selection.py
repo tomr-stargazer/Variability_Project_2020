@@ -3,6 +3,8 @@ import numpy as np
 
 from ..variability_selection import delta
 from ..variability_selection import S_threeband
+from ..variability_selection import S_twoband
+from ..variability_selection import reduced_chisq
 
 
 def test_delta_1():
@@ -132,3 +134,88 @@ def test_S_threeband_5():
     np.testing.assert_equal(
         S_threeband(j, sigma_j, h, sigma_h, k, sigma_k), desired_S_threeband
     )
+
+
+def test_S_twoband_1():
+    # zero variability
+    j = np.ones(5)
+    sigma_j = np.ones(5) * 0.2
+    h = np.ones(5)
+    sigma_h = np.ones(5) * 0.2
+
+    desired_S_twoband = 0
+
+    np.testing.assert_equal(S_twoband(j, sigma_j, h, sigma_h), desired_S_twoband)
+
+
+def test_S_twoband_2():
+    # one 'errant' datapoint
+    j = np.ones(5)
+    sigma_j = np.ones(5) * 0.2
+    h = np.ones(5)
+    sigma_h = np.ones(5) * 0.2
+    j[2] = 2
+
+    desired_S_twoband = 0
+
+    np.testing.assert_equal(S_twoband(j, sigma_j, h, sigma_h), desired_S_twoband)
+
+
+def test_S_twoband_3():
+    # positively correlated variability
+    j = np.ones(5)
+    sigma_j = np.ones(5) * 0.2
+    h = np.ones(5)
+    sigma_h = np.ones(5) * 0.2
+    j[2] = 2
+    h[2] = 2
+
+    desired_S_twoband = 1.788854381999832
+
+    np.testing.assert_equal(S_twoband(j, sigma_j, h, sigma_h), desired_S_twoband)
+
+
+def test_reduced_chisq_1():
+    mag = np.ones(5)
+    err = np.ones(5) * 0.2
+
+    desired_reduced_chisq = 0
+
+    np.testing.assert_equal(reduced_chisq(mag, err), desired_reduced_chisq)
+
+
+def test_reduced_chisq_2():
+    mag = np.ones(5)
+    err = np.ones(5) * 0.2
+
+    mag[2] = 2
+
+    desired_reduced_chisq = 5
+
+    np.testing.assert_equal(reduced_chisq(mag, err), desired_reduced_chisq)
+
+
+def test_reduced_chisq_3():
+    mag = np.arange(5) * 1.0
+    err = np.ones(5) * 0.2
+
+    mag[0] = np.nan
+    mag[2] = np.nan
+
+    desired_reduced_chisq = 58.33333333333332
+
+    np.testing.assert_equal(reduced_chisq(mag, err), desired_reduced_chisq)
+
+
+def test_reduced_chisq_3():
+    mag = np.ones(5)
+    err = np.ones(5) * 0.2
+
+    mag[0] = np.nan
+    mag[2] = np.nan
+    mag[3] = np.nan
+    mag[4] = np.nan
+
+    desired_reduced_chisq = np.nan
+
+    np.testing.assert_equal(reduced_chisq(mag, err), desired_reduced_chisq)

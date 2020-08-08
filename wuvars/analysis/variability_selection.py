@@ -101,21 +101,16 @@ def S_twoband(a, sigma_a, b, sigma_b):
 
     """
 
-    n = a.size
+    n = np.sum(~np.isnan(a) & ~np.isnan(b))
 
-    # Perhaps hackish
     if n < 2:
-        return 0
+        return np.nan
 
-    d_j = delta(a, sigma_j)
-    d_h = delta(h, sigma_h)
-    d_k = delta(k, sigma_k)
+    d_a = np.sqrt(n / (n - 1)) * (a - np.nanmean(a)) / sigma_a
+    d_b = np.sqrt(n / (n - 1)) * (b - np.nanmean(b)) / sigma_b
 
-    P_i = np.array([d_j * d_h, d_h * d_k, d_j * d_k])
+    P_i = d_a * d_b
 
-    # I originally had two sums going: one over P_i, and one over all the
-    # elements of n, but then I realized that a single sum over all axes
-    # did the exact same thing (I tested it) so now it's back to one sum.
     s = np.nansum(np.sign(P_i) * np.sqrt(np.abs(P_i))) / (n * 1.0)
 
     return s
@@ -130,6 +125,19 @@ def chisq(mag, err):
 
     """
     return np.nansum((mag - np.nanmean(mag)) ** 2 / err ** 2)
+
+
+def reduced_chisq(mag, err):
+    """
+    Chisq divided by number of degrees of freedom (which is n-1).
+
+    Caveat emptor: https://arxiv.org/abs/1012.3754
+
+    """
+    nu = np.sum(~np.isnan(mag)) - 1
+    if nu == 0:
+        return np.nan
+    return 1 / nu * np.nansum((mag - np.nanmean(mag)) ** 2 / err ** 2)
 
 
 def spreadsheet_maker(df):
@@ -227,9 +235,9 @@ def spreadsheet_maker(df):
         for band in bands:
             mag = x[f"{band}APERMAG3"]
             err = x[f"{band}APERMAG3ERR"]
-            d.append(chisq(mag, err))
+            d.append(reduced_chisq(mag, err))
             primary_index.append("variability")
-            secondary_index.append(band + "_chisq")
+            secondary_index.append(band + "_red_chisq")
 
         # two-band variability: two-band Stetson
         for band in bands:
@@ -237,11 +245,18 @@ def spreadsheet_maker(df):
             band_pair = "JHK".replace(band, "")
             band_A, band_B = band_pair
 
-            d.append()
+            A_mag = x[f"{band_A}APERMAG3"]
+            A_err = x[f"{band_A}APERMAG3ERR"]
+            B_mag = x[f"{band_B}APERMAG3"]
+            B_err = x[f"{band_B}APERMAG3ERR"]
+
+            d.append(S_twoband(A_mag, A_err, B_mag, B_err))
+            primary_index.append("variability")
+            secondary_index.append(f"Stetson_{band_pair}")
 
         # three-band variability: three-band Stetson
         stetson_arguments = (
-            x["{band}APERMAG3{err}"] for band in bands for err in ["", "ERR"]
+            x[f"{band}APERMAG3{err}"] for band in bands for err in ["", "ERR"]
         )
         d.append(S_threeband(*stetson_arguments))
         primary_index.append("variability")
