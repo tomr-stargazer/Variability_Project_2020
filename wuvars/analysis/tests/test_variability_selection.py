@@ -207,7 +207,7 @@ def test_reduced_chisq_3():
     np.testing.assert_equal(reduced_chisq(mag, err), desired_reduced_chisq)
 
 
-def test_reduced_chisq_3():
+def test_reduced_chisq_4():
     mag = np.ones(5)
     err = np.ones(5) * 0.2
 
