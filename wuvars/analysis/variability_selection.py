@@ -260,7 +260,7 @@ def spreadsheet_maker(df):
         )
         d.append(S_threeband(*stetson_arguments))
         primary_index.append("variability")
-        secondary_index.append("JHK_Stetson")
+        secondary_index.append("Stetson_JHK")
 
         return pd.Series(d, index=[primary_index, secondary_index])
 
@@ -313,3 +313,42 @@ def select_variables(spreadsheet, parameters):
     - I'd like to make it straightforward to ... do unions and intersections of different variable subsets.
 
     """
+
+    pass
+
+
+# v = None
+# ds = None
+# S_JHK = "Stetson_JHK"
+# S_JH = "Stetson_JH"
+# S_JK = "Stetson_JK"
+# S_HK = "Stetson_HK"
+
+# q2_all_indices = (
+#     (ds["count"]["N_J"] > 50)
+#     & (ds["count"]["N_J"] < 150)
+#     & (ds["count"]["N_H"] > 50)
+#     & (ds["count"]["N_H"] < 150)
+#     & (ds["count"]["N_K"] > 50)
+#     & (ds["count"]["N_K"] < 150)
+#     & (ds["max"]["JPPERRBITS"] == 0)
+#     & (ds["max"]["HPPERRBITS"] == 0)
+#     & (ds["max"]["KPPERRBITS"] == 0)
+#     & (ds["median"]["PSTAR"] > 0.75)
+# )
+
+# variable_indices = q2_all_indices & (
+#     (ds[v][S_JHK] > 2)
+#     | (ds[v][S_JH] > 2)
+#     | (ds[v][S_HK] > 2)
+#     | (ds[v][S_JK] > 2)
+#     | (ds[v]["J_red_chisq"] > 2)
+#     | (ds[v]["H_red_chisq"] > 2)
+#     | (ds[v]["K_red_chisq"] > 2)
+# )
+
+
+
+
+
+
