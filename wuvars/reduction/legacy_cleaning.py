@@ -5,6 +5,14 @@ I'm not proud of that legacy code, but - so it goes.
 
 Depends on ATpy, because of (aforementioned) legacy reasons.
 
+Also depends on all code from the following projects being importable
+(as individual modules! not even as submodules within projects!) on the pythonpath:
+- https://github.com/tomr-stargazer/wuvars-proto
+- https://github.com/tomr-stargazer/wuvars-orion
+
+It's not up to par with modern python packaging standards (tbh, it never was). Needs
+refactoring badly. But it does... "technically" work, when set up properly.
+
 """
 
 import os
