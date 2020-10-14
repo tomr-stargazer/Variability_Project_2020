@@ -264,6 +264,8 @@ def spreadsheet_maker(df):
 
         return pd.Series(d, index=[primary_index, secondary_index])
 
+    # nullify
+    df[df == -999999488.0] = np.nan
     df_spreadsheet = df.groupby("SOURCEID").apply(f_mi)
 
     return df_spreadsheet
