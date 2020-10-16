@@ -26,6 +26,37 @@ def write_summary_spreadsheet(filename, output):
     return None
 
 
+def compute_spreadsheets_for_unclean_datasets():
+
+    wserv_ids = [1, 5, 7, 8, 11]
+
+    input_root = (
+        "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/Raw_Downloads"
+    )
+    output_root = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/analysis_artifacts"
+
+    for wserv in wserv_ids[::-1]:
+        input_path = os.path.join(input_root, f"WSERV{str(wserv)}.fits.gz",)
+
+        output_path = os.path.join(
+            output_root,
+            f"wserv{str(wserv)}",
+            f"WSERV{str(wserv)}_uncleaned_summary_spreadsheet.h5",
+        )
+
+        pathlib.Path(os.path.join(output_root, f"wserv{str(wserv)}")).mkdir(
+            parents=True, exist_ok=True
+        )
+
+        print(f"INPUT / OUTPUT for WSERV{wserv}:", input_path, output_path)
+        startTime = datetime.now()
+        print(f"Starting at: {startTime}")
+
+        write_summary_spreadsheet(input_path, output_path)
+
+        print(f"WSERV{wserv} elapsed time: ", datetime.now() - startTime)
+
+
 if __name__ == "__main__":
 
     wserv_ids = [1, 5, 7, 8, 11]
