@@ -16,70 +16,6 @@ import astropy.table
 import pandas as pd
 
 
-# dropbox_bo_data = os.path.expanduser("~/Desktop/Bo_Tom/NGC1333/WSERV7/DATA/")
-# dropbox_bo_spread = dropbox_bo_data + "spreadsheet/"
-
-# spread = astropy.table.Table.read(
-#     dropbox_bo_spread + "full_data_errorcorrected_ce_spreadsheet.fits"
-# )
-# spread_cleaned = astropy.table.Table.read(
-#     dropbox_bo_spread + "fdece_graded_clipped0.95_scrubbed0.1_dusted0.5_spread.fits"
-# )
-
-# fulldata = astropy.table.Table.read(
-#     dropbox_bo_data + "full_data_errorcorrected_ce.fits"
-# )
-# fulldata_cleaned = astropy.table.Table.read(
-#     dropbox_bo_data + "fdece_graded_clipped0.95_scrubbed0.1_dusted0.5.fits"
-# )
-
-
-wserv = 7
-
-raw_root = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/Raw_Downloads"
-w7_data_raw_p = os.path.join(raw_root, f"WSERV{str(wserv)}.fits.gz",)
-
-clean_root = (
-    "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/"
-)
-w7_data_clean_p = os.path.join(
-    clean_root,
-    f"wserv{str(wserv)}",
-    f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5.h5",
-)
-
-
-spreadsheet_root = (
-    "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/analysis_artifacts"
-)
-w7_spread_raw_p = os.path.join(
-    spreadsheet_root,
-    f"wserv{str(wserv)}",
-    f"WSERV{str(wserv)}_uncleaned_summary_spreadsheet.h5",
-)
-
-w7_spread_clean_p = os.path.join(
-    spreadsheet_root,
-    f"wserv{str(wserv)}",
-    f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_summary_spreadsheet.h5",
-)
-
-w7_data_raw = astropy.table.Table.read(w7_data_raw_p)
-w7_data_clean = astropy.table.Table.read(w7_data_clean_p)
-
-w7_spread_raw = pd.read_hdf(w7_spread_raw_p, key="table")
-w7_spread_clean = pd.read_hdf(w7_spread_clean_p, key="table")
-
-
-"""
-    input_root = (
-        "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/Raw_Downloads"
-    )
-    output_root = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/analysis_artifacts"
-
-"""
-
-
 def filter_by_tile(photometry_data, ds):
     """
     Splits the input data tables into 16 tiles, avoiding overlap regions.
@@ -140,10 +76,12 @@ def filter_by_tile(photometry_data, ds):
             tile_tables.append(tile_photometry)
             tile_spreadsheets.append(tile_spreadsheet)
 
+            pdb.set_trace()
+
     return tile_tables, tile_spreadsheets
 
 
-def f_observing_map(dat=w7_data_clean, ds=w7_spread_clean):
+def f_observing_map(dat, ds, min_nights=50):
     """
     Makes a map of observations and how many J, H, K band datapoints
     each tile has.
@@ -153,9 +91,9 @@ def f_observing_map(dat=w7_data_clean, ds=w7_spread_clean):
     maxvars = ds[
         (ds["variability"]["Stetson_JHK"] > 0.5)
         & (
-            (ds["count"]["N_J"] >= 50)
-            | (ds["count"]["N_K"] >= 50)
-            | (ds["count"]["N_H"] >= 50)
+            (ds["count"]["N_J"] >= min_nights)
+            | (ds["count"]["N_K"] >= min_nights)
+            | (ds["count"]["N_H"] >= min_nights)
         )
     ]
 
@@ -256,3 +194,43 @@ def f_observing_map(dat=w7_data_clean, ds=w7_spread_clean):
     plt.ylabel("Dec (deg)")
 
     return fig
+
+
+if __name__ == "__main__":
+    """ Here we're going to use wserv7 as a test case. """
+
+    wserv = 7
+
+    raw_root = (
+        "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/Raw_Downloads"
+    )
+    w7_data_raw_p = os.path.join(raw_root, f"WSERV{str(wserv)}.fits.gz",)
+
+    clean_root = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/"
+    w7_data_clean_p = os.path.join(
+        clean_root,
+        f"wserv{str(wserv)}",
+        f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5.h5",
+    )
+
+    spreadsheet_root = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/analysis_artifacts"
+    w7_spread_raw_p = os.path.join(
+        spreadsheet_root,
+        f"wserv{str(wserv)}",
+        f"WSERV{str(wserv)}_uncleaned_summary_spreadsheet.h5",
+    )
+
+    w7_spread_clean_p = os.path.join(
+        spreadsheet_root,
+        f"wserv{str(wserv)}",
+        f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_summary_spreadsheet.h5",
+    )
+
+    w7_data_raw = astropy.table.Table.read(w7_data_raw_p)
+    w7_data_clean = astropy.table.Table.read(w7_data_clean_p)
+
+    w7_spread_raw = pd.read_hdf(w7_spread_raw_p, key="table")
+    w7_spread_clean = pd.read_hdf(w7_spread_clean_p, key="table")
+
+    fig1 = f_observing_map(dat=w7_data_raw, ds=w7_spread_raw)
+    fig2 = f_observing_map(dat=w7_data_clean, ds=w7_spread_clean)
