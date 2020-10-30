@@ -318,39 +318,141 @@ def select_variables(spreadsheet, parameters):
 
     pass
 
+    # v = None
+    # ds = None
+    # S_JHK = "Stetson_JHK"
+    # S_JH = "Stetson_JH"
+    # S_JK = "Stetson_JK"
+    # S_HK = "Stetson_HK"
 
-# v = None
-# ds = None
-# S_JHK = "Stetson_JHK"
-# S_JH = "Stetson_JH"
-# S_JK = "Stetson_JK"
-# S_HK = "Stetson_HK"
+    # q2_all_indices = (
+    #     (ds["count"]["N_J"] > 50)
+    #     & (ds["count"]["N_J"] < 150)
+    #     & (ds["count"]["N_H"] > 50)
+    #     & (ds["count"]["N_H"] < 150)
+    #     & (ds["count"]["N_K"] > 50)
+    #     & (ds["count"]["N_K"] < 150)
+    #     & (ds["max"]["JPPERRBITS"] == 0)
+    #     & (ds["max"]["HPPERRBITS"] == 0)
+    #     & (ds["max"]["KPPERRBITS"] == 0)
+    #     & (ds["median"]["PSTAR"] > 0.75)
+    # )
 
-# q2_all_indices = (
-#     (ds["count"]["N_J"] > 50)
-#     & (ds["count"]["N_J"] < 150)
-#     & (ds["count"]["N_H"] > 50)
-#     & (ds["count"]["N_H"] < 150)
-#     & (ds["count"]["N_K"] > 50)
-#     & (ds["count"]["N_K"] < 150)
-#     & (ds["max"]["JPPERRBITS"] == 0)
-#     & (ds["max"]["HPPERRBITS"] == 0)
-#     & (ds["max"]["KPPERRBITS"] == 0)
-#     & (ds["median"]["PSTAR"] > 0.75)
-# )
+    # variable_indices = q2_all_indices & (
+    #     (ds[v][S_JHK] > 2)
+    #     | (ds[v][S_JH] > 2)
+    #     | (ds[v][S_HK] > 2)
+    #     | (ds[v][S_JK] > 2)
+    #     | (ds[v]["J_red_chisq"] > 2)
+    #     | (ds[v]["H_red_chisq"] > 2)
+    #     | (ds[v]["K_red_chisq"] > 2)
+    # )
 
-# variable_indices = q2_all_indices & (
-#     (ds[v][S_JHK] > 2)
-#     | (ds[v][S_JH] > 2)
-#     | (ds[v][S_HK] > 2)
-#     | (ds[v][S_JK] > 2)
-#     | (ds[v]["J_red_chisq"] > 2)
-#     | (ds[v]["H_red_chisq"] > 2)
-#     | (ds[v]["K_red_chisq"] > 2)
-# )
+    # q1_old = (
+    #     (
+    #         (ds["count"]["N_J"] >= 50)
+    #         & (ds["count"]["N_J"] < 135)
+    #         & (ds["mean"]["JAPERMAG3"] > 11)
+    #         & (ds["mean"]["JAPERMAG3"] < 17)
+    #         & (ds["count"]["N_J"] == ds["count"]["N_J_good"])
+    #     )
+    #     | (
+    #         (ds["count"]["N_H"] >= 50)
+    #         & (ds["count"]["N_H"] < 130)
+    #         & (ds["mean"]["HAPERMAG3"] > 11)
+    #         & (ds["mean"]["HAPERMAG3"] < 16.7)
+    #         & (ds["count"]["N_H"] == ds["count"]["N_H_good"])
+    #     )
+    #     | (
+    #         (ds["count"]["N_K"] >= 50)
+    #         & (ds["count"]["N_K"] < 150)
+    #         & (ds["mean"]["KAPERMAG3"] > 11)
+    #         & (ds["mean"]["KAPERMAG3"] < 16)
+    #         & (ds["count"]["N_K"] == ds["count"]["N_K_good"])
+    #     )
+    #     & (ds["median"]["PSTAR"] > 0.75)
+    # )
 
 
+def q0_selection(ds):
+    q0 = (
+        (ds["count"]["N_J"] >= 50)
+        | (ds["count"]["N_H"] >= 50)
+        | (ds["count"]["N_K"] >= 50)
+    )
+
+    return q0
 
 
+def q2_selection(ds):
+    q2 = (
+        (ds["count"]["N_J"] >= 50)
+        & (ds["count"]["N_J"] < 150)
+        & (ds["count"]["N_H"] >= 50)
+        & (ds["count"]["N_H"] < 150)
+        & (ds["count"]["N_K"] >= 50)
+        & (ds["count"]["N_K"] < 150)
+        & (ds["mean"]["JAPERMAG3"] > 11)
+        & (ds["mean"]["HAPERMAG3"] > 11)
+        & (ds["mean"]["KAPERMAG3"] > 11)
+        & (ds["count"]["N_J"] == ds["count"]["N_J_good"])
+        & (ds["count"]["N_H"] == ds["count"]["N_H_good"])
+        & (ds["count"]["N_K"] == ds["count"]["N_K_good"])
+        & (ds["median"]["PSTAR"] > 0.75)
+    )
+    return q2
 
 
+def q1_selection(ds):
+    q1 = (
+        (
+            (ds["count"]["N_J"] >= 50)
+            & (ds["count"]["N_J"] < 150)
+            & (ds["mean"]["JAPERMAG3"] > 11)
+            & (ds["count"]["N_J"] == ds["count"]["N_J_good"])
+        )
+        | (
+            (ds["count"]["N_H"] >= 50)
+            & (ds["count"]["N_H"] < 150)
+            & (ds["mean"]["HAPERMAG3"] > 11)
+            & (ds["count"]["N_H"] == ds["count"]["N_H_good"])
+        )
+        | (
+            (ds["count"]["N_K"] >= 50)
+            & (ds["count"]["N_K"] < 150)
+            & (ds["mean"]["KAPERMAG3"] > 11)
+            & (ds["count"]["N_K"] == ds["count"]["N_K_good"])
+        )
+        & (ds["median"]["PSTAR"] > 0.75)
+    )
+
+    return q1
+
+
+def q1_variables(ds):
+    q1v = (
+        (
+            (ds["count"]["N_J"] >= 50)
+            & (ds["count"]["N_J"] < 150)
+            & (ds["mean"]["JAPERMAG3"] > 11)
+            & (ds["count"]["N_J"] == ds["count"]["N_J_good"])
+            & (ds["variability"]["J_red_chisq"] > 2)
+        )
+        | (
+            (ds["count"]["N_H"] >= 50)
+            & (ds["count"]["N_H"] < 150)
+            & (ds["mean"]["HAPERMAG3"] > 11)
+            & (ds["count"]["N_H"] == ds["count"]["N_H_good"])
+            & (ds["variability"]["H_red_chisq"] > 2)
+        )
+        | (
+            (ds["count"]["N_K"] >= 50)
+            & (ds["count"]["N_K"] < 150)
+            & (ds["mean"]["KAPERMAG3"] > 11)
+            & (ds["count"]["N_K"] == ds["count"]["N_K_good"])
+            & (ds["variability"]["K_red_chisq"] > 2)
+        )
+        & (ds["median"]["PSTAR"] > 0.75)
+    )
+
+    return q1v
