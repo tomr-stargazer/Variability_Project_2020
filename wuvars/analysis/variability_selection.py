@@ -290,11 +290,11 @@ def data_nuller(df, max_flags=256):
     # - nan out JAPERMAG3, JAPERMAG3ERR, JMHPNT, JMHPNTERR, and JPPERRBITS
 
     j_nan = (df["JAPERMAG3"] == null_val) | (df["JPPERRBITS"] > max_flags)
-    df["JAPERMAG3"][j_nan] = np.nan
-    df["JAPERMAG3ERR"][j_nan] = np.nan
-    df["JMHPNT"][j_nan] = np.nan
-    df["JMHPNTERR"][j_nan] = np.nan
-    df["JPPERRBITS"][j_nan] = np.nan
+    df.loc[j_nan, "JAPERMAG3"] = np.nan
+    df.loc[j_nan, "JAPERMAG3ERR"] = np.nan
+    df.loc[j_nan, "JMHPNT"] = np.nan
+    df.loc[j_nan, "JMHPNTERR"] = np.nan
+    df.loc[j_nan, "JPPERRBITS"] = np.nan
 
     # - HAPERMAG is null, or
     # - HPPERRBITS > max_flags
@@ -302,13 +302,13 @@ def data_nuller(df, max_flags=256):
     # - nan out HAPERMAG3, HAPERMAG3ERR, JMHPNT, JMHPNTERR, HMKPNT, HMKPNTERR, and HPPERRBITS
 
     h_nan = (df["HAPERMAG3"] == null_val) | (df["HPPERRBITS"] > max_flags)
-    df["HAPERMAG3"][h_nan] = np.nan
-    df["HAPERMAG3ERR"][h_nan] = np.nan
-    df["JMHPNT"][h_nan] = np.nan
-    df["JMHPNTERR"][h_nan] = np.nan
-    df["HMKPNT"][h_nan] = np.nan
-    df["HMKPNTERR"][h_nan] = np.nan
-    df["HPPERRBITS"][h_nan] = np.nan
+    df.loc[h_nan, "HAPERMAG3"] = np.nan
+    df.loc[h_nan, "HAPERMAG3ERR"] = np.nan
+    df.loc[h_nan, "JMHPNT"] = np.nan
+    df.loc[h_nan, "JMHPNTERR"] = np.nan
+    df.loc[h_nan, "HMKPNT"] = np.nan
+    df.loc[h_nan, "HMKPNTERR"] = np.nan
+    df.loc[h_nan, "HPPERRBITS"] = np.nan
 
     # - KAPERMAG is null
     # - KPPERRBITS > max_flags
@@ -316,11 +316,11 @@ def data_nuller(df, max_flags=256):
     # - nan out KAPERMAG3, KAPERMAG3ERR, HMKPNT, HMKPNTERR, and KPPERRBITS
 
     k_nan = (df["KAPERMAG3"] == null_val) | (df["KPPERRBITS"] > max_flags)
-    df["KAPERMAG3"][k_nan] = np.nan
-    df["KAPERMAG3ERR"][k_nan] = np.nan
-    df["HMKPNT"][k_nan] = np.nan
-    df["HMKPNTERR"][k_nan] = np.nan
-    df["KPPERRBITS"][k_nan] = np.nan
+    df.loc[k_nan, "KAPERMAG3"] = np.nan
+    df.loc[k_nan, "KAPERMAG3ERR"] = np.nan
+    df.loc[k_nan, "HMKPNT"] = np.nan
+    df.loc[k_nan, "HMKPNTERR"] = np.nan
+    df.loc[k_nan, "KPPERRBITS"] = np.nan
 
     # raise an error if there's anything left by this
     assert ~np.any(df == null_val)
