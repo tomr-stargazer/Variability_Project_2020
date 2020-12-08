@@ -266,9 +266,65 @@ def spreadsheet_maker(df):
 
     # nullify
     df[df == -999999488.0] = np.nan
+
+    # TODO: expand this nullify step to include a nuanced treatment of rows that have been flagged by ppErrbits
     df_spreadsheet = df.groupby("SOURCEID").apply(f_mi)
 
     return df_spreadsheet
+
+
+def data_nuller(df, max_flags=256):
+    """
+    Applies rules to the dataframe to null out specific columns!
+
+    Operates on the dataframe in-place.
+
+    """
+
+    null_val = -999999488.0
+
+    # we care if:
+    # - JAPERMAG is null, or
+    # - JPPERRBITS > max_flags
+    # THEN
+    # - nan out JAPERMAG3, JAPERMAG3ERR, JMHPNT, JMHPNTERR, and JPPERRBITS
+
+    j_nan = (df["JAPERMAG3"] == null_val) | (df["JPPERRBITS"] > max_flags)
+    df["JAPERMAG3"][j_nan] = np.nan
+    df["JAPERMAG3ERR"][j_nan] = np.nan
+    df["JMHPNT"][j_nan] = np.nan
+    df["JMHPNTERR"][j_nan] = np.nan
+    df["JPPERRBITS"][j_nan] = np.nan
+
+    # - HAPERMAG is null, or
+    # - HPPERRBITS > max_flags
+    # THEN
+    # - nan out HAPERMAG3, HAPERMAG3ERR, JMHPNT, JMHPNTERR, HMKPNT, HMKPNTERR, and HPPERRBITS
+
+    h_nan = (df["HAPERMAG3"] == null_val) | (df["HPPERRBITS"] > max_flags)
+    df["HAPERMAG3"][h_nan] = np.nan
+    df["HAPERMAG3ERR"][h_nan] = np.nan
+    df["JMHPNT"][h_nan] = np.nan
+    df["JMHPNTERR"][h_nan] = np.nan
+    df["HMKPNT"][h_nan] = np.nan
+    df["HMKPNTERR"][h_nan] = np.nan
+    df["HPPERRBITS"][h_nan] = np.nan
+
+    # - KAPERMAG is null
+    # - KPPERRBITS > max_flags
+    # THEN we wanna:
+    # - nan out KAPERMAG3, KAPERMAG3ERR, HMKPNT, HMKPNTERR, and KPPERRBITS
+
+    k_nan = (df["KAPERMAG3"] == null_val) | (df["KPPERRBITS"] > max_flags)
+    df["KAPERMAG3"][k_nan] = np.nan
+    df["KAPERMAG3ERR"][k_nan] = np.nan
+    df["HMKPNT"][k_nan] = np.nan
+    df["HMKPNTERR"][k_nan] = np.nan
+    df["KPPERRBITS"][k_nan] = np.nan
+
+    # raise an error if there's anything left by this
+    assert ~np.any(df == null_val)
+
 
 
 # Here's another thing we want: the ability to select variable stars, given the above "spreadsheet" / summary properties.
