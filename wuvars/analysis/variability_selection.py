@@ -319,7 +319,6 @@ def spreadsheet_maker(df):
 
     # # nullify
     # df[df == -999999488.0] = np.nan
-    # TODO: expand this nullify step to include a nuanced treatment of rows that have been flagged by ppErrbits
     data_nuller(df)
 
     df_spreadsheet = df.groupby("SOURCEID").apply(f_mi)
