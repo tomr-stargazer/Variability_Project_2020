@@ -403,30 +403,103 @@ def select_variables(spreadsheet, parameters):
     #     | (ds[v]["K_red_chisq"] > 2)
     # )
 
-    # q1_old = (
-    #     (
-    #         (ds["count"]["N_J"] >= 50)
-    #         & (ds["count"]["N_J"] < 135)
-    #         & (ds["mean"]["JAPERMAG3"] > 11)
-    #         & (ds["mean"]["JAPERMAG3"] < 17)
-    #         & (ds["count"]["N_J"] == ds["count"]["N_J_good"])
-    #     )
-    #     | (
-    #         (ds["count"]["N_H"] >= 50)
-    #         & (ds["count"]["N_H"] < 130)
-    #         & (ds["mean"]["HAPERMAG3"] > 11)
-    #         & (ds["mean"]["HAPERMAG3"] < 16.7)
-    #         & (ds["count"]["N_H"] == ds["count"]["N_H_good"])
-    #     )
-    #     | (
-    #         (ds["count"]["N_K"] >= 50)
-    #         & (ds["count"]["N_K"] < 150)
-    #         & (ds["mean"]["KAPERMAG3"] > 11)
-    #         & (ds["mean"]["KAPERMAG3"] < 16)
-    #         & (ds["count"]["N_K"] == ds["count"]["N_K_good"])
-    #     )
-    #     & (ds["median"]["PSTAR"] > 0.75)
-    # )
+
+q1_old = (
+    (
+        (ds["count"]["N_J"] >= 50)
+        & (ds["count"]["N_J"] <= 125)
+        & (ds["mean"]["JAPERMAG3"] > 11)
+        & (ds["mean"]["JAPERMAG3"] < 17)
+        & (ds["count"]["N_J_info"] == 0)
+    )
+    | (
+        (ds["count"]["N_H"] >= 50)
+        & (ds["count"]["N_H"] <= 125)
+        & (ds["mean"]["HAPERMAG3"] > 11)
+        & (ds["mean"]["HAPERMAG3"] < 16)
+        & (ds["count"]["N_H_info"] == 0)
+    )
+    | (
+        (ds["count"]["N_K"] >= 50)
+        & (ds["count"]["N_K"] <= 125)
+        & (ds["mean"]["KAPERMAG3"] > 11)
+        & (ds["mean"]["KAPERMAG3"] < 16)
+        & (ds["count"]["N_K_info"] == 0)
+    )
+) & (ds["median"]["PSTAR"] > 0.75)
+
+
+cand_case2 = (sp.pstar_median > 0.75) & (
+    (
+        (sp.N_j >= 50)
+        & (sp.N_j <= 125)
+        & (sp.j_mean > 11)  # J band criteria
+        & (sp.j_mean < 17)
+        & (sp.N_j_info == 0)
+    )
+    | (
+        (sp.N_h >= 50)
+        & (sp.N_h <= 125)
+        & (sp.h_mean > 11)  # H band criteria
+        & (sp.h_mean < 16)
+        & (sp.N_h_info == 0)
+    )
+    | (
+        (sp.N_k >= 50)
+        & (sp.N_k <= 125)
+        & (sp.k_mean > 11)  # K band criteria
+        & (sp.k_mean < 16)
+        & (sp.N_k_info == 0)
+    )
+)
+
+cand_case1 = (
+    (sp.pstar_median > 0.75)
+    & (
+        (sp.N_j >= 50)
+        & (sp.N_j <= 125)
+        & (sp.j_mean > 11)  # J band criteria
+        & (sp.j_mean < 17)
+        & (sp.N_j_info == 0)
+    )
+    & (
+        (sp.N_h >= 50)
+        & (sp.N_h <= 125)
+        & (sp.h_mean > 11)  # H band criteria
+        & (sp.h_mean < 16)
+        & (sp.N_h_info == 0)
+    )
+    & (
+        (sp.N_k >= 50)
+        & (sp.N_k <= 125)
+        & (sp.k_mean > 11)  # K band criteria
+        & (sp.k_mean < 16)
+        & (sp.N_k_info == 0)
+    )
+)
+q2_old = (
+    (
+        (ds["count"]["N_J"] >= 50)
+        & (ds["count"]["N_J"] <= 125)
+        & (ds["mean"]["JAPERMAG3"] > 11)
+        & (ds["mean"]["JAPERMAG3"] < 17)
+        & (ds["count"]["N_J_info"] == 0)
+    )
+    & (
+        (ds["count"]["N_H"] >= 50)
+        & (ds["count"]["N_H"] <= 125)
+        & (ds["mean"]["HAPERMAG3"] > 11)
+        & (ds["mean"]["HAPERMAG3"] < 16)
+        & (ds["count"]["N_H_info"] == 0)
+    )
+    & (
+        (ds["count"]["N_K"] >= 50)
+        & (ds["count"]["N_K"] <= 125)
+        & (ds["mean"]["KAPERMAG3"] > 11)
+        & (ds["mean"]["KAPERMAG3"] < 16)
+        & (ds["count"]["N_K_info"] == 0)
+    )
+) & (ds["median"]["PSTAR"] > 0.75)
 
 
 def q0_selection(ds):
@@ -462,19 +535,19 @@ def q1_selection(ds):
     q1 = (
         (
             (ds["count"]["N_J"] >= 50)
-            & (ds["count"]["N_J"] < 150)
+            & (ds["count"]["N_J"] < 125)
             & (ds["mean"]["JAPERMAG3"] > 11)
             & (ds["count"]["N_J"] == ds["count"]["N_J_good"])
         )
         | (
             (ds["count"]["N_H"] >= 50)
-            & (ds["count"]["N_H"] < 150)
+            & (ds["count"]["N_H"] < 125)
             & (ds["mean"]["HAPERMAG3"] > 11)
             & (ds["count"]["N_H"] == ds["count"]["N_H_good"])
         )
         | (
             (ds["count"]["N_K"] >= 50)
-            & (ds["count"]["N_K"] < 150)
+            & (ds["count"]["N_K"] < 125)
             & (ds["mean"]["KAPERMAG3"] > 11)
             & (ds["count"]["N_K"] == ds["count"]["N_K_good"])
         )
@@ -482,6 +555,31 @@ def q1_selection(ds):
     )
 
     return q1
+
+
+autocandidates_old = sp.where(
+    (
+        (sp.N_j >= 50)
+        & (sp.N_j <= 125)
+        & (sp.j_mean > 11)  # J band criteria
+        & (sp.j_mean < 17)
+        & (sp.N_j_info == 0)  # J
+    )
+    | (  # J
+        (sp.N_h >= 50)
+        & (sp.N_h <= 125)
+        & (sp.h_mean > 11)  # H band criteria
+        & (sp.h_mean < 16)
+        & (sp.N_h_info == 0)  # H
+    )
+    | (  # H
+        (sp.N_k >= 50)
+        & (sp.N_k <= 125)
+        & (sp.k_mean > 11)  # K band criteria
+        & (sp.k_mean < 16)
+        & (sp.N_k_info == 0)  # K
+    )
+)  # K
 
 
 def q1_variables(ds):
