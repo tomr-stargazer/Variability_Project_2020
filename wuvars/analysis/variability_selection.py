@@ -140,6 +140,59 @@ def reduced_chisq(mag, err):
     return 1 / nu * np.nansum((mag - np.nanmean(mag)) ** 2 / err ** 2)
 
 
+def data_nuller(df, max_flags=256):
+    """
+    Applies rules to the dataframe to null out specific columns!
+
+    Operates on the dataframe in-place.
+
+    """
+
+    null_val = -999999488.0
+
+    # we care if:
+    # - JAPERMAG is null, or
+    # - JPPERRBITS > max_flags
+    # THEN
+    # - nan out JAPERMAG3, JAPERMAG3ERR, JMHPNT, JMHPNTERR, and JPPERRBITS
+
+    j_nan = (df["JAPERMAG3"] == null_val) | (df["JPPERRBITS"] > max_flags)
+    df.loc[j_nan, "JAPERMAG3"] = np.nan
+    df.loc[j_nan, "JAPERMAG3ERR"] = np.nan
+    df.loc[j_nan, "JMHPNT"] = np.nan
+    df.loc[j_nan, "JMHPNTERR"] = np.nan
+    df.loc[j_nan, "JPPERRBITS"] = np.nan
+
+    # - HAPERMAG is null, or
+    # - HPPERRBITS > max_flags
+    # THEN
+    # - nan out HAPERMAG3, HAPERMAG3ERR, JMHPNT, JMHPNTERR, HMKPNT, HMKPNTERR, and HPPERRBITS
+
+    h_nan = (df["HAPERMAG3"] == null_val) | (df["HPPERRBITS"] > max_flags)
+    df.loc[h_nan, "HAPERMAG3"] = np.nan
+    df.loc[h_nan, "HAPERMAG3ERR"] = np.nan
+    df.loc[h_nan, "JMHPNT"] = np.nan
+    df.loc[h_nan, "JMHPNTERR"] = np.nan
+    df.loc[h_nan, "HMKPNT"] = np.nan
+    df.loc[h_nan, "HMKPNTERR"] = np.nan
+    df.loc[h_nan, "HPPERRBITS"] = np.nan
+
+    # - KAPERMAG is null
+    # - KPPERRBITS > max_flags
+    # THEN we wanna:
+    # - nan out KAPERMAG3, KAPERMAG3ERR, HMKPNT, HMKPNTERR, and KPPERRBITS
+
+    k_nan = (df["KAPERMAG3"] == null_val) | (df["KPPERRBITS"] > max_flags)
+    df.loc[k_nan, "KAPERMAG3"] = np.nan
+    df.loc[k_nan, "KAPERMAG3ERR"] = np.nan
+    df.loc[k_nan, "HMKPNT"] = np.nan
+    df.loc[k_nan, "HMKPNTERR"] = np.nan
+    df.loc[k_nan, "KPPERRBITS"] = np.nan
+
+    # raise an error if there's anything left by this
+    assert ~np.any(df == null_val)
+
+
 def spreadsheet_maker(df):
     """
     Compute several summary properties of EVERY column in this table, grouped by SOURCEID:
@@ -264,67 +317,14 @@ def spreadsheet_maker(df):
 
         return pd.Series(d, index=[primary_index, secondary_index])
 
-    # nullify
-    df[df == -999999488.0] = np.nan
-
+    # # nullify
+    # df[df == -999999488.0] = np.nan
     # TODO: expand this nullify step to include a nuanced treatment of rows that have been flagged by ppErrbits
+    data_nuller(df)
+
     df_spreadsheet = df.groupby("SOURCEID").apply(f_mi)
 
     return df_spreadsheet
-
-
-def data_nuller(df, max_flags=256):
-    """
-    Applies rules to the dataframe to null out specific columns!
-
-    Operates on the dataframe in-place.
-
-    """
-
-    null_val = -999999488.0
-
-    # we care if:
-    # - JAPERMAG is null, or
-    # - JPPERRBITS > max_flags
-    # THEN
-    # - nan out JAPERMAG3, JAPERMAG3ERR, JMHPNT, JMHPNTERR, and JPPERRBITS
-
-    j_nan = (df["JAPERMAG3"] == null_val) | (df["JPPERRBITS"] > max_flags)
-    df.loc[j_nan, "JAPERMAG3"] = np.nan
-    df.loc[j_nan, "JAPERMAG3ERR"] = np.nan
-    df.loc[j_nan, "JMHPNT"] = np.nan
-    df.loc[j_nan, "JMHPNTERR"] = np.nan
-    df.loc[j_nan, "JPPERRBITS"] = np.nan
-
-    # - HAPERMAG is null, or
-    # - HPPERRBITS > max_flags
-    # THEN
-    # - nan out HAPERMAG3, HAPERMAG3ERR, JMHPNT, JMHPNTERR, HMKPNT, HMKPNTERR, and HPPERRBITS
-
-    h_nan = (df["HAPERMAG3"] == null_val) | (df["HPPERRBITS"] > max_flags)
-    df.loc[h_nan, "HAPERMAG3"] = np.nan
-    df.loc[h_nan, "HAPERMAG3ERR"] = np.nan
-    df.loc[h_nan, "JMHPNT"] = np.nan
-    df.loc[h_nan, "JMHPNTERR"] = np.nan
-    df.loc[h_nan, "HMKPNT"] = np.nan
-    df.loc[h_nan, "HMKPNTERR"] = np.nan
-    df.loc[h_nan, "HPPERRBITS"] = np.nan
-
-    # - KAPERMAG is null
-    # - KPPERRBITS > max_flags
-    # THEN we wanna:
-    # - nan out KAPERMAG3, KAPERMAG3ERR, HMKPNT, HMKPNTERR, and KPPERRBITS
-
-    k_nan = (df["KAPERMAG3"] == null_val) | (df["KPPERRBITS"] > max_flags)
-    df.loc[k_nan, "KAPERMAG3"] = np.nan
-    df.loc[k_nan, "KAPERMAG3ERR"] = np.nan
-    df.loc[k_nan, "HMKPNT"] = np.nan
-    df.loc[k_nan, "HMKPNTERR"] = np.nan
-    df.loc[k_nan, "KPPERRBITS"] = np.nan
-
-    # raise an error if there's anything left by this
-    assert ~np.any(df == null_val)
-
 
 
 # Here's another thing we want: the ability to select variable stars, given the above "spreadsheet" / summary properties.
