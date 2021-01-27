@@ -11,10 +11,29 @@ The second approach is more testable. But this is SO simple.
 
 """
 
+import numpy as np
+from wuvars.analysis.rederive_error_correction import decorrect_error
+
+
 def revise_errorbars(improperly_error_corrected_dataset, s, c):
 
-    # undo the old error correction terms
+    dat = improperly_error_corrected_dataset
 
-    # apply the new error correction terms
+    bands = ["J", "H", "K"]
+    for b in bands:
 
-    # return the astropy table
+        # undo the old error correction terms
+
+        improper_err = dat[f"{b}APERMAG3ERR"]
+        err = decorrect_error(improper_err)
+
+        # apply the new error correction terms
+        new_corrected_err = np.sqrt(c * err ** 2 + s ** 2)
+
+        dat[f"{b}APERMAG3ERR"] = new_corrected_err
+
+    return dat
+
+
+if __name__ == "__main__":
+    print("Testing")
