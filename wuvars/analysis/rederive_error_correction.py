@@ -41,14 +41,15 @@ import numpy as np
 
 # ok, let's do this.
 
+
 def decorrect_error(M, s=0.021, c=1.082):
     """
     M^2 = cE^2 + s^2 
     therefore
     E = sqrt( (M^2 - s^2) / c )
     """
-    
-    E = np.sqrt( (M**2 - s**2) / c )
+
+    E = np.sqrt((M ** 2 - s ** 2) / c)
 
     return E
 
@@ -106,8 +107,8 @@ def bin_the_median_errorbars_by_magnitude(ds, bins=10, range=None, decorrect=Tru
             rms_list.append(median_observed_rms_in_this_mag_bin)
             err_list.append(median_estimated_error_in_this_mag_bin)
 
-        output_dict[b]['mag_bin_center'] = bin_centers
-        output_dict[b]['measured_error'] = rms_list
-        output_dict[b]['estimated_error'] = err_list
+        output_dict[b]["mag_bin_center"] = bin_centers
+        output_dict[b]["measured_error"] = rms_list
+        output_dict[b]["estimated_error"] = err_list
 
-    return output_dict 
+    return output_dict
