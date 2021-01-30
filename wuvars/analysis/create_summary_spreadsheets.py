@@ -118,6 +118,39 @@ def make_summary_spreadsheet_for_wserv5_v2012():
         print(f"WSERV{wserv} elapsed time: ", datetime.now() - startTime)
 
 
+def make_summary_spreadsheets_for_errorcorrected_data():
+
+    wserv_ids = [1, 5, 7, 8, 11]
+
+    input_root = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/"
+    output_root = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/analysis_artifacts"
+
+    for wserv in wserv_ids[::-1]:
+        input_path = os.path.join(
+            input_root,
+            f"wserv{str(wserv)}",
+            f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_new_error_corrected.h5",
+        )
+
+        output_path = os.path.join(
+            output_root,
+            f"wserv{str(wserv)}",
+            f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_new_error_corrected_summary_spreadsheet.h5",
+        )
+
+        pathlib.Path(os.path.join(output_root, f"wserv{str(wserv)}")).mkdir(
+            parents=True, exist_ok=True
+        )
+
+        print(f"INPUT / OUTPUT for WSERV{wserv}:", input_path, output_path)
+        startTime = datetime.now()
+        print(f"Starting at: {startTime}")
+
+        write_summary_spreadsheet(input_path, output_path)
+
+        print(f"WSERV{wserv} elapsed time: ", datetime.now() - startTime)
+
+
 if __name__ == "__main__":
 
     wserv_ids = [1, 5, 7, 8, 11]
