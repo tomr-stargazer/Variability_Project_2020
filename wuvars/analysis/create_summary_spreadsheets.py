@@ -129,7 +129,7 @@ def make_summary_spreadsheets_for_errorcorrected_data():
         input_path = os.path.join(
             input_root,
             f"wserv{str(wserv)}",
-            f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_new_error_corrected.h5",
+            f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_new_error_corrected.fits",
         )
 
         output_path = os.path.join(
