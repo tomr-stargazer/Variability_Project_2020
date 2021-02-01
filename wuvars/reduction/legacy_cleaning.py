@@ -18,6 +18,7 @@ refactoring badly. But it does... "technically" work, when set up properly.
 import os
 import numpy as np
 import atpy
+import astropy.table
 
 from wuvars.reduction.legacy_cleaning_helpers import spreadsheet_mapreduce_combine
 import night_cleanser
@@ -99,7 +100,9 @@ def do_it(
             os.path.join(output_location, "summary_spreadsheet.h5")
         )
     except FileNotFoundError:
-        summary_spreadsheet = spreadsheet_mapreduce_combine(data, intermediate_location, splits=splits)
+        summary_spreadsheet = spreadsheet_mapreduce_combine(
+            data, intermediate_location, splits=splits
+        )
         summary_spreadsheet.write(
             os.path.join(output_location, "summary_spreadsheet.h5"), overwrite=True
         )
@@ -191,7 +194,13 @@ def make():
     do_it(wserv1_data_input, wserv1_output_path, "WSERV1", splits=100)
 
     # do it for wserv5
-    wserv5_data_input = os.path.join(raw_data_path, "wserv5.fits.gz")
+    # OLD:
+    # wserv5_data_input = os.path.join(raw_data_path, "wserv5.fits.gz")
+    # NEW:
+    wserv5_data_input = os.path.join(
+        "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/wserv5/",
+        "wserv5_spatially_trimmed.fits",
+    )
     wserv5_output_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/wserv5/"
     do_it(wserv5_data_input, wserv5_output_path, "WSERV5", splits=25)
 
@@ -227,3 +236,35 @@ def test_make():
     prototype_output_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/prototypes/"
 
     do_it(prototype_input_file, prototype_output_path, "DUMMY", minimum_nights=15)
+
+
+def generate_wserv5_trimmed_by_RA():
+    """
+    Take in the raw WSERV5 data, do exactly one thing (strip out the exclave), save it to file.
+
+    """
+    raw_data_path = (
+        "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/Raw_Downloads"
+    )
+    wserv5_data_input = os.path.join(raw_data_path, "wserv5.fits.gz")
+    wserv5_output_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/wserv5/"
+
+    # load up the .fits file
+    data = astropy.table.Table.read(wserv5_data_input)
+    # data.table_name = name
+
+    new_data = data[np.degrees(data["RA"]) < 84.5]
+
+    new_filename = os.path.join(wserv5_output_path, "wserv5_spatially_trimmed.fits")
+
+    new_data.write(new_filename, overwrite=True)
+
+
+def make_wserv5_only():
+
+    wserv5_data_input = os.path.join(
+        "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/wserv5/",
+        "wserv5_spatially_trimmed.fits",
+    )
+    wserv5_output_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/wserv5/"
+    do_it(wserv5_data_input, wserv5_output_path, "WSERV5", splits=25)
