@@ -76,7 +76,7 @@ def filter_by_tile(photometry_data, ds):
             tile_tables.append(tile_photometry)
             tile_spreadsheets.append(tile_spreadsheet)
 
-            pdb.set_trace()
+            # pdb.set_trace()
 
     return tile_tables, tile_spreadsheets
 
