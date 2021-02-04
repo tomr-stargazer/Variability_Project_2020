@@ -1,0 +1,32 @@
+"""
+Here's where I'll try to write code that selects brown dwarfs based on their colors.
+
+"""
+from wuvars.analysis.bd_mags import apparent_BD_mags_jhk
+
+import pdb
+
+
+def simple_BD_select(ds, wserv):
+
+    # rieke & lebofsky 1985 reddening law
+    A_K = 0.112
+    A_H = 0.175
+    E_HK = A_H - A_K  
+    slope = A_K / E_HK # this is like a slope in color-mag space
+
+    J_BDlimit = apparent_BD_mags_jhk[wserv][0]
+    H_BDlimit = apparent_BD_mags_jhk[wserv][1]
+    K_BDlimit = apparent_BD_mags_jhk[wserv][2]
+
+    HK_BDlimit = H_BDlimit - K_BDlimit
+
+    K_intercept = K_BDlimit - slope * HK_BDlimit
+
+    h = ds["median"]["HAPERMAG3"]
+    k = ds["median"]["KAPERMAG3"]
+    hmk = h - k
+
+    bd_selection = (hmk > HK_BDlimit) & (k > slope * hmk + K_intercept)
+
+    return bd_selection

@@ -609,3 +609,340 @@ def q1_variables(ds):
     )
 
     return q1v
+
+
+# most of the above is a mess and I'll have to figure out who's calling what, but for now:
+
+
+def select_q2_old(ds):
+    # implements specifically the ONC Q2 criterion, minus the location-based constraint
+
+    q2 = (
+        (
+            (ds["count"]["N_J"] >= 50)
+            & (ds["count"]["N_J"] <= 125)
+            & (ds["mean"]["JAPERMAG3"] > 11)
+            & (ds["mean"]["JAPERMAG3"] < 17)
+            & (ds["count"]["N_J_info"] == 0)
+        )
+        & (
+            (ds["count"]["N_H"] >= 50)
+            & (ds["count"]["N_H"] <= 125)
+            & (ds["mean"]["HAPERMAG3"] > 11)
+            & (ds["mean"]["HAPERMAG3"] < 16)
+            & (ds["count"]["N_H_info"] == 0)
+        )
+        & (
+            (ds["count"]["N_K"] >= 50)
+            & (ds["count"]["N_K"] <= 125)
+            & (ds["mean"]["KAPERMAG3"] > 11)
+            & (ds["mean"]["KAPERMAG3"] < 16)
+            & (ds["count"]["N_K_info"] == 0)
+        )
+    ) & (ds["median"]["PSTAR"] > 0.75)
+
+    return q2
+
+
+def select_q1_old(ds):
+    # implements specifically the ONC Q2 criterion, minus the location-based constraint
+
+    q1 = (
+        (
+            (ds["count"]["N_J"] >= 50)
+            & (ds["count"]["N_J"] <= 125)
+            & (ds["mean"]["JAPERMAG3"] > 11)
+            & (ds["mean"]["JAPERMAG3"] < 17)
+            & (ds["count"]["N_J_info"] == 0)
+        )
+        | (
+            (ds["count"]["N_H"] >= 50)
+            & (ds["count"]["N_H"] <= 125)
+            & (ds["mean"]["HAPERMAG3"] > 11)
+            & (ds["mean"]["HAPERMAG3"] < 16)
+            & (ds["count"]["N_H_info"] == 0)
+        )
+        | (
+            (ds["count"]["N_K"] >= 50)
+            & (ds["count"]["N_K"] <= 125)
+            & (ds["mean"]["KAPERMAG3"] > 11)
+            & (ds["mean"]["KAPERMAG3"] < 16)
+            & (ds["count"]["N_K_info"] == 0)
+        )
+    ) & (ds["median"]["PSTAR"] > 0.75)
+
+    return q1
+
+
+def select_q2_new(ds, n_obs, bright_limit=11, J_limit=18.5, H_limit=18, K_limit=17.75):
+
+    q2 = (
+        (
+            (ds["count"]["N_J"] >= n_obs * 5 / 12)
+            & (ds["count"]["N_J"] <= n_obs * 1.2)
+            & (ds["mean"]["JAPERMAG3"] > bright_limit)
+            & (ds["mean"]["JAPERMAG3"] < J_limit)
+            & (ds["count"]["N_J_info"] == 0)
+        )
+        & (
+            (ds["count"]["N_H"] >= n_obs * 5 / 12)
+            & (ds["count"]["N_H"] <= n_obs * 1.2)
+            & (ds["mean"]["HAPERMAG3"] > bright_limit)
+            & (ds["mean"]["HAPERMAG3"] < H_limit)
+            & (ds["count"]["N_H_info"] == 0)
+        )
+        & (
+            (ds["count"]["N_K"] >= n_obs * 5 / 12)
+            & (ds["count"]["N_K"] <= n_obs * 1.2)
+            & (ds["mean"]["KAPERMAG3"] > bright_limit)
+            & (ds["mean"]["KAPERMAG3"] < K_limit)
+            & (ds["count"]["N_K_info"] == 0)
+        )
+    ) & (ds["median"]["PSTAR"] > 0.75)
+
+    return q2
+
+
+def select_q1_new(ds, n_obs, bright_limit=11, J_limit=18.5, H_limit=18, K_limit=17.75):
+
+    q1 = (
+        (
+            (ds["count"]["N_J"] >= n_obs * 5 / 12)
+            & (ds["count"]["N_J"] <= n_obs * 1.2)
+            & (ds["mean"]["JAPERMAG3"] > bright_limit)
+            & (ds["mean"]["JAPERMAG3"] < J_limit)
+            & (ds["count"]["N_J_info"] == 0)
+        )
+        | (
+            (ds["count"]["N_H"] >= n_obs * 5 / 12)
+            & (ds["count"]["N_H"] <= n_obs * 1.2)
+            & (ds["mean"]["HAPERMAG3"] > bright_limit)
+            & (ds["mean"]["HAPERMAG3"] < H_limit)
+            & (ds["count"]["N_H_info"] == 0)
+        )
+        | (
+            (ds["count"]["N_K"] >= n_obs * 5 / 12)
+            & (ds["count"]["N_K"] <= n_obs * 1.2)
+            & (ds["mean"]["KAPERMAG3"] > bright_limit)
+            & (ds["mean"]["KAPERMAG3"] < K_limit)
+            & (ds["count"]["N_K_info"] == 0)
+        )
+    ) & (ds["median"]["PSTAR"] > 0.75)
+
+    return q1
+
+
+def select_q0_new(ds, n_obs):
+    q0 = (
+        (ds["count"]["N_J"] >= n_obs * 5 / 12)
+        | (ds["count"]["N_H"] >= n_obs * 5 / 12)
+        | (ds["count"]["N_K"] >= n_obs * 5 / 12)
+    )
+
+    return q0
+
+
+def q2_var(ds):
+
+    # join with OR:
+    # Stetson JHK > 2
+    # Stetson (any band combo) > 2
+    # chisq_red (any band) >
+
+    q2v = ds["variability"]["Stetson_JHK"] > 2
+
+    return q2v
+
+
+###### we're trying a new approach here.
+
+
+def sq0(ds, min_nobs, max_nobs):
+    q0 = (
+        (ds["count"]["N_J"] >= min_nobs)
+        | (ds["count"]["N_H"] >= min_nobs)
+        | (ds["count"]["N_K"] >= min_nobs)
+    )
+
+    return q0
+
+
+def sq1_j(
+    ds, min_nobs, max_nobs, bright_limit=11, J_limit=18.5, H_limit=18, K_limit=17.75
+):
+
+    q1_j = (
+        (ds["count"]["N_J"] >= min_nobs)
+        & (ds["count"]["N_J"] <= max_nobs)
+        & (ds["mean"]["JAPERMAG3"] > bright_limit)
+        & (ds["mean"]["JAPERMAG3"] < J_limit)
+        & (ds["count"]["N_J_info"] == 0)
+    )
+
+    return q1_j
+
+
+def sq1_h(
+    ds, min_nobs, max_nobs, bright_limit=11, J_limit=18.5, H_limit=18, K_limit=17.75
+):
+
+    q1_h = (
+        (ds["count"]["N_H"] >= min_nobs)
+        & (ds["count"]["N_H"] <= max_nobs)
+        & (ds["mean"]["HAPERMAG3"] > bright_limit)
+        & (ds["mean"]["HAPERMAG3"] < H_limit)
+        & (ds["count"]["N_H_info"] == 0)
+    )
+
+    return q1_h
+
+
+def sq1_k(
+    ds, min_nobs, max_nobs, bright_limit=11, J_limit=18.5, H_limit=18, K_limit=17.75
+):
+
+    q1_k = (
+        (ds["count"]["N_K"] >= min_nobs)
+        & (ds["count"]["N_K"] <= max_nobs)
+        & (ds["mean"]["KAPERMAG3"] > bright_limit)
+        & (ds["mean"]["KAPERMAG3"] < K_limit)
+        & (ds["count"]["N_K_info"] == 0)
+    )
+
+    return q1_k
+
+
+def sq1(*args, **kwargs):
+
+    ds = args[0]
+
+    q1 = (sq1_j(*args, **kwargs) | sq1_h(*args, **kwargs) | sq1_k(*args, **kwargs)) & (
+        ds["median"]["PSTAR"] > 0.75
+    )
+
+    return q1
+
+
+def sq2(*args, **kwargs):
+
+    ds = args[0]
+
+    q2 = (
+        sq1_j(*args, **kwargs)
+        & sq1_h(*args, **kwargs)
+        & sq1_k(*args, **kwargs)
+        & (ds["median"]["PSTAR"] > 0.75)
+    )
+
+    return q2
+
+
+def sv_j(ds, red_chisq_cutoff=2):
+
+    v_j = ds["variability"]["J_red_chisq"] > red_chisq_cutoff
+
+    return v_j
+
+
+def sv_h(ds, red_chisq_cutoff=2):
+
+    v_h = ds["variability"]["H_red_chisq"] > red_chisq_cutoff
+
+    return v_h
+
+
+def sv_k(ds, red_chisq_cutoff=2):
+
+    v_k = ds["variability"]["K_red_chisq"] > red_chisq_cutoff
+
+    return v_k
+
+
+def sv_jh(ds, Stetson_cutoff=2):
+
+    v_jh = ds["variability"]["Stetson_JH"] > Stetson_cutoff
+
+    return v_jh
+
+
+def sv_hk(ds, Stetson_cutoff=2):
+
+    v_hk = ds["variability"]["Stetson_HK"] > Stetson_cutoff
+
+    return v_hk
+
+
+def sv_jk(ds, Stetson_cutoff=2):
+
+    v_jk = ds["variability"]["Stetson_JK"] > Stetson_cutoff
+
+    return v_jk
+
+
+def sv_jhk(ds, Stetson_cutoff=2):
+
+    v_jhk = ds["variability"]["Stetson_JHK"] > Stetson_cutoff
+
+    return v_jhk
+
+
+def sq2_variables(*args, **kwargs):
+
+    ds = args[0]
+
+    q2 = sq2(*args, **kwargs)
+
+    q2_vars = q2 & (
+        sv_jhk(ds) | sv_jk(ds) | sv_hk(ds) | sv_jh(ds) | sv_j(ds) | sv_h(ds) | sv_k(ds)
+    )
+
+    return q2_vars
+
+
+def sq1_variables(*args, **kwargs):
+
+    ds = args[0]
+
+    q1_j = sq1_j(*args, **kwargs)
+    q1_h = sq1_h(*args, **kwargs)
+    q1_k = sq1_k(*args, **kwargs)
+
+    v_j = sv_j(ds)
+    v_h = sv_h(ds)
+    v_k = sv_k(ds)
+
+    v_jh = sv_jh(ds)
+    v_hk = sv_hk(ds)
+    v_jk = sv_jk(ds)
+
+    q1_vars = (
+        (q1_j & v_j)
+        | (q1_h & v_h)
+        | (q1_k & v_k)
+        | (q1_j & q1_h & v_jh)
+        | (q1_j & q1_k & v_jk)
+        | (q1_h & q1_k & v_hk)
+    )
+
+    return q1_vars
+
+
+def sq0_variables(*args, **kwargs):
+
+    ds = args[0]
+
+    q0 = sq0(*args, **kwargs)
+
+    v_j = sv_j(ds)
+    v_h = sv_h(ds)
+    v_k = sv_k(ds)
+
+    v_jh = sv_jh(ds)
+    v_hk = sv_hk(ds)
+    v_jk = sv_jk(ds)
+
+    v_jhk = sv_jhk(ds)
+
+    q0_vars = q0 & (v_j | v_h | v_k | v_jh | v_jk | v_hk | v_jhk)
+
+    return q0_vars
