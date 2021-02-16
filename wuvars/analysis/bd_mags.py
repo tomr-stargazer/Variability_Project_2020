@@ -1,6 +1,12 @@
 """
 An importable set of magnitudes of brown dwarf limit stars.
 
+These are from an email Johanna Vos sent me on July 21, 2020. She wrote:
+"This text file contains absolute and apparent mags (J,H,K) for mass<0.08Msolar for 
+each star-forming region. I used the Allard BT-Settl models to calculate these. 
+I didn't do any sort of error calculation but can implement an MCMC type 
+error propagation if necessary."
+
 """
 
 absolute_BD_mags_jhk = {}
