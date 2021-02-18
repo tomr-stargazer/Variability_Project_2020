@@ -550,49 +550,49 @@ def sq2(*args, **kwargs):
     return q2
 
 
-def sv_j(ds, red_chisq_cutoff=5):
+def sv_j(ds, red_chisq_cutoff=np.nan):
 
     v_j = ds["variability"]["J_red_chisq"] > red_chisq_cutoff
 
     return v_j
 
 
-def sv_h(ds, red_chisq_cutoff=5):
+def sv_h(ds, red_chisq_cutoff=7.5):
 
     v_h = ds["variability"]["H_red_chisq"] > red_chisq_cutoff
 
     return v_h
 
 
-def sv_k(ds, red_chisq_cutoff=5):
+def sv_k(ds, red_chisq_cutoff=7.5):
 
     v_k = ds["variability"]["K_red_chisq"] > red_chisq_cutoff
 
     return v_k
 
 
-def sv_jh(ds, Stetson_cutoff=2):
+def sv_jh(ds, Stetson_cutoff=5):
 
     v_jh = ds["variability"]["Stetson_JH"] > Stetson_cutoff
 
     return v_jh
 
 
-def sv_hk(ds, Stetson_cutoff=2):
+def sv_hk(ds, Stetson_cutoff=5):
 
     v_hk = ds["variability"]["Stetson_HK"] > Stetson_cutoff
 
     return v_hk
 
 
-def sv_jk(ds, Stetson_cutoff=2):
+def sv_jk(ds, Stetson_cutoff=5):
 
     v_jk = ds["variability"]["Stetson_JK"] > Stetson_cutoff
 
     return v_jk
 
 
-def sv_jhk(ds, Stetson_cutoff=3):
+def sv_jhk(ds, Stetson_cutoff=6):
 
     v_jhk = ds["variability"]["Stetson_JHK"] > Stetson_cutoff
 
@@ -662,3 +662,36 @@ def sq0_variables(*args, **kwargs):
     q0_vars = q0 & (v_j | v_h | v_k | v_jh | v_jk | v_hk | v_jhk)
 
     return q0_vars
+
+
+def sq1_k_variables_only(*args, **kwargs):
+    ds = args[0]
+
+    q1_j = sq1_j(*args, **kwargs)
+    q1_h = sq1_h(*args, **kwargs)
+    q1_k = sq1_k(*args, **kwargs)
+
+    v_j = sv_j(ds)
+    v_h = sv_h(ds)
+    v_k = sv_k(ds)
+
+    v_jh = sv_jh(ds)
+    v_hk = sv_hk(ds)
+    v_jk = sv_jk(ds)
+
+    v_jhk = sv_jhk(ds)
+
+    q1_k_only_vars = (
+        (q1_k)
+        & (v_k)
+        & ~(
+            (q1_j & v_j)
+            | (q1_h & v_h)
+            | (q1_j & q1_h & v_jh)
+            | (q1_j & q1_k & v_jk)
+            | (q1_h & q1_k & v_hk)
+            | (q1_j & q1_h & q1_k & v_jhk)
+        )
+    )
+
+    return q1_k_only_vars
