@@ -326,87 +326,6 @@ def spreadsheet_maker(df):
     return df_spreadsheet
 
 
-# Here's another thing we want: the ability to select variable stars, given the above "spreadsheet" / summary properties.
-# Basically, I want to be able to tell my data:
-# Q2 variables
-# ------------
-# - N_J, N_H, N_K > 50 (each)
-# AND
-# - JPPERRMAX, HPPERRMAX, KPPERRMAX = 0 (each)
-# AND (any of the following)
-# [
-# - JHK Stetson > 1 OR
-# - JK, HK, JH Stetson > 1 OR
-# - chisq_J > N_J   OR
-# - chisq_H > N_H   OR
-# - chisq_K > N_K
-# ]
-
-# similar (but ultimately more convoluted) criteria can be devised for what we might call "Q1" variables, which
-# would be actually broken into "two-band" Q1 variables, and "one-band" Q1 variables:
-# - JH, HK, JK
-# - J, H, K
-# more can be written soon; a lot of it depends on how many
-
-# There's a slight philosophical distinction between the above framework and how I think the WSA does things.
-# In my framework, I disqualify a star from a quality grade if it has a *single* flagged night
-
-
-def select_variables(spreadsheet, parameters):
-    """
-    Selects variables from a spreadsheet, given parameters.
-
-    Parameters:
-    - minimum Stetson that qualifies variability
-    - 
-
-    Returns: ???
-    - Possibly an index array that maps back to the input spreadsheet? like a boolean array
-      so that you could say 
-      `variable_sourceids = spreadsheet['SOURCEIDS'][variable_indices]`
-      given the variable_indices return value
-
-    Notes:
-    - I'd like to make it straightforward to ... do unions and intersections of different variable subsets.
-
-    """
-
-    pass
-
-    # v = None
-    # ds = None
-    # S_JHK = "Stetson_JHK"
-    # S_JH = "Stetson_JH"
-    # S_JK = "Stetson_JK"
-    # S_HK = "Stetson_HK"
-
-    # q2_all_indices = (
-    #     (ds["count"]["N_J"] > 50)
-    #     & (ds["count"]["N_J"] < 150)
-    #     & (ds["count"]["N_H"] > 50)
-    #     & (ds["count"]["N_H"] < 150)
-    #     & (ds["count"]["N_K"] > 50)
-    #     & (ds["count"]["N_K"] < 150)
-    #     & (ds["max"]["JPPERRBITS"] == 0)
-    #     & (ds["max"]["HPPERRBITS"] == 0)
-    #     & (ds["max"]["KPPERRBITS"] == 0)
-    #     & (ds["median"]["PSTAR"] > 0.75)
-    # )
-
-    # variable_indices = q2_all_indices & (
-    #     (ds[v][S_JHK] > 2)
-    #     | (ds[v][S_JH] > 2)
-    #     | (ds[v][S_HK] > 2)
-    #     | (ds[v][S_JK] > 2)
-    #     | (ds[v]["J_red_chisq"] > 2)
-    #     | (ds[v]["H_red_chisq"] > 2)
-    #     | (ds[v]["K_red_chisq"] > 2)
-    # )
-
-
-# most of the above is a mess and I'll have to figure out who's calling what, but for now:
-
-
 def select_q2_old(ds):
     # implements specifically the ONC Q2 criterion, minus the location-based constraint
 
@@ -468,6 +387,13 @@ def select_q1_old(ds):
 
 
 ###### we're trying a new approach here.
+
+
+
+### TODO PROMPTLY:
+# I need to revise these so that I can pass a min_Stetson criterion to sq2_variables()
+# and it goes through properly. 
+# Choosing *args, **kwargs was lazy and I'm gonna have to refactor.
 
 
 def sq0(ds, min_nobs, max_nobs):
@@ -550,49 +476,49 @@ def sq2(*args, **kwargs):
     return q2
 
 
-def sv_j(ds, red_chisq_cutoff=np.nan):
+def sv_j(ds, red_chisq_cutoff=10):
 
     v_j = ds["variability"]["J_red_chisq"] > red_chisq_cutoff
 
     return v_j
 
 
-def sv_h(ds, red_chisq_cutoff=7.5):
+def sv_h(ds, red_chisq_cutoff=10):
 
     v_h = ds["variability"]["H_red_chisq"] > red_chisq_cutoff
 
     return v_h
 
 
-def sv_k(ds, red_chisq_cutoff=7.5):
+def sv_k(ds, red_chisq_cutoff=10):
 
     v_k = ds["variability"]["K_red_chisq"] > red_chisq_cutoff
 
     return v_k
 
 
-def sv_jh(ds, Stetson_cutoff=5):
+def sv_jh(ds, Stetson_cutoff=3):
 
     v_jh = ds["variability"]["Stetson_JH"] > Stetson_cutoff
 
     return v_jh
 
 
-def sv_hk(ds, Stetson_cutoff=5):
+def sv_hk(ds, Stetson_cutoff=3):
 
     v_hk = ds["variability"]["Stetson_HK"] > Stetson_cutoff
 
     return v_hk
 
 
-def sv_jk(ds, Stetson_cutoff=5):
+def sv_jk(ds, Stetson_cutoff=3):
 
     v_jk = ds["variability"]["Stetson_JK"] > Stetson_cutoff
 
     return v_jk
 
 
-def sv_jhk(ds, Stetson_cutoff=6):
+def sv_jhk(ds, Stetson_cutoff=5):
 
     v_jhk = ds["variability"]["Stetson_JHK"] > Stetson_cutoff
 
@@ -605,9 +531,13 @@ def sq2_variables(*args, **kwargs):
 
     q2 = sq2(*args, **kwargs)
 
-    q2_vars = q2 & (
-        sv_jhk(ds) | sv_jk(ds) | sv_hk(ds) | sv_jh(ds) | sv_j(ds) | sv_h(ds) | sv_k(ds)
-    )
+    v_jh = sv_jh(ds)
+    v_hk = sv_hk(ds)
+    v_jk = sv_jk(ds)
+
+    v_jhk = sv_jhk(ds)
+
+    q2_vars = q2 & (v_jhk | v_jk | v_hk | v_jh)
 
     return q2_vars
 
@@ -620,10 +550,6 @@ def sq1_variables(*args, **kwargs):
     q1_h = sq1_h(*args, **kwargs)
     q1_k = sq1_k(*args, **kwargs)
 
-    v_j = sv_j(ds)
-    v_h = sv_h(ds)
-    v_k = sv_k(ds)
-
     v_jh = sv_jh(ds)
     v_hk = sv_hk(ds)
     v_jk = sv_jk(ds)
@@ -631,13 +557,10 @@ def sq1_variables(*args, **kwargs):
     v_jhk = sv_jhk(ds)
 
     q1_vars = (
-        (q1_j & v_j)
-        | (q1_h & v_h)
-        | (q1_k & v_k)
+        (q1_j & q1_h & q1_k & v_jhk)
         | (q1_j & q1_h & v_jh)
         | (q1_j & q1_k & v_jk)
         | (q1_h & q1_k & v_hk)
-        | (q1_j & q1_h & q1_k & v_jhk)
     )
 
     return q1_vars
@@ -664,6 +587,7 @@ def sq0_variables(*args, **kwargs):
     return q0_vars
 
 
+# This one was mainly used for exploratory purposes. See e.g., prototypes/Exploring K-only single band variables chisq.ipynb.
 def sq1_k_variables_only(*args, **kwargs):
     ds = args[0]
 
