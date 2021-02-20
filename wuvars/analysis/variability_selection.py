@@ -389,14 +389,13 @@ def select_q1_old(ds):
 ###### we're trying a new approach here.
 
 
-
 ### TODO PROMPTLY:
 # I need to revise these so that I can pass a min_Stetson criterion to sq2_variables()
-# and it goes through properly. 
+# and it goes through properly.
 # Choosing *args, **kwargs was lazy and I'm gonna have to refactor.
 
 
-def sq0(ds, min_nobs, max_nobs):
+def sq0(ds, min_nobs, max_nobs, **kwargs):
     q0 = (
         (ds["count"]["N_J"] >= min_nobs)
         | (ds["count"]["N_H"] >= min_nobs)
@@ -407,7 +406,14 @@ def sq0(ds, min_nobs, max_nobs):
 
 
 def sq1_j(
-    ds, min_nobs, max_nobs, bright_limit=11, J_limit=18.5, H_limit=18, K_limit=17.75
+    ds,
+    min_nobs,
+    max_nobs,
+    bright_limit=11,
+    J_limit=18.5,
+    H_limit=18,
+    K_limit=17.75,
+    **kwargs,
 ):
 
     q1_j = (
@@ -422,7 +428,14 @@ def sq1_j(
 
 
 def sq1_h(
-    ds, min_nobs, max_nobs, bright_limit=11, J_limit=18.5, H_limit=18, K_limit=17.75
+    ds,
+    min_nobs,
+    max_nobs,
+    bright_limit=11,
+    J_limit=18.5,
+    H_limit=18,
+    K_limit=17.75,
+    **kwargs,
 ):
 
     q1_h = (
@@ -437,7 +450,14 @@ def sq1_h(
 
 
 def sq1_k(
-    ds, min_nobs, max_nobs, bright_limit=11, J_limit=18.5, H_limit=18, K_limit=17.75
+    ds,
+    min_nobs,
+    max_nobs,
+    bright_limit=11,
+    J_limit=18.5,
+    H_limit=18,
+    K_limit=17.75,
+    **kwargs,
 ):
 
     q1_k = (
@@ -476,49 +496,54 @@ def sq2(*args, **kwargs):
     return q2
 
 
-def sv_j(ds, red_chisq_cutoff=10):
+def sv_j(ds, red_chisq_cutoff=10, **kwargs):
 
     v_j = ds["variability"]["J_red_chisq"] > red_chisq_cutoff
 
     return v_j
 
 
-def sv_h(ds, red_chisq_cutoff=10):
+def sv_h(ds, red_chisq_cutoff=10, **kwargs):
 
     v_h = ds["variability"]["H_red_chisq"] > red_chisq_cutoff
 
     return v_h
 
 
-def sv_k(ds, red_chisq_cutoff=10):
+def sv_k(ds, red_chisq_cutoff=10, **kwargs):
 
     v_k = ds["variability"]["K_red_chisq"] > red_chisq_cutoff
 
     return v_k
 
 
-def sv_jh(ds, Stetson_cutoff=3):
+def sv_jh(ds, Stetson_cutoff=3, **kwargs):
+    print(f"Stetson_cutoff={Stetson_cutoff}")
 
     v_jh = ds["variability"]["Stetson_JH"] > Stetson_cutoff
 
     return v_jh
 
 
-def sv_hk(ds, Stetson_cutoff=3):
+def sv_hk(ds, Stetson_cutoff=3, **kwargs):
+    print(f"Stetson_cutoff={Stetson_cutoff}")
 
     v_hk = ds["variability"]["Stetson_HK"] > Stetson_cutoff
 
     return v_hk
 
 
-def sv_jk(ds, Stetson_cutoff=3):
+def sv_jk(ds, Stetson_cutoff=3, **kwargs):
+    print(f"Stetson_cutoff={Stetson_cutoff}")
 
     v_jk = ds["variability"]["Stetson_JK"] > Stetson_cutoff
 
     return v_jk
 
 
-def sv_jhk(ds, Stetson_cutoff=5):
+def sv_jhk(ds, Stetson_cutoff=5, **kwargs):
+
+    print(f"Stetson_cutoff={Stetson_cutoff}")
 
     v_jhk = ds["variability"]["Stetson_JHK"] > Stetson_cutoff
 
@@ -531,11 +556,11 @@ def sq2_variables(*args, **kwargs):
 
     q2 = sq2(*args, **kwargs)
 
-    v_jh = sv_jh(ds)
-    v_hk = sv_hk(ds)
-    v_jk = sv_jk(ds)
+    v_jh = sv_jh(ds, **kwargs)
+    v_hk = sv_hk(ds, **kwargs)
+    v_jk = sv_jk(ds, **kwargs)
 
-    v_jhk = sv_jhk(ds)
+    v_jhk = sv_jhk(ds, **kwargs)
 
     q2_vars = q2 & (v_jhk | v_jk | v_hk | v_jh)
 
@@ -550,11 +575,11 @@ def sq1_variables(*args, **kwargs):
     q1_h = sq1_h(*args, **kwargs)
     q1_k = sq1_k(*args, **kwargs)
 
-    v_jh = sv_jh(ds)
-    v_hk = sv_hk(ds)
-    v_jk = sv_jk(ds)
+    v_jh = sv_jh(ds, **kwargs)
+    v_hk = sv_hk(ds, **kwargs)
+    v_jk = sv_jk(ds, **kwargs)
 
-    v_jhk = sv_jhk(ds)
+    v_jhk = sv_jhk(ds, **kwargs)
 
     q1_vars = (
         (q1_j & q1_h & q1_k & v_jhk)
@@ -572,15 +597,15 @@ def sq0_variables(*args, **kwargs):
 
     q0 = sq0(*args, **kwargs)
 
-    v_j = sv_j(ds)
-    v_h = sv_h(ds)
-    v_k = sv_k(ds)
+    v_j = sv_j(ds,  **kwargs)
+    v_h = sv_h(ds,  **kwargs)
+    v_k = sv_k(ds,  **kwargs)
 
-    v_jh = sv_jh(ds)
-    v_hk = sv_hk(ds)
-    v_jk = sv_jk(ds)
+    v_jh = sv_jh(ds,  **kwargs)
+    v_hk = sv_hk(ds,  **kwargs)
+    v_jk = sv_jk(ds,  **kwargs)
 
-    v_jhk = sv_jhk(ds)
+    v_jhk = sv_jhk(ds,  **kwargs)
 
     q0_vars = q0 & (v_j | v_h | v_k | v_jh | v_jk | v_hk | v_jhk)
 
@@ -595,15 +620,15 @@ def sq1_k_variables_only(*args, **kwargs):
     q1_h = sq1_h(*args, **kwargs)
     q1_k = sq1_k(*args, **kwargs)
 
-    v_j = sv_j(ds)
-    v_h = sv_h(ds)
-    v_k = sv_k(ds)
+    v_j = sv_j(ds, **kwargs)
+    v_h = sv_h(ds, **kwargs)
+    v_k = sv_k(ds, **kwargs)
 
-    v_jh = sv_jh(ds)
-    v_hk = sv_hk(ds)
-    v_jk = sv_jk(ds)
+    v_jh = sv_jh(ds, **kwargs)
+    v_hk = sv_hk(ds, **kwargs)
+    v_jk = sv_jk(ds, **kwargs)
 
-    v_jhk = sv_jhk(ds)
+    v_jhk = sv_jhk(ds, **kwargs)
 
     q1_k_only_vars = (
         (q1_k)
