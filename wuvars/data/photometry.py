@@ -10,14 +10,15 @@ from wuvars.data.photometry import v1
 
 import os
 from datetime import datetime
-from collections import namedtuple
+from recordclass import recordclass
 from astropy.table import Table
 
 wserv_ids = [1, 5, 7, 8, 11]
 
-Dataset = namedtuple(
+Dataset = recordclass(
     "Dataset", (f"wserv{n}" for n in wserv_ids), defaults=(None,) * len(wserv_ids)
 )
+
 
 v1 = Dataset()
 
@@ -41,6 +42,6 @@ for i, wserv in enumerate(wserv_ids):
     dat = Table.read(data_path)
     photometry_data.append(dat)
 
-    print(f"DONE (elapsed time: {datetime.now() - startTime})")
+    print(f"DONE (elapsed time: {(datetime.now() - startTime).total_seconds():.2f}s)")
 
     v1[i] = dat

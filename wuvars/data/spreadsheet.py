@@ -9,11 +9,11 @@ from datetime import datetime
 from astropy.table import Table
 import pandas as pd
 
-from collections import namedtuple
+from recordclass import recordclass
 
 wserv_ids = [1, 5, 7, 8, 11]
 
-Dataset = namedtuple(
+Dataset = recordclass(
     "Dataset", (f"wserv{n}" for n in wserv_ids), defaults=(None,) * len(wserv_ids)
 )
 
@@ -32,8 +32,6 @@ for i, wserv in enumerate(wserv_ids):
         f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_new_error_corrected_summary_spreadsheet.h5",
     )
 
-    ds = pd.read_hdf(spreadsheet_path, key='table')
+    ds = pd.read_hdf(spreadsheet_path, key="table")
 
-    
-
-wserv1, wserv5, wserv7, wserv8, wserv11 = spreadsheets
+    v1[i] = ds
