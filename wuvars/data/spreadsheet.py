@@ -33,5 +33,7 @@ for i, wserv in enumerate(wserv_ids):
     )
 
     ds = pd.read_hdf(spreadsheet_path, key="table")
+    # adjust post-facto for the missing 2/3 weight.
+    ds.loc[:, ("variability", "Stetson_JHK")] *= (1 / 1.5)
 
     v1[i] = ds
