@@ -13,6 +13,8 @@ from datetime import datetime
 from recordclass import recordclass
 from astropy.table import Table
 
+from wuvars.analysis.variability_selection import data_nuller
+
 wserv_ids = [1, 5, 7, 8, 11]
 
 Dataset = recordclass(
@@ -21,6 +23,8 @@ Dataset = recordclass(
 
 
 v1 = Dataset()
+
+v1_grouped = Dataset()
 
 
 data_root = (
@@ -40,8 +44,14 @@ for i, wserv in enumerate(wserv_ids):
     startTime = datetime.now()
 
     dat = Table.read(data_path)
-    photometry_data.append(dat)
+    v1[i] = dat
+    print("Grouping... ", end="", flush=True)
+
+    df = dat.to_pandas()
+    data_nuller(df)
+    dat_again = Table.from_pandas(df)
+    dat_by_source = dat_again.group_by("SOURCEID")
+    v1_grouped[i] = dat_by_source
 
     print(f"DONE (elapsed time: {(datetime.now() - startTime).total_seconds():.2f}s)")
 
-    v1[i] = dat
