@@ -396,6 +396,10 @@ def select_q1_old(ds):
 
 
 def sq0(ds, min_nobs, max_nobs, **kwargs):
+    """
+    Select stars which meet Q=0 data quality cut.
+
+    """
     q0 = (
         (ds["count"]["N_J"] >= min_nobs)
         | (ds["count"]["N_H"] >= min_nobs)
@@ -406,15 +410,12 @@ def sq0(ds, min_nobs, max_nobs, **kwargs):
 
 
 def sq1_j(
-    ds,
-    min_nobs,
-    max_nobs,
-    bright_limit=11,
-    J_limit=18.5,
-    H_limit=18,
-    K_limit=17.75,
-    **kwargs,
+    ds, min_nobs, max_nobs, bright_limit=11, J_limit=18.5, **kwargs,
 ):
+    """
+    Select stars which meet Q=1 data quality cut at J band.
+
+    """
 
     q1_j = (
         (ds["count"]["N_J"] >= min_nobs)
@@ -428,15 +429,12 @@ def sq1_j(
 
 
 def sq1_h(
-    ds,
-    min_nobs,
-    max_nobs,
-    bright_limit=11,
-    J_limit=18.5,
-    H_limit=18,
-    K_limit=17.75,
-    **kwargs,
+    ds, min_nobs, max_nobs, bright_limit=11, H_limit=18, **kwargs,
 ):
+    """
+    Select stars which meet Q=1 data quality cut at H band.
+
+    """
 
     q1_h = (
         (ds["count"]["N_H"] >= min_nobs)
@@ -450,15 +448,12 @@ def sq1_h(
 
 
 def sq1_k(
-    ds,
-    min_nobs,
-    max_nobs,
-    bright_limit=11,
-    J_limit=18.5,
-    H_limit=18,
-    K_limit=17.75,
-    **kwargs,
+    ds, min_nobs, max_nobs, bright_limit=11, K_limit=17.75, **kwargs,
 ):
+    """
+    Select stars which meet Q=1 data quality cut at K band.
+
+    """
 
     q1_k = (
         (ds["count"]["N_K"] >= min_nobs)
@@ -472,6 +467,10 @@ def sq1_k(
 
 
 def sq1(*args, **kwargs):
+    """
+    Select stars which meet Q=1 data quality cut.
+
+    """
 
     ds = args[0]
 
@@ -483,6 +482,10 @@ def sq1(*args, **kwargs):
 
 
 def sq2(*args, **kwargs):
+    """
+    Select stars which meet Q=2 data quality cut.
+
+    """
 
     ds = args[0]
 
@@ -497,6 +500,10 @@ def sq2(*args, **kwargs):
 
 
 def sv_j(ds, red_chisq_cutoff=10, **kwargs):
+    """
+    Select 1-band variable stars, given a minimum J-band reduced chi^2.
+
+    """
 
     v_j = ds["variability"]["J_red_chisq"] > red_chisq_cutoff
 
@@ -504,6 +511,10 @@ def sv_j(ds, red_chisq_cutoff=10, **kwargs):
 
 
 def sv_h(ds, red_chisq_cutoff=10, **kwargs):
+    """
+    Select 1-band variable stars, given a minimum H-band reduced chi^2.
+
+    """
 
     v_h = ds["variability"]["H_red_chisq"] > red_chisq_cutoff
 
@@ -511,6 +522,10 @@ def sv_h(ds, red_chisq_cutoff=10, **kwargs):
 
 
 def sv_k(ds, red_chisq_cutoff=10, **kwargs):
+    """
+    Select 1-band variable stars, given a minimum K-band reduced chi^2.
+
+    """
 
     v_k = ds["variability"]["K_red_chisq"] > red_chisq_cutoff
 
@@ -518,7 +533,10 @@ def sv_k(ds, red_chisq_cutoff=10, **kwargs):
 
 
 def sv_jh(ds, Stetson_cutoff=3, **kwargs):
-    print(f"Stetson_cutoff={Stetson_cutoff}")
+    """
+    Select 2-band variable stars, given a minimum JH Stetson index.
+
+    """
 
     v_jh = ds["variability"]["Stetson_JH"] > Stetson_cutoff
 
@@ -526,7 +544,10 @@ def sv_jh(ds, Stetson_cutoff=3, **kwargs):
 
 
 def sv_hk(ds, Stetson_cutoff=3, **kwargs):
-    print(f"Stetson_cutoff={Stetson_cutoff}")
+    """
+    Select 2-band variable stars, given a minimum HK Stetson index.
+
+    """
 
     v_hk = ds["variability"]["Stetson_HK"] > Stetson_cutoff
 
@@ -534,7 +555,10 @@ def sv_hk(ds, Stetson_cutoff=3, **kwargs):
 
 
 def sv_jk(ds, Stetson_cutoff=3, **kwargs):
-    print(f"Stetson_cutoff={Stetson_cutoff}")
+    """
+    Select 2-band variable stars, given a minimum JK Stetson index.
+
+    """
 
     v_jk = ds["variability"]["Stetson_JK"] > Stetson_cutoff
 
@@ -542,8 +566,10 @@ def sv_jk(ds, Stetson_cutoff=3, **kwargs):
 
 
 def sv_jhk(ds, Stetson_cutoff=5, **kwargs):
+    """
+    Select 3-band variable stars, given a minimum JHK Stetson index.
 
-    print(f"Stetson_cutoff={Stetson_cutoff}")
+    """
 
     v_jhk = ds["variability"]["Stetson_JHK"] > Stetson_cutoff
 
@@ -551,7 +577,10 @@ def sv_jhk(ds, Stetson_cutoff=5, **kwargs):
 
 
 def sq2_variables(*args, **kwargs):
+    """
+    Select variable stars (double or triple-band) which meet Q2 quality standards.
 
+    """
     ds = args[0]
 
     q2 = sq2(*args, **kwargs)
@@ -568,7 +597,10 @@ def sq2_variables(*args, **kwargs):
 
 
 def sq1_variables(*args, **kwargs):
+    """
+    Select variable stars (double or triple-band) which meet Q1 quality standards.
 
+    """
     ds = args[0]
 
     q1_j = sq1_j(*args, **kwargs)
@@ -592,20 +624,24 @@ def sq1_variables(*args, **kwargs):
 
 
 def sq0_variables(*args, **kwargs):
+    """
+    Select variable stars (single, double, or triple-band) which meet Q0 quality standards. 
+
+    """
 
     ds = args[0]
 
     q0 = sq0(*args, **kwargs)
 
-    v_j = sv_j(ds,  **kwargs)
-    v_h = sv_h(ds,  **kwargs)
-    v_k = sv_k(ds,  **kwargs)
+    v_j = sv_j(ds, **kwargs)
+    v_h = sv_h(ds, **kwargs)
+    v_k = sv_k(ds, **kwargs)
 
-    v_jh = sv_jh(ds,  **kwargs)
-    v_hk = sv_hk(ds,  **kwargs)
-    v_jk = sv_jk(ds,  **kwargs)
+    v_jh = sv_jh(ds, **kwargs)
+    v_hk = sv_hk(ds, **kwargs)
+    v_jk = sv_jk(ds, **kwargs)
 
-    v_jhk = sv_jhk(ds,  **kwargs)
+    v_jhk = sv_jhk(ds, **kwargs)
 
     q0_vars = q0 & (v_j | v_h | v_k | v_jh | v_jk | v_hk | v_jhk)
 
