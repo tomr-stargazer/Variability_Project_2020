@@ -54,4 +54,3 @@ for i, wserv in enumerate(wserv_ids):
     v1_grouped[i] = dat_by_source
 
     print(f"DONE (elapsed time: {(datetime.now() - startTime).total_seconds():.2f}s)")
-
