@@ -1,63 +1,216 @@
 """
-Given a coordinate pair, checks in 
+Tom is rewriting this around the following use-case.
 
-See also this astropy documentation guide: https://learn.astropy.org/Coordinates.html
-and this:
-https://docs.astropy.org/en/stable/coordinates/matchsep.html
+We'll input
+(a)  a list of literature catalogs of brown dwarfs, and
+(b) our own spreadsheet,
+and we'll expect as output
+(a) a list (table?) of successful cross-matches, and 
+(b) a list (table?) of failed cross-matches.
 
-and this function:
-https://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord.match_to_catalog_sky
 
 """
 
-import astropy.table
-import pandas as pd
+import os
+from collections import OrderedDict, namedtuple
+
 import numpy as np
+import pandas as pd
 
-def match(tab, ds):
+import astropy.table
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+
+
+Table_and_coord = namedtuple("Table_and_coord", ("table", "coords"))
+
+
+class TableMatcher(object):
     """
-    Matches a short input table `tab` with a long table/spreadsheet `ds`
-
-    Optimal use case: you care a lot about seeing every possible match from `tab` into
-    `ds`, and don't mind if the output is somewhat verbose.
+    Basically, I'm implementing the idea I'd written up in my notes.
 
     """
-    # tab: input table with columns of ra, dec in decimal degrees (for now)
-    # ds: "summary spreadsheet" pandas dataframe
 
-    # simply print the separation between the two
+    def __init__(self, spread_tc, aux_tables):
+        super(TableMatcher, self).__init__()
+        self.spread_tc = spread_tc
+        self.aux_tables = aux_tables
+        self.match_table = None
+        self.non_matches = None
+        self.BD_spreadsheet = None
 
-    # for each item in tab:
-    for item in tab:
+    def match(self):
+        """
+        We'll implement stuff here from my notes.
 
-        #    compute a distance between `item` and each element of `ds`.
+        """
+        BD_match_sourceids_list = []
+        non_matches_dict = {}
 
-        # for a locally flat approximation, the "rectangular" distance between two items 
-        # in RA, Dec space has a term `delta` which is the cosine of the declination.
+        for (name, aux_tc) in self.aux_tables.items():
 
-        # one degree longitudinal separation on the equator is longer than 
-        #   one degree longitudinal separation near the poles.
+            idx, d2d, d3d = aux_tc.coords.match_to_catalog_sky(self.spread_tc.coords)
 
-        delta = np.cos(item.dec)
+            max_sep = 1.0 * u.arcsec
+            sep_constraint = d2d < max_sep
 
-        dist = delta * (item.ra - ds.ra)**2 + ()
+            matches = self.spread_tc.table.iloc[idx[sep_constraint]]
+            non_matches = aux_tc.table[~sep_constraint]
+# 
+            # print("Matches: \n", matches, "\n\n")
+            print(f"Non-matches to {name}:", len(non_matches))
 
+            BD_match_sourceids_list.extend(matches.index)
+            non_matches_dict[name] = non_matches
 
+        BD_match_sourceids = np.unique(BD_match_sourceids_list)
+        BD_spreadsheet = self.spread_tc.table[
+            np.in1d(self.spread_tc.table.index, BD_match_sourceids)
+        ]
+        BD_coords = self.spread_tc.coords[
+            np.in1d(self.spread_tc.table.index, BD_match_sourceids)
+        ]
 
-# c = SkyCoord(...)
-# for i in range(len(c)):
-#     ra, dec = c.ra[i], c.dec[i]
-#     # do stuff
+        match_table = astropy.table.Table()
+        match_table["SOURCEID"] = BD_spreadsheet.index
+        match_table["RA"] = np.degrees(BD_spreadsheet["median"]["RA"])
+        match_table["DEC"] = np.degrees(BD_spreadsheet["median"]["DEC"])
+
+        for (name, aux_tc) in self.aux_tables.items():
+
+            # note that the catalog matching here is intentionally REVERSE of previous
+            idx, d2d, d3d = BD_coords.match_to_catalog_sky(aux_tc.coords)
+
+            max_sep = 1.0 * u.arcsec
+            sep_constraint = d2d < max_sep
+
+            # BD_matches = BD_coords[sep_constraint]
+            # aux_matches = aux_tc.coords[idx[sep_constraint]]
+
+            idx[~sep_constraint] = -99999
+
+            # print(np.max(d2d[sep_constraint].to(u.arcsec)))
+
+            match_table[f"{name}_index"] = idx
+
+        # print("Match table:\n", match_table)
+
+        self.match_table = match_table
+        self.BD_spreadsheet = BD_spreadsheet
+        self.non_matches = non_matches_dict
+
+        return None
+
 
 if __name__ == "__main__":
 
-    # Here's a dummy 'test' example.
+    # we'll prototype what goes here in a jupyter notebook.
+    # I'm mostly thinking it'll be NGC 1333 as an example.
 
-    tab = astropy.table.Table()
-    tab_ra = [1, 2, 3]
-    tab_dec = [1, 2, 3]
+    aux_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/data/auxiliary_catalogs/NGC1333"
 
-    tab.add_columns([tab_ra, tab_dec], names=["RA", "Dec"])
+    filepath_table4 = os.path.join(aux_path, "Scholz_2012ApJ_744_6S_table4.fit")
+    table4 = astropy.table.Table.read(filepath_table4)
+    coords_table4 = SkyCoord(ra=table4["RAJ2000"], dec=table4["DEJ2000"])
+    table4_tc = Table_and_coord(table4, coords_table4)
 
-    ds = pd.DataFrame()
-    ds.    
+    filepath_table2 = os.path.join(aux_path, "Scholz_2012ApJ_744_6S_table2.fit")
+    table2 = astropy.table.Table.read(filepath_table2)
+    coords_table2 = SkyCoord(ra=table2["RAJ2000"], dec=table2["DEJ2000"])
+    table2_tc = Table_and_coord(table2, coords_table2)
+
+    print(table2_tc.coords)
+    print(table4_tc.coords)
+
+    filepath_table1 = os.path.join(aux_path, "Scholz_2012ApJ_756_24S_table1.fit")
+    table1 = astropy.table.Table.read(filepath_table1)
+    coords_table1 = SkyCoord(ra=table1["RAJ2000"], dec=table1["DEJ2000"])
+    table1_tc = Table_and_coord(table1, coords_table1)
+
+    print(table1_tc.coords)
+
+    # this is a sufficient basis for me to now build my thing around.
+
+    aux_tables = OrderedDict()
+    aux_tables["Scholz_12a_table2"] = table2_tc
+    aux_tables["Scholz_12a_table4"] = table4_tc
+    aux_tables["Scholz_12b_table1"] = table1_tc
+
+    # now we grab our spreadsheet
+    from wuvars.data import spreadsheet
+
+    wserv = 7  # for NGC 1333
+    spread = spreadsheet.load_wserv_v2(wserv)
+    spreadsheet_coordinates = SkyCoord(
+        ra=spread["median"]["RA"].values * u.rad,
+        dec=spread["median"]["DEC"].values * u.rad,
+    )
+
+    spread_tc = Table_and_coord(spread, spreadsheet_coordinates)
+
+    if False:
+
+        # I think that everything below here can go in a method or function which takes
+        # the following as input:
+        #    spread_tc:  Table_and_coord of (pandas.DataFrame, SkyCoord)
+        #    aux_tables:  Table_and_coord of (astropy.Table, SkyCoord)
+        #
+        # and then "returns" (sets the variables in `self`) the following:
+        #    BD_spread_tc:  Table_and_coord of (pandas.DataFrame, SkyCoord)
+        #    match_table:
+
+        # ngc1333 = TableMatcher(spread_tc, aux_tables)
+        # ngc1333.match()
+        # ngc1333.match_table
+        # ngc1333.BD_spreadsheet
+        # ngc1333.non_matches_dict
+
+        BD_match_sourceids_list = []
+
+        non_matches_dict = {}
+
+        for (name, aux_tc) in aux_tables.items():
+
+            idx, d2d, d3d = aux_tc.coords.match_to_catalog_sky(spread_tc.coords)
+
+            max_sep = 1.0 * u.arcsec
+            sep_constraint = d2d < max_sep
+
+            matches = spread_tc.table.iloc[idx[sep_constraint]]
+            non_matches = aux_tc.table[~sep_constraint]
+
+            print("Matches: \n", matches, "\n\n")
+            print("Non-matches: \n", non_matches, "\n\n")
+
+            BD_match_sourceids_list.extend(matches.index)
+            non_matches_dict[name] = non_matches
+
+        BD_match_sourceids = np.unique(BD_match_sourceids_list)
+        BD_spreadsheet = spread_tc.table[
+            np.in1d(spread_tc.table.index, BD_match_sourceids)
+        ]
+        BD_coords = spread_tc.coords[np.in1d(spread_tc.table.index, BD_match_sourceids)]
+
+        match_table = astropy.table.Table()
+        match_table["SOURCEID"] = BD_spreadsheet.index
+        match_table["RA"] = np.degrees(BD_spreadsheet["median"]["RA"])
+        match_table["DEC"] = np.degrees(BD_spreadsheet["median"]["DEC"])
+
+        for (name, aux_tc) in aux_tables.items():
+
+            # note that the catalog matching here is intentionally REVERSE of previous
+            idx, d2d, d3d = BD_coords.match_to_catalog_sky(aux_tc.coords)
+
+            max_sep = 1.0 * u.arcsec
+            sep_constraint = d2d < max_sep
+
+            # BD_matches = BD_coords[sep_constraint]
+            # aux_matches = aux_tc.coords[idx[sep_constraint]]
+
+            idx[~sep_constraint] = -99999
+
+            print(np.max(d2d[sep_constraint].to(u.arcsec)))
+
+            match_table[f"{name}_index"] = idx
+
+        print("Match table:\n", match_table)
