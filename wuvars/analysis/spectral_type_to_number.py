@@ -40,14 +40,14 @@ def get_SpT_from_num(num):
     """
 
     if num < 10:
-        if type(num) == int:
+        if isinstance(num, int):
             return f"M{num}"
-        elif type(num) == float:
+        elif isinstance(num, float):
             return f"M{num:.1f}"
     elif num >= 10:
-        if type(num) == int:
+        if isinstance(num, int):
             return f"L{num-10}"
-        elif type(num) == float:
+        elif isinstance(num, float):
             return f"L{num-10:.1f}"
 
 
