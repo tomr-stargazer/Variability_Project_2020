@@ -14,6 +14,8 @@ and we'll expect as output
 import os
 from collections import OrderedDict, namedtuple
 
+import pdb
+
 import numpy as np
 import pandas as pd
 
@@ -22,7 +24,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 
-Table_and_coord = namedtuple("Table_and_coord", ("table", "coords"))
+# Table_and_coord = namedtuple("Table_and_coord", ("table", "coords"))
 
 
 class TableMatcher(object):
@@ -31,9 +33,9 @@ class TableMatcher(object):
 
     """
 
-    def __init__(self, spread_tc, aux_tables):
+    def __init__(self, spread, aux_tables):
         super(TableMatcher, self).__init__()
-        self.spread_tc = spread_tc
+        self.spread = spread
         self.aux_tables = aux_tables
         self.match_table = None
         self.non_matches = None
@@ -47,15 +49,15 @@ class TableMatcher(object):
         BD_match_sourceids_list = []
         non_matches_dict = {}
 
-        for (name, aux_tc) in self.aux_tables.items():
+        for (name, aux_table) in self.aux_tables.items():
 
-            idx, d2d, d3d = aux_tc.coords.match_to_catalog_sky(self.spread_tc.coords)
+            idx, d2d, d3d = aux_table.coords.match_to_catalog_sky(self.spread.coords)
 
             max_sep = 1.0 * u.arcsec
             sep_constraint = d2d < max_sep
 
-            matches = self.spread_tc.table.iloc[idx[sep_constraint]]
-            non_matches = aux_tc.table[~sep_constraint]
+            matches = self.spread.iloc[idx[sep_constraint]]
+            non_matches = aux_table[~sep_constraint]
 # 
             # print("Matches: \n", matches, "\n\n")
             print(f"Non-matches to {name}:", len(non_matches))
@@ -64,11 +66,11 @@ class TableMatcher(object):
             non_matches_dict[name] = non_matches
 
         BD_match_sourceids = np.unique(BD_match_sourceids_list)
-        BD_spreadsheet = self.spread_tc.table[
-            np.in1d(self.spread_tc.table.index, BD_match_sourceids)
+        BD_spreadsheet = self.spread[
+            np.in1d(self.spread.index, BD_match_sourceids)
         ]
-        BD_coords = self.spread_tc.coords[
-            np.in1d(self.spread_tc.table.index, BD_match_sourceids)
+        BD_coords = self.spread.coords[
+            np.in1d(self.spread.index, BD_match_sourceids)
         ]
 
         match_table = astropy.table.Table()
@@ -76,22 +78,27 @@ class TableMatcher(object):
         match_table["RA"] = np.degrees(BD_spreadsheet["median"]["RA"])
         match_table["DEC"] = np.degrees(BD_spreadsheet["median"]["DEC"])
 
-        for (name, aux_tc) in self.aux_tables.items():
+        for (name, aux_table) in self.aux_tables.items():
 
             # note that the catalog matching here is intentionally REVERSE of previous
-            idx, d2d, d3d = BD_coords.match_to_catalog_sky(aux_tc.coords)
+            idx, d2d, d3d = BD_coords.match_to_catalog_sky(aux_table.coords)
 
             max_sep = 1.0 * u.arcsec
             sep_constraint = d2d < max_sep
 
             # BD_matches = BD_coords[sep_constraint]
-            # aux_matches = aux_tc.coords[idx[sep_constraint]]
+            # aux_matches = aux_table.coords[idx[sep_constraint]]
+
+            mask_these_as_false = ~sep_constraint
 
             idx[~sep_constraint] = -99999
+            idx_masked = np.ma.masked_array(idx, mask=mask_these_as_false)
+
+            # pdb.set_trace()
 
             # print(np.max(d2d[sep_constraint].to(u.arcsec)))
 
-            match_table[f"{name}_index"] = idx
+            match_table[f"{name}_index"] = idx_masked
 
         # print("Match table:\n", match_table)
 
@@ -111,42 +118,42 @@ if __name__ == "__main__":
 
     filepath_table4 = os.path.join(aux_path, "Scholz_2012ApJ_744_6S_table4.fit")
     table4 = astropy.table.Table.read(filepath_table4)
-    coords_table4 = SkyCoord(ra=table4["RAJ2000"], dec=table4["DEJ2000"])
-    table4_tc = Table_and_coord(table4, coords_table4)
+    table4.coords = SkyCoord(ra=table4["RAJ2000"], dec=table4["DEJ2000"])
+    # table4_tc = Table_and_coord(table4, coords_table4)
 
     filepath_table2 = os.path.join(aux_path, "Scholz_2012ApJ_744_6S_table2.fit")
     table2 = astropy.table.Table.read(filepath_table2)
-    coords_table2 = SkyCoord(ra=table2["RAJ2000"], dec=table2["DEJ2000"])
-    table2_tc = Table_and_coord(table2, coords_table2)
+    table2.coords = SkyCoord(ra=table2["RAJ2000"], dec=table2["DEJ2000"])
+    # table2_tc = Table_and_coord(table2, coords_table2)
 
-    print(table2_tc.coords)
-    print(table4_tc.coords)
+    # print(table2.coords)
+    # print(table4.coords)
 
     filepath_table1 = os.path.join(aux_path, "Scholz_2012ApJ_756_24S_table1.fit")
     table1 = astropy.table.Table.read(filepath_table1)
-    coords_table1 = SkyCoord(ra=table1["RAJ2000"], dec=table1["DEJ2000"])
-    table1_tc = Table_and_coord(table1, coords_table1)
+    table1.coords = SkyCoord(ra=table1["RAJ2000"], dec=table1["DEJ2000"])
+    # table1_tc = Table_and_coord(table1, coords_table1)
 
-    print(table1_tc.coords)
+    # print(table1.coords)
 
     # this is a sufficient basis for me to now build my thing around.
 
     aux_tables = OrderedDict()
-    aux_tables["Scholz_12a_table2"] = table2_tc
-    aux_tables["Scholz_12a_table4"] = table4_tc
-    aux_tables["Scholz_12b_table1"] = table1_tc
+    aux_tables["Scholz_12a_table2"] = table2
+    aux_tables["Scholz_12a_table4"] = table4
+    aux_tables["Scholz_12b_table1"] = table1
 
     # now we grab our spreadsheet
     from wuvars.data import spreadsheet
 
     wserv = 7  # for NGC 1333
     spread = spreadsheet.load_wserv_v2(wserv)
-    spreadsheet_coordinates = SkyCoord(
+    spread.coords = SkyCoord(
         ra=spread["median"]["RA"].values * u.rad,
         dec=spread["median"]["DEC"].values * u.rad,
     )
 
-    spread_tc = Table_and_coord(spread, spreadsheet_coordinates)
+    # spread_tc = Table_and_coord(spread, spreadsheet_coordinates)
 
     if False:
 
@@ -167,39 +174,39 @@ if __name__ == "__main__":
 
         BD_match_sourceids_list = []
 
-        non_matches_dict = {}
+        # non_matches_dict = {}
 
-        for (name, aux_tc) in aux_tables.items():
+        for (name, aux_table) in aux_tables.items():
 
-            idx, d2d, d3d = aux_tc.coords.match_to_catalog_sky(spread_tc.coords)
+            idx, d2d, d3d = aux_table.coords.match_to_catalog_sky(spread.coords)
 
             max_sep = 1.0 * u.arcsec
             sep_constraint = d2d < max_sep
 
-            matches = spread_tc.table.iloc[idx[sep_constraint]]
-            non_matches = aux_tc.table[~sep_constraint]
+            aux_table.matches = spread.iloc[idx[sep_constraint]]
+            aux_table.non_matches = aux_table[~sep_constraint]
 
-            print("Matches: \n", matches, "\n\n")
-            print("Non-matches: \n", non_matches, "\n\n")
+            # print("Matches: \n", matches, "\n\n")
+            # print("Non-matches: \n", non_matches, "\n\n")
 
-            BD_match_sourceids_list.extend(matches.index)
-            non_matches_dict[name] = non_matches
+            BD_match_sourceids_list.extend(aux_table.matches.index)
+            # non_matches_dict[name] = non_matches
 
         BD_match_sourceids = np.unique(BD_match_sourceids_list)
-        BD_spreadsheet = spread_tc.table[
-            np.in1d(spread_tc.table.index, BD_match_sourceids)
+        BD_spreadsheet = spread[
+            np.in1d(spread.index, BD_match_sourceids)
         ]
-        BD_coords = spread_tc.coords[np.in1d(spread_tc.table.index, BD_match_sourceids)]
+        BD_coords = spread.coords[np.in1d(spread.index, BD_match_sourceids)]
 
         match_table = astropy.table.Table()
         match_table["SOURCEID"] = BD_spreadsheet.index
         match_table["RA"] = np.degrees(BD_spreadsheet["median"]["RA"])
         match_table["DEC"] = np.degrees(BD_spreadsheet["median"]["DEC"])
 
-        for (name, aux_tc) in aux_tables.items():
+        for (name, aux_table) in aux_tables.items():
 
             # note that the catalog matching here is intentionally REVERSE of previous
-            idx, d2d, d3d = BD_coords.match_to_catalog_sky(aux_tc.coords)
+            idx, d2d, d3d = BD_coords.match_to_catalog_sky(aux_table.coords)
 
             max_sep = 1.0 * u.arcsec
             sep_constraint = d2d < max_sep
