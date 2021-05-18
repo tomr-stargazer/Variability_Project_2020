@@ -1,0 +1,81 @@
+Title: A Census of Young Stars and Brown Dwarfs in IC 348 and NGC 1333  
+Authors: Luhman K.L., Esplin T.L., Loutrel N.P. 
+Table: Candidate Members of NGC 1333
+================================================================================
+Byte-by-byte Description of file: apjaa2cabt5_mrt.txt
+--------------------------------------------------------------------------------
+   Bytes Format Units   Label      Explanations
+--------------------------------------------------------------------------------
+   1- 30 A30    ---     Name       Source name (1)
+  32- 33 I2     h       RAh        Hour of Right Ascension (J2000) 
+  35- 36 I2     min     RAm        Minute of Right Ascension (J2000) 
+  38- 42 F5.2   s       RAs        Second of Right Ascension (J2000) 
+  44- 44 A1     ---     DE-        Sign of the Declination (J2000)
+  45- 46 I2     deg     DEd        Degree of Declination (J2000) 
+  48- 49 I2     arcmin  DEm        Arcminute of Declination (J2000) 
+  51- 54 F4.1   arcsec  DEs        Arcsecond of Declination (J2000)
+  56- 73 A18    ---     Strom      Name from Strom et al. (1974ApJ...191..111S)
+  75- 81 A7     ---     Aspin      Name from Aspin et al. (1994A&AS..106..165A)
+  83- 93 A11    ---     Lada       Name from Lada et al. (1996AJ....111.1964L)
+  95-101 A7     ---     Wilking    Name from Wilking et al. (2004AJ....127.1131W)
+ 103-115 A13    ---     Gutermuth  Name from Gutermuth et al. (2008ApJ...674..336G)
+ 117-128 A12    ---     Oasa       Name from Oasa et al. (2008AJ....136.1372O)
+ 130-142 A13    ---     Evans      Name from Evans et al. (2009ApJS..181..321E)
+ 144-156 A13    ---     Winston    Name from Winston et al. (2010AJ....140..266W)
+ 158-183 A26    ---     Rebull     Name from Rebull et al. (2015AJ....150..175R)
+ 185-194 A10    ---     Selection  Basis of selection (2)
+ 196-200 F5.2   mag     Jmag       ? J magnitude
+ 202-205 F4.2   mag   e_Jmag       ? Uncertainty in Jmag
+ 207-211 F5.2   mag     Hmag       ? H magnitude
+ 213-216 F4.2   mag   e_Hmag       ? Uncertainty in Hmag
+ 218-222 F5.2   mag     Ksmag      Ks magnitude
+ 224-227 F4.2   mag   e_Ksmag      Uncertainty in Ksmag
+ 229-231 A3     ---     JHKref     JHK reference (3)
+--------------------------------------------------------------------------------
+Note (1): Coordinate-based identifications from the 2MASS Point Source Catalog 
+    when available. Otherwise, identifications are based on the coordinates 
+    measured from the WIRCam images in this work.
+Note (2): Sources were selected as candidate members based on:
+    X     = X-ray emission -- Getman et al. (2002ApJ...575..354G),
+            Winston et al. (2010AJ....140..266W), K. Getman (in preparation);
+    IR    = mid-IR excess emission -- Gutermuth et al. (2008ApJ...674..336G), 
+            Evans et al.(2009ApJS..181..321E);
+    CMD   = color-magnitude diagrams in this work, Figure 3;
+    pm[?] = proper motions in this work, Figure 4.
+Note (3): JHK reference:
+    2 = 2MASS Point Source Catalog; 
+    u = UKIDSS Data Release 10;
+    w = WIRCam data from this work.
+--------------------------------------------------------------------------------
+NGC 1333 IRS J03282780+3120559 03 28 27.80 +31 20 55.9                                                                                                                                  CMD        20.66 0.05 18.82 0.03 17.67 0.03 www 
+NGC 1333 IRS J03283448+3117432 03 28 34.48 +31 17 43.2                                                [GMM2008] 41                                                                      IR,pm      20.03 0.03 17.17 0.03 15.32 0.03 www 
+NGC 1333 IRS J03283740+3116050 03 28 37.40 +31 16 05.0                                                                                                                                  pm?                              17.46 0.03 w   
+NGC 1333 IRS J03284011+3115132 03 28 40.11 +31 15 13.2                                                                                                                                  CMD,pm     20.32 0.03 17.73 0.03 16.27 0.03 www 
+2MASS J03284022+3125490        03 28 40.22 +31 25 49.0                                                                                                       SSTYSV J032840.23+312549.0 CMD,pm?    15.43 0.03 13.86 0.03 12.84 0.02 wwu 
+NGC 1333 IRS J03284076+3124203 03 28 40.76 +31 24 20.3                                                                                                       SSTYSV J032840.77+312420.1 CMD        20.87 0.04 18.94 0.03 17.76 0.03 www 
+NGC 1333 IRS J03284353+3125010 03 28 43.53 +31 25 01.0                                                                                                                                  CMD        21.05 0.08 19.44 0.07 18.48 0.03 www 
+NGC 1333 IRS J03284719+3118459 03 28 47.19 +31 18 45.9                    ASR 66              MBO 221                                                        SSTYSV J032847.19+311845.9 pm         21.06 0.08 17.59 0.03 15.46 0.03 www 
+NGC 1333 IRS J03284883+3117537 03 28 48.83 +31 17 53.7                                                                                                       SSTYSV J032848.83+311753.7 IR,CMD     20.65 0.05 19.37 0.05 18.13 0.03 www 
+NGC 1333 IRS J03284926+3112388 03 28 49.26 +31 12 38.8                                                                                                                                  pm                    18.46 0.03 16.67 0.03 ww  
+NGC 1333 IRS J03285113+3127047 03 28 51.13 +31 27 04.7                                                                                                                                  pm?                              18.97 0.04 w   
+NGC 1333 IRS J03285358+3112147 03 28 53.58 +31 12 14.7                    ASR 97                      [GMM2008] 56                                           SSTYSV J032853.57+311214.6 IR,CMD,pm  19.51 0.03 17.00 0.03 15.41 0.03 www 
+NGC 1333 IRS J03285508+3114163 03 28 55.08 +31 14 16.3                    ASR 50                      [GMM2008] 145                            [WMW2010] 162 SSTYSV J032855.08+311416.4 X,pm?                            15.87 0.02 u   
+NGC 1333 IRS J03285513+3115027 03 28 55.13 +31 15 02.7                    ASR 134                                                                            SSTYSV J032855.13+311502.7 pm?                              16.04 0.02 u   
+NGC 1333 IRS J03285556+3123216 03 28 55.56 +31 23 21.6                                                                                                       SSTYSV J032855.55+312321.6 pm?        21.03 0.06 18.25 0.03 16.57 0.03 www 
+NGC 1333 IRS J03285709+3121250 03 28 57.09 +31 21 25.0                                        MBO 199 [GMM2008] 22                                           SSTYSV J032857.09+312124.9 IR,pm                 19.22 0.04 16.51 0.03 ww  
+NGC 1333 IRS J03285772+3118172 03 28 57.72 +31 18 17.2                                                              [OTS2008] 19                             SSTYSV J032857.72+311817.2 CMD        20.19 0.03 18.90 0.03 17.92 0.03 www 
+NGC 1333 IRS J03285895+3129076 03 28 58.95 +31 29 07.6                                        MBO 192                                                        SSTYSV J032858.95+312907.6 pm?        20.42 0.03 17.73 0.03 16.12 0.03 www 
+NGC 1333 IRS J03290125+3122572 03 29 01.25 +31 22 57.2                                                                                                                                  pm?                   19.67 0.11 18.49 0.04 ww  
+NGC 1333 IRS J03290725+3124098 03 29 07.25 +31 24 09.8                                        MBO 216                                                        SSTYSV J032907.24+312409.7 IR,CMD,pm  20.76 0.04 18.51 0.03 16.56 0.03 www 
+NGC 1333 IRS J03290941+3112502 03 29 09.41 +31 12 50.2                                                                                                       SSTYSV J032909.40+311250.1 pm         20.89 0.04 18.14 0.03 16.70 0.03 www 
+2MASS J03290964+3122564        03 29 09.64 +31 22 56.4 [SVS76] NGC 1333 7         [LAL96] 226 MBO 7   [GMM2008] 95               [EDJ2009] 213               SSTYSV J032909.64+312256.4 IR,CMD,pm? 11.27 0.02 10.16 0.03  9.53 0.02 222 
+NGC 1333 IRS J03291180+3122036 03 29 11.80 +31 22 03.6                                                                                                                                  CMD        18.07 0.03 17.01 0.03 16.53 0.04 www 
+2MASS J03291184+3121557        03 29 11.84 +31 21 55.7                                        MBO 81                                                         SSTYSV J032911.86+312155.7 IR                    17.90 0.04 15.02 0.03 ww  
+NGC 1333 IRS J03291317+3119495 03 29 13.17 +31 19 49.5                    ASR 84              MBO 168                                                        SSTYSV J032913.16+311949.4 IR,pm      21.52 0.11 17.92 0.03 15.82 0.03 www 
+NGC 1333 IRS J03291331+3117161 03 29 13.31 +31 17 16.1                    ASR 27                                    [OTS2008] 62                             SSTYSV J032913.30+311716.1 pm?        20.86 0.05 17.81 0.03 16.23 0.03 www 
+2MASS J03291532+3129346        03 29 15.32 +31 29 34.6                                        MBO 158 [GMM2008] 107                                          SSTYSV J032915.34+312934.7 IR,pm?     20.53 0.04 17.78 0.03 15.92 0.03 www 
+NGC 1333 IRS J03291565+3119110 03 29 15.65 +31 19 11.0                    ASR 59              MBO 218 [GMM2008] 108                                          SSTYSV J032915.64+311911.0 IR,pm                 19.09 0.04 16.69 0.03 ww  
+NGC 1333 IRS J03291866+3120215 03 29 18.66 +31 20 21.5                                        MBO 154                                                        SSTYSV J032918.65+312021.8 IR,CMD,pm  19.91 0.03 17.24 0.03 15.76 0.03 www 
+NGC 1333 IRS J03293317+3125495 03 29 33.17 +31 25 49.5                                                                                                                                  CMD        20.80 0.05 19.37 0.04 18.37 0.03 www 
+NGC 1333 IRS J03293560+3112128 03 29 35.60 +31 12 12.8                                                                                                       SSTYSV J032935.60+311213.0 pm?                              18.98 0.04 w   
+NGC 1333 IRS J03294217+3117205 03 29 42.17 +31 17 20.5                                                                                                                                  CMD        18.72 0.03 17.82 0.03 17.12 0.03 www 

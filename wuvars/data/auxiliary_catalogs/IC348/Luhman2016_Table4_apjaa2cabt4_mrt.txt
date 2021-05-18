@@ -1,0 +1,57 @@
+Title: A Census of Young Stars and Brown Dwarfs in IC 348 and NGC 1333  
+Authors: Luhman K.L., Esplin T.L., Loutrel N.P. 
+Table: Candidate Members of IC 348
+================================================================================
+Byte-by-byte Description of file: apjaa2cabt4_mrt.txt
+--------------------------------------------------------------------------------
+   Bytes Format Units    Label   Explanations
+--------------------------------------------------------------------------------
+   1- 28 A28    ---      Name    Source name (1)
+  30- 31 I2     h        RAh     Hour of Right Ascension (J2000) 
+  33- 34 I2     min      RAm     Minute of Right Ascension (J2000) 
+  36- 40 F5.2   s        RAs     Second of Right Ascension (J2000) 
+  42- 42 A1     ---      DE-     Sign of the Declination (J2000)
+  43- 44 I2     deg      DEd     Degree of Declination (J2000) 
+  46- 47 I2     arcmin   DEm     Arcminute of Declination (J2000) 
+  49- 52 F4.1   arcsec   DEs     Arcsecond of Declination (J2000)
+  54- 58 I5     ---      Luhman  Name based on Luhman et al.
+                                  (1998ApJ...508..347L) running IDs 
+  60- 66 A7     ---      Select  Basis of Selection (2) 
+  68- 72 F5.2   mag      Jmag    ? WIRCam J magnitude, this work 
+  74- 77 F4.2   mag    e_Jmag    ? Uncertainty in Jmag
+  79- 83 F5.2   mag      Hmag    WIRCam H magnitude, this work 
+  85- 88 F4.2   mag    e_Hmag    Uncertainty in Hmag 
+  90- 94 F5.2   mag      Ksmag   WIRCam Ks magnitude, this work 
+  96- 99 F4.2   mag    e_Ksmag   Uncertainty in Ksmag
+--------------------------------------------------------------------------------
+Note (1): Coordinate-based identifications from the 2MASS Point Source Catalog 
+    when available. Otherwise, identifications are based on the coordinates 
+    measured from the WIRCam images in this work.
+Note (2) Sources were selected as candidate members based on:
+    CMD   = color-magnitude diagrams in this work, Figure 2;
+    pm[?] = proper motions in this work, Figure 4.
+--------------------------------------------------------------------------------
+IC 348 IRS J03434428+3203424 03 43 44.28 +32 03 42.4 54299 pm                 18.52 0.04 15.74 0.03 
+2MASS J03435901+3158282      03 43 59.01 +31 58 28.2  1869 pm?     19.34 0.03 16.59 0.03 14.88 0.03 
+IC 348 IRS J03440704+3159242 03 44 07.04 +31 59 24.2 54486 pm?                19.21 0.05 17.68 0.03 
+IC 348 IRS J03441057+3157004 03 44 10.57 +31 57 00.4 54502 pm?     20.47 0.05 17.60 0.03 16.03 0.03 
+IC 348 IRS J03441387+3157170 03 44 13.87 +31 57 17.0 54532 pm      20.73 0.06 18.20 0.03 16.60 0.03 
+IC 348 IRS J03442154+3157381 03 44 21.54 +31 57 38.1 52567 pm      18.81 0.03 16.60 0.03 15.39 0.03 
+2MASS J03442217+3159371      03 44 22.17 +31 59 37.1 10418 pm?                18.42 0.03 15.90 0.03 
+IC 348 IRS J03442355+3157339 03 44 23.55 +31 57 33.9  1865 CMD,pm? 18.42 0.03 16.48 0.03 15.40 0.03 
+IC 348 IRS J03442539+3207245 03 44 25.39 +32 07 24.5 30053 CMD     20.58 0.04 19.31 0.04 18.44 0.03 
+IC 348 IRS J03442750+3200477 03 44 27.50 +32 00 47.7 22286 pm?     19.37 0.03 17.52 0.03 16.51 0.03 
+IC 348 IRS J03442790+3157489 03 44 27.90 +31 57 48.9 52620 pm      19.52 0.03 17.48 0.03 16.39 0.03 
+2MASS J03442811+3158306      03 44 28.11 +31 58 30.6  1886 pm?     20.11 0.03 16.73 0.03 14.87 0.03 
+IC 348 IRS J03443171+3204326 03 44 31.71 +32 04 32.6 30024 CMD     20.18 0.03 18.92 0.03 18.20 0.03 
+IC 348 IRS J03443276+3158294 03 44 32.76 +31 58 29.4 52641 pm                 19.25 0.04 17.48 0.03 
+IC 348 IRS J03443516+3211052 03 44 35.16 +32 11 05.2   596 CMD     19.91 0.03 18.70 0.03 17.82 0.03 
+IC 348 IRS J03443537+3158233 03 44 35.37 +31 58 23.3 52657 pm?                19.75 0.10 17.85 0.03 
+IC 348 IRS J03443631+3205066 03 44 36.31 +32 05 06.6 30030 CMD     20.31 0.03 19.16 0.03 18.19 0.03 
+2MASS J03444037+3157292      03 44 40.37 +31 57 29.2  1929 pm      19.35 0.03 16.65 0.03 15.15 0.03 
+IC 348 IRS J03444668+3201010 03 44 46.68 +32 01 01.0 40172 pm                 17.93 0.03 15.61 0.03 
+IC 348 IRS J03450146+3213418 03 45 01.46 +32 13 41.8 30124 CMD     20.52 0.05 19.23 0.04 18.27 0.03 
+IC 348 IRS J03450384+3200235 03 45 03.84 +32 00 23.5 40182 pm                 18.70 0.04 16.35 0.03 
+IC 348 IRS J03450403+3158129 03 45 04.03 +31 58 12.9 22639 pm      20.33 0.07 19.04 0.05 17.85 0.04 
+IC 348 IRS J03451226+3205502 03 45 12.26 +32 05 50.2 22766 CMD,pm? 18.51 0.03 16.46 0.03 15.40 0.03 
+IC 348 IRS J03451871+3205310 03 45 18.71 +32 05 31.0 22898 pm?     19.59 0.03 17.53 0.03 16.45 0.03 
