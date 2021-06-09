@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VOTABLE version="1.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.ivoa.net/xml/VOTable/v1.3"
+  xsi:schemaLocation="http://www.ivoa.net/xml/VOTable/v1.3 http://www.ivoa.net/xml/VOTable/v1.3">
+ <DESCRIPTION>
+   VizieR Astronomical Server vizier.u-strasbg.fr
+    Date: 2021-06-09T23:16:47 [V1.99+ (14-Oct-2013)]
+   Explanations and Statistics of UCDs:			See LINK below
+   In case of problem, please report to:	cds-question@unistra.fr
+   In this version, NULL integer columns are written as an empty string
+   &lt;TD&gt;&lt;/TD&gt;, explicitely possible from VOTable-1.3
+ </DESCRIPTION>
+<!-- VOTable description at http://www.ivoa.net/Documents/latest/VOT.html -->
+<INFO ID="VERSION" name="votable-version" value="1.99+ (14-Oct-2013)"/>
+<INFO ID="Ref" name="-ref" value="VIZ60c14b7a2895a2"/>
+<INFO ID="MaxTuples" name="-out.max" value="50"/>
+<INFO name="queryParameters" value="21">
+-oc.form=dec
+-out.max=50
+-nav=cat:J/AJ/132/2296&amp;tab:{J/AJ/132/2296/table2}&amp;key:source=J/AJ/132/2296&amp;HTTPPRM:&amp;
+-c.eq=J2000
+-c.r=  2
+-c.u=arcmin
+-c.geom=r
+-source=J/AJ/132/2296/table2
+-order=I
+-out=[AMO2006]
+-out=RAJ2000
+-out=DEJ2000
+-out=F110W
+-out=e_F110W
+-out=F160W
+-out=e_F160W
+-out=F165M
+-out=e_F165M
+-out=F207M
+-out=e_F207M
+-out=2MASS
+</INFO>
+
+<!--
+Execution Reports
+ -->
+
+<RESOURCE ID="yCat_51322296" name="J/AJ/132/2296">
+  <DESCRIPTION>NICMOS observations of Mon R2 cluster (Andersen+, 2006)</DESCRIPTION>
+  <COOSYS ID="J2000" system="eq_FK5" equinox="J2000"/>
+  <TABLE ID="J_AJ_132_2296_table2" name="J/AJ/132/2296/table2">
+    <DESCRIPTION>The HST/NICMOS photometry for Mon R2</DESCRIPTION>
+    <!-- Definitions of GROUPs and FIELDs -->
+
+<!-- +++No column could be found to attach a LINK in table: J/AJ/132/2296/table2 -->
+    <FIELD name="[AMO2006]" ucd="meta.id;meta.main" datatype="short" width="3"><!-- ucd="ID_MAIN" -->
+      <DESCRIPTION>Source identification</DESCRIPTION>
+    </FIELD>
+    <FIELD name="RAJ2000" ucd="pos.eq.ra;meta.main" ref="J2000" datatype="char" arraysize="11" unit="&quot;h:m:s&quot;"><!-- ucd="POS_EQ_RA_MAIN" -->
+      <DESCRIPTION>Hour of Right Ascension (J2000)</DESCRIPTION>
+    </FIELD>
+    <FIELD name="DEJ2000" ucd="pos.eq.dec;meta.main" ref="J2000" datatype="char" arraysize="11" unit="&quot;d:m:s&quot;"><!-- ucd="POS_EQ_DEC_MAIN" -->
+      <DESCRIPTION>Degree of Declination (J2000)</DESCRIPTION>
+    </FIELD>
+    <FIELD name="F110W" ucd="phot.mag;em.IR.J" datatype="float" width="5" precision="2" unit="mag"><!-- ucd="PHOT_MAG_J" -->
+      <DESCRIPTION>? HST/NICMOS F110W band magnitude 1100nm</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="e_F110W" ucd="stat.error" datatype="float" width="5" precision="2" unit="mag"><!-- ucd="ERROR" -->
+      <DESCRIPTION>? Uncertainty in F110W</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="F160W" ucd="phot.mag;em.IR.H" datatype="float" width="5" precision="2" unit="mag"><!-- ucd="PHOT_MAG_H" -->
+      <DESCRIPTION>? HST/NICMOS F160W band magnitude 1600nm</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="e_F160W" ucd="stat.error" datatype="float" width="6" precision="3" unit="mag"><!-- ucd="ERROR" -->
+      <DESCRIPTION>? Uncertainty in F160W</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="F165M" ucd="phot.mag;em.IR.H" datatype="float" width="5" precision="2" unit="mag"><!-- ucd="PHOT_MAG_H" -->
+      <DESCRIPTION>? HST/NICMOS F165M band magnitude 1650nm</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="e_F165M" ucd="stat.error" datatype="float" width="5" precision="2" unit="mag"><!-- ucd="ERROR" -->
+      <DESCRIPTION>? Uncertainty in F165M</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="F207M" ucd="phot.mag;em.IR.K" datatype="float" width="5" precision="2" unit="mag"><!-- ucd="PHOT_MAG_K" -->
+      <DESCRIPTION>HST/NICMOS F207M band magnitude 2070nm</DESCRIPTION>
+    </FIELD>
+    <FIELD name="e_F207M" ucd="stat.error" datatype="float" width="5" precision="2" unit="mag"><!-- ucd="ERROR" -->
+      <DESCRIPTION>Uncertainty in F207M</DESCRIPTION>
+    </FIELD>
+    <FIELD name="2MASS" ucd="meta.id" datatype="char" arraysize="17*"><!-- ucd="ID_ALTERNATIVE" -->
+      <DESCRIPTION>The 2MASS identification</DESCRIPTION>
+      <LINK href="http://vizier.u-strasbg.fr/viz-bin/VizieR-5?-info=XML&amp;-out.add=.&amp;-source=II/246&amp;2MASS=J${2MASS}"/>
+    </FIELD>
+<DATA><TABLEDATA>
+<TR><TD>1</TD><TD>06 07 44.98</TD><TD>-06 23 25.8</TD><TD>23.11</TD><TD>0.51</TD><TD>17.32</TD><TD>0.050</TD><TD>17.10</TD><TD>0.05</TD><TD>14.47</TD><TD>0.06</TD><TD>06074492-0623257</TD></TR>
+<TR><TD>2</TD><TD>06 07 45.63</TD><TD>-06 23 25.1</TD><TD>24.55</TD><TD>1.21</TD><TD>19.77</TD><TD>0.070</TD><TD>19.41</TD><TD>0.07</TD><TD>17.07</TD><TD>0.07</TD><TD></TD></TR>
+<TR><TD>3</TD><TD>06 07 43.89</TD><TD>-06 23 26.8</TD><TD>18.58</TD><TD>0.03</TD><TD>16.20</TD><TD>0.040</TD><TD>15.90</TD><TD>0.04</TD><TD>15.48</TD><TD>0.06</TD><TD></TD></TR>
+<TR><TD>4</TD><TD>06 07 44.82</TD><TD>-06 23 25.8</TD><TD>17.34</TD><TD>0.03</TD><TD>14.77</TD><TD>0.030</TD><TD>14.55</TD><TD>0.03</TD><TD>13.89</TD><TD>0.05</TD><TD>06074483-0623260</TD></TR>
+<TR><TD>5</TD><TD>06 07 44.26</TD><TD>-06 23 25.5</TD><TD>16.12</TD><TD>0.04</TD><TD>13.81</TD><TD>0.040</TD><TD>13.58</TD><TD>0.04</TD><TD>13.04</TD><TD>0.06</TD><TD>06074426-0623256</TD></TR>
+<TR><TD>6</TD><TD>06 07 47.67</TD><TD>-06 23 22.0</TD><TD>20.17</TD><TD>0.04</TD><TD>18.45</TD><TD>0.040</TD><TD>18.15</TD><TD>0.04</TD><TD>17.90</TD><TD>0.08</TD><TD></TD></TR>
+<TR><TD>7</TD><TD>06 07 46.08</TD><TD>-06 23 21.8</TD><TD>18.62</TD><TD>0.03</TD><TD>15.92</TD><TD>0.030</TD><TD>15.68</TD><TD>0.03</TD><TD>15.01</TD><TD>0.05</TD><TD></TD></TR>
+<TR><TD>8</TD><TD>06 07 44.98</TD><TD>-06 23 21.9</TD><TD>21.13</TD><TD>0.05</TD><TD>17.56</TD><TD>0.030</TD><TD>17.29</TD><TD>0.03</TD><TD>16.17</TD><TD>0.05</TD><TD></TD></TR>
+<TR><TD>9</TD><TD>06 07 47.23</TD><TD>-06 23 18.8</TD><TD>20.88</TD><TD>0.05</TD><TD>18.74</TD><TD>0.040</TD><TD>18.51</TD><TD>0.04</TD><TD>18.03</TD><TD>0.08</TD><TD></TD></TR>
+<TR><TD>10</TD><TD>06 07 44.53</TD><TD>-06 23 21.4</TD><TD>17.75</TD><TD>0.04</TD><TD>14.96</TD><TD>0.040</TD><TD>14.67</TD><TD>0.04</TD><TD>13.63</TD><TD>0.06</TD><TD>06074454-0623214</TD></TR>
+<TR><TD>11</TD><TD>06 07 45.31</TD><TD>-06 23 20.2</TD><TD>15.51</TD><TD>0.04</TD><TD>12.99</TD><TD>0.040</TD><TD>12.76</TD><TD>0.04</TD><TD>12.13</TD><TD>0.06</TD><TD>06074531-0623202</TD></TR>
+<TR><TD>12</TD><TD>06 07 43.82</TD><TD>-06 23 21.5</TD><TD>21.76</TD><TD>0.11</TD><TD>18.46</TD><TD>0.040</TD><TD>18.14</TD><TD>0.04</TD><TD>17.08</TD><TD>0.07</TD><TD></TD></TR>
+<TR><TD>13</TD><TD>06 07 45.21</TD><TD>-06 23 19.5</TD><TD>18.62</TD><TD>0.04</TD><TD>16.35</TD><TD>0.040</TD><TD>16.06</TD><TD>0.04</TD><TD>15.62</TD><TD>0.07</TD><TD></TD></TR>
+<TR><TD>14</TD><TD>06 07 46.64</TD><TD>-06 23 17.3</TD><TD>15.26</TD><TD>0.04</TD><TD>12.80</TD><TD>0.040</TD><TD>12.90</TD><TD>0.04</TD><TD>12.09</TD><TD>0.06</TD><TD>06074665-0623175</TD></TR>
+<TR><TD>15</TD><TD>06 07 45.68</TD><TD>-06 23 17.7</TD><TD>18.91</TD><TD>0.04</TD><TD>16.26</TD><TD>0.040</TD><TD>16.02</TD><TD>0.04</TD><TD>15.37</TD><TD>0.07</TD><TD></TD></TR>
+<TR><TD>16</TD><TD>06 07 43.96</TD><TD>-06 23 18.5</TD><TD>17.00</TD><TD>0.04</TD><TD>14.52</TD><TD>0.040</TD><TD>14.29</TD><TD>0.04</TD><TD>13.71</TD><TD>0.06</TD><TD>06074396-0623184</TD></TR>
+<TR><TD>17</TD><TD>06 07 44.10</TD><TD>-06 23 18.2</TD><TD>21.25</TD><TD>0.06</TD><TD>18.47</TD><TD>0.040</TD><TD>18.28</TD><TD>0.04</TD><TD>17.26</TD><TD>0.07</TD><TD></TD></TR>
+<TR><TD>18</TD><TD>06 07 45.49</TD><TD>-06 23 16.0</TD><TD>16.32</TD><TD>0.04</TD><TD>14.06</TD><TD>0.040</TD><TD>13.84</TD><TD>0.04</TD><TD>13.43</TD><TD>0.06</TD><TD>06074549-0623160</TD></TR>
+<TR><TD>19</TD><TD>06 07 44.95</TD><TD>-06 23 16.4</TD><TD>22.56</TD><TD>0.16</TD><TD>19.34</TD><TD>0.050</TD><TD>19.06</TD><TD>0.05</TD><TD>17.05</TD><TD>0.05</TD><TD></TD></TR>
+<TR><TD>20</TD><TD>06 07 46.31</TD><TD>-06 23 13.7</TD><TD>18.43</TD><TD>0.04</TD><TD>16.00</TD><TD>0.040</TD><TD>15.72</TD><TD>0.04</TD><TD>15.21</TD><TD>0.07</TD><TD>06074631-0623128</TD></TR>
+<TR><TD>21</TD><TD>06 07 44.62</TD><TD>-06 23 15.3</TD><TD>22.75</TD><TD>0.15</TD><TD>17.75</TD><TD>0.040</TD><TD>17.42</TD><TD>0.04</TD><TD>15.56</TD><TD>0.06</TD><TD></TD></TR>
+<TR><TD>22</TD><TD>06 07 45.65</TD><TD>-06 23 14.1</TD><TD>18.46</TD><TD>0.04</TD><TD>16.29</TD><TD>0.040</TD><TD>16.06</TD><TD>0.04</TD><TD>15.71</TD><TD>0.07</TD><TD></TD></TR>
+<TR><TD>23</TD><TD>06 07 44.37</TD><TD>-06 23 15.4</TD><TD></TD><TD></TD><TD>20.90</TD><TD>0.170</TD><TD>20.79</TD><TD>0.18</TD><TD>18.54</TD><TD>0.12</TD><TD></TD></TR>
+<TR><TD>24</TD><TD>06 07 44.48</TD><TD>-06 23 15.2</TD><TD></TD><TD></TD><TD>20.43</TD><TD>0.120</TD><TD>20.40</TD><TD>0.14</TD><TD>17.49</TD><TD>0.08</TD><TD></TD></TR>
+<TR><TD>25</TD><TD>06 07 47.74</TD><TD>-06 23 11.8</TD><TD>16.98</TD><TD>0.04</TD><TD>15.01</TD><TD>0.040</TD><TD>14.77</TD><TD>0.04</TD><TD>14.45</TD><TD>0.06</TD><TD></TD></TR>
+<TR><TD>26</TD><TD>06 07 47.12</TD><TD>-06 23 12.2</TD><TD>21.33</TD><TD>0.07</TD><TD>18.75</TD><TD>0.050</TD><TD>18.47</TD><TD>0.05</TD><TD>17.74</TD><TD>0.09</TD><TD></TD></TR>
+<TR><TD>27</TD><TD>06 07 46.69</TD><TD>-06 23 12.6</TD><TD>15.84</TD><TD>0.04</TD><TD>13.58</TD><TD>0.040</TD><TD>13.35</TD><TD>0.04</TD><TD>12.87</TD><TD>0.06</TD><TD>06074669-0623125</TD></TR>
+<TR><TD>28</TD><TD>06 07 44.80</TD><TD>-06 23 14.4</TD><TD>16.95</TD><TD>0.03</TD><TD>13.79</TD><TD>0.030</TD><TD>13.59</TD><TD>0.03</TD><TD>12.59</TD><TD>0.05</TD><TD>06074482-0623144</TD></TR>
+<TR><TD>29</TD><TD>06 07 46.33</TD><TD>-06 23 12.1</TD><TD>20.55</TD><TD>0.05</TD><TD>16.52</TD><TD>0.040</TD><TD>16.21</TD><TD>0.04</TD><TD>14.37</TD><TD>0.06</TD><TD></TD></TR>
+<TR><TD>30</TD><TD>06 07 45.46</TD><TD>-06 23 12.9</TD><TD>21.62</TD><TD>0.14</TD><TD>18.59</TD><TD>0.080</TD><TD>18.33</TD><TD>0.08</TD><TD>17.50</TD><TD>0.12</TD><TD></TD></TR>
+<TR><TD>31</TD><TD>06 07 47.26</TD><TD>-06 23 10.5</TD><TD>24.16</TD><TD>0.67</TD><TD>21.84</TD><TD>0.690</TD><TD>22.11</TD><TD>1.15</TD><TD>18.99</TD><TD>0.24</TD><TD></TD></TR>
+<TR><TD>32</TD><TD>06 07 43.95</TD><TD>-06 23 13.0</TD><TD>21.38</TD><TD>0.07</TD><TD>16.62</TD><TD>0.040</TD><TD>16.40</TD><TD>0.04</TD><TD>14.10</TD><TD>0.06</TD><TD>06074393-0623130</TD></TR>
+<TR><TD>33</TD><TD>06 07 46.23</TD><TD>-06 23 10.4</TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD>17.91</TD><TD>0.18</TD><TD></TD></TR>
+<TR><TD>34</TD><TD>06 07 45.73</TD><TD>-06 23 10.9</TD><TD>20.83</TD><TD>0.05</TD><TD>17.38</TD><TD>0.030</TD><TD>17.06</TD><TD>0.03</TD><TD>15.79</TD><TD>0.05</TD><TD>06074579-0623113</TD></TR>
+<TR><TD>35</TD><TD>06 07 45.11</TD><TD>-06 23 10.8</TD><TD>20.79</TD><TD>0.06</TD><TD>16.52</TD><TD>0.040</TD><TD>16.07</TD><TD>0.04</TD><TD>14.16</TD><TD>0.06</TD><TD>06074593-0623110</TD></TR>
+<TR><TD>36</TD><TD>06 07 45.80</TD><TD>-06 23 09.6</TD><TD>20.79</TD><TD>0.04</TD><TD>16.93</TD><TD>0.020</TD><TD>16.63</TD><TD>0.02</TD><TD>15.24</TD><TD>0.04</TD><TD>06074500-0623113</TD></TR>
+<TR><TD>37</TD><TD>06 07 45.96</TD><TD>-06 23 09.2</TD><TD>21.37</TD><TD>0.14</TD><TD>17.80</TD><TD>0.040</TD><TD>17.63</TD><TD>0.04</TD><TD>15.67</TD><TD>0.04</TD><TD></TD></TR>
+<TR><TD>38</TD><TD>06 07 46.16</TD><TD>-06 23 09.0</TD><TD></TD><TD></TD><TD>19.18</TD><TD>0.090</TD><TD>19.02</TD><TD>0.09</TD><TD>16.35</TD><TD>0.06</TD><TD></TD></TR>
+<TR><TD>39</TD><TD>06 07 46.86</TD><TD>-06 23 07.9</TD><TD>16.73</TD><TD>0.02</TD><TD>14.64</TD><TD>0.020</TD><TD>14.39</TD><TD>0.02</TD><TD>13.90</TD><TD>0.03</TD><TD>06074686-0623076</TD></TR>
+<TR><TD>40</TD><TD>06 07 43.99</TD><TD>-06 23 10.6</TD><TD>19.51</TD><TD>0.03</TD><TD>16.63</TD><TD>0.030</TD><TD>16.36</TD><TD>0.03</TD><TD>15.60</TD><TD>0.05</TD><TD></TD></TR>
+<TR><TD>41</TD><TD>06 07 43.68</TD><TD>-06 23 10.4</TD><TD>17.50</TD><TD>0.03</TD><TD>15.12</TD><TD>0.030</TD><TD>14.84</TD><TD>0.03</TD><TD>14.29</TD><TD>0.05</TD><TD>06074370-0623107</TD></TR>
+<TR><TD>42</TD><TD>06 07 45.16</TD><TD>-06 23 08.7</TD><TD>20.17</TD><TD>0.04</TD><TD>16.42</TD><TD>0.030</TD><TD>16.16</TD><TD>0.03</TD><TD>14.96</TD><TD>0.05</TD><TD>06074516-0623103</TD></TR>
+<TR><TD>43</TD><TD>06 07 45.42</TD><TD>-06 23 08.2</TD><TD>19.23</TD><TD>0.03</TD><TD>15.62</TD><TD>0.030</TD><TD>15.11</TD><TD>0.03</TD><TD>13.86</TD><TD>0.05</TD><TD>06074542-0623092</TD></TR>
+<TR><TD>44</TD><TD>06 07 44.81</TD><TD>-06 23 08.4</TD><TD>24.04</TD><TD>0.68</TD><TD>19.33</TD><TD>0.040</TD><TD>19.08</TD><TD>0.03</TD><TD>16.69</TD><TD>0.04</TD><TD></TD></TR>
+<TR><TD>45</TD><TD>06 07 45.89</TD><TD>-06 23 07.3</TD><TD>22.60</TD><TD>0.16</TD><TD>19.47</TD><TD>0.040</TD><TD>19.21</TD><TD>0.04</TD><TD>17.65</TD><TD>0.05</TD><TD></TD></TR>
+<TR><TD>46</TD><TD>06 07 46.64</TD><TD>-06 23 05.9</TD><TD>20.61</TD><TD>0.12</TD><TD>17.02</TD><TD>0.070</TD><TD>16.78</TD><TD>0.07</TD><TD>15.41</TD><TD>0.08</TD><TD>06074661-0623058</TD></TR>
+<TR><TD>47</TD><TD>06 07 47.25</TD><TD>-06 23 05.1</TD><TD>21.95</TD><TD>0.15</TD><TD>19.59</TD><TD>0.080</TD><TD>19.27</TD><TD>0.08</TD><TD>18.18</TD><TD>0.15</TD><TD></TD></TR>
+<TR><TD>48</TD><TD>06 07 46.62</TD><TD>-06 23 05.7</TD><TD>21.01</TD><TD>0.19</TD><TD>18.23</TD><TD>0.090</TD><TD>17.94</TD><TD>0.09</TD><TD>16.45</TD><TD>0.08</TD><TD></TD></TR>
+<TR><TD>49</TD><TD>06 07 45.64</TD><TD>-06 23 06.5</TD><TD>20.92</TD><TD>0.05</TD><TD>16.55</TD><TD>0.030</TD><TD>16.23</TD><TD>0.03</TD><TD>14.78</TD><TD>0.05</TD><TD></TD></TR>
+<TR><TD>50</TD><TD>06 07 47.84</TD><TD>-06 23 03.7</TD><TD>16.52</TD><TD>0.03</TD><TD>13.82</TD><TD>0.030</TD><TD>13.58</TD><TD>0.03</TD><TD>12.82</TD><TD>0.05</TD><TD>06074784-0623038</TD></TR>
+</TABLEDATA></DATA>
+</TABLE>
+<INFO name="matches" value="50">matching records</INFO>
+
+<INFO name="Warning" value="No center provided++++"/>
+<INFO name="Warning" value="+++No column for LINK to a row in table: J/AJ/132/2296/table2"/>
+<INFO name="Warning" value="truncated result (maxtup=50)"/><INFO name="QUERY_STATUS" value="OVERFLOW">truncated result (maxtup=50)</INFO>
+
+</RESOURCE>
+</VOTABLE>
