@@ -15,8 +15,12 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy import units as u
 
 from wuvars.data import spreadsheet, photometry
+from wuvars.analysis.spectral_type_to_number import get_num_from_SpT
 
-### Part 1: loading the input catalogs.
+
+# =========================================== #
+# === Part 1: loading the input catalogs. === #
+# =========================================== #
 
 aux_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/data/auxiliary_catalogs/IC348"
 
@@ -35,7 +39,24 @@ L16_T1_Dec = Angle(
 
 L16_T1_coordinates = SkyCoord(ra=L16_T1_RA, dec=L16_T1_Dec)
 
-# Part 2: loading our data.
+# This column contains the 'adopted' spectral type for each source.
+L16_SpT = L16_T1["Adopt"]
+L16_SpT_num = []
+for SpT in L16_SpT:
+    try:
+        L16_SpT_num.append(get_num_from_SpT(SpT))
+    # This exception applies to any 'masked' entries, which should be treated as NaN.
+    except IndexError:
+        L16_SpT_num.append(np.nan)
+
+# Choose all objects with spectral type later than M6.0
+L16_bds = np.array(L16_SpT_num) >= 6.0
+
+
+# ======================================= #
+# === Part 2: loading our UKIRT data. === #
+# ======================================= #
+
 # IC 348 is WSERV8
 spread = spreadsheet.load_wserv_v2(8)
 sm = spread["median"]
@@ -43,11 +64,24 @@ spreadsheet_coordinates = SkyCoord(
     ra=sm["RA"].values * u.rad, dec=sm["DEC"].values * u.rad
 )
 
+
+# =================================== #
+# === Part 3: Doing the matching. === #
+# =================================== #
+
 idx, d2d, d3d = L16_T1_coordinates.match_to_catalog_sky(spreadsheet_coordinates)
 
+# Maximum separation of 0.37'' chosen by inspecting a histogram of closest matches.
+max_sep = 0.37 * u.arcsec
+sep_constraint = d2d < max_sep
 
-# Part 3: Doing the matching.
+# We're going to compute
+# (a) all matched IC348 members, for quality control, and
+# (b) just the
+matches = sm.iloc[idx[sep_constraint]]
 
-# Part 4: Outputting the results to file.
+# =============================================== #
+# === Part 4: Outputting the results to file. === #
+# =============================================== #
 
 # SkyCoord(ra=(table['RAh'], table['RAm'], table['RAs']), dec=(table['DEd'], table['DEm'], table['DEs'])
