@@ -16,7 +16,7 @@ from astropy import units as u
 
 from wuvars.data import spreadsheet, photometry
 from wuvars.analysis.spectral_type_to_number import get_num_from_SpT
-
+from wuvars.analysis.luhman16_coord_handler import coords_from_Luhman_table
 
 # =========================================== #
 # === Part 1: loading the input catalogs. === #
@@ -29,15 +29,7 @@ L16_T1_filepath = os.path.join(aux_path, "Luhman2016_Table1_apjaa2cabt1_mrt.txt"
 L16_T1 = astropy.table.Table.read(L16_T1_filepath, format="ascii.cds")
 
 # get the coordinates into a usable state
-L16_T1_RA = Angle(
-    (L16_T1["RAh"].data, L16_T1["RAm"].data, L16_T1["RAs"].data), unit=u.hourangle
-)
-L16_T1_Dec_sign = np.where(L16_T1["DE-"] == "+", 1, -1)
-L16_T1_Dec = Angle(
-    (L16_T1_Dec_sign * L16_T1["DEd"], L16_T1["DEm"], L16_T1["DEs"],), unit=u.deg,
-)
-
-L16_T1_coordinates = SkyCoord(ra=L16_T1_RA, dec=L16_T1_Dec)
+L16_T1_coordinates = coords_from_Luhman_table(L16_T1)
 
 # This column contains the 'adopted' spectral type for each source.
 L16_SpT = L16_T1["Adopt"]
