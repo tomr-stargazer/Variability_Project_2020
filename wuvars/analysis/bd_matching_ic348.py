@@ -69,8 +69,12 @@ sep_constraint = d2d < max_sep
 
 # We're going to compute
 # (a) all matched IC348 members, for quality control, and
-# (b) just the
+# (b) just the brown dwarfs
 matches = sm.iloc[idx[sep_constraint]]
+matched = L16_T1[sep_constraint]
+
+bd_matches = sm.iloc[idx[sep_constraint & L16_bds]]
+bd_matched =  L16_T1[sep_constraint & L16_bds]
 
 # =============================================== #
 # === Part 4: Outputting the results to file. === #
