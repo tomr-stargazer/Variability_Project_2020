@@ -18,6 +18,7 @@ from wuvars.data import spreadsheet, photometry
 from wuvars.analysis.spectral_type_to_number import get_num_from_SpT
 from wuvars.analysis.luhman16_coord_handler import coords_from_Luhman_table
 
+
 # =========================================== #
 # === Part 1: loading the input catalogs. === #
 # =========================================== #
@@ -68,16 +69,46 @@ max_sep = 0.37 * u.arcsec
 sep_constraint = d2d < max_sep
 
 # We're going to compute
-# (a) all matched IC348 members, for quality control, and
+# (a) all matched IC348 members, for quality control / comparisons, and
 # (b) just the brown dwarfs
+
 matches = sm.iloc[idx[sep_constraint]]
 matched = L16_T1[sep_constraint]
+joint_matches = astropy.table.hstack(
+    [astropy.table.Table.from_pandas(matches), matched]
+)
+joint_matches.add_column(matches.index, index=0, name="SOURCEID")
 
 bd_matches = sm.iloc[idx[sep_constraint & L16_bds]]
-bd_matched =  L16_T1[sep_constraint & L16_bds]
+bd_matched = L16_T1[sep_constraint & L16_bds]
+bd_joint_matches = astropy.table.hstack(
+    [astropy.table.Table.from_pandas(bd_matches), bd_matched]
+)
+bd_joint_matches.add_column(bd_matches.index, index=0, name="SOURCEID")
+
 
 # =============================================== #
 # === Part 4: Outputting the results to file. === #
 # =============================================== #
+
+results_path = (
+    "/Users/tsrice/Documents/Variability_Project_2020/Results/matched_catalogs/ic348"
+)
+
+j = "JAPERMAG3"
+h = "HAPERMAG3"
+k = "KAPERMAG3"
+jmh = "JMHPNT"
+hmk = "HMKPNT"
+
+bd_results_table = bd_joint_matches["Name", "SOURCEID", "RA", "DEC", j, h, k, "Adopt"]
+bd_results_table['Adopt'].name = 'SpT'
+
+# we want our results table to have the following...
+# NAME | SOURCEID | RA | Dec | J | H | K | SpT |
+
+bd_results_table.write(
+    os.path.join(results_path, "IC348_matches.dat"), format="ascii.ipac"
+)
 
 # SkyCoord(ra=(table['RAh'], table['RAm'], table['RAs']), dec=(table['DEd'], table['DEm'], table['DEs'])
