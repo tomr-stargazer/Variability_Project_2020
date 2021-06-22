@@ -1,4 +1,6 @@
 """
+NB: OBSOLETE as of June 2021. 
+
 Here's where I'll try to write code that selects brown dwarfs based on their colors.
 
 """
