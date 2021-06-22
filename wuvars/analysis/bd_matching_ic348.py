@@ -101,14 +101,20 @@ k = "KAPERMAG3"
 jmh = "JMHPNT"
 hmk = "HMKPNT"
 
-bd_results_table = bd_joint_matches["Name", "SOURCEID", "RA", "DEC", j, h, k, "Adopt"]
-bd_results_table['Adopt'].name = 'SpT'
+jerr = j + "ERR"
+herr = h + "ERR"
+kerr = k + "ERR"
+
+bd_results_table = bd_joint_matches[
+    "Name", "SOURCEID", "RA", "DEC", j, h, k, jerr, herr, kerr, "Adopt"
+]
+bd_results_table["Adopt"].name = "SpT"
 
 # we want our results table to have the following...
 # NAME | SOURCEID | RA | Dec | J | H | K | SpT |
 
 bd_results_table.write(
-    os.path.join(results_path, "IC348_matches.dat"), format="ascii.ipac"
+    os.path.join(results_path, "IC348_matches.dat"), format="ascii.ipac", overwrite=True
 )
 
 # SkyCoord(ra=(table['RAh'], table['RAm'], table['RAs']), dec=(table['DEd'], table['DEm'], table['DEs'])
