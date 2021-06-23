@@ -125,13 +125,19 @@ def simple_lc_scatter(dg, sid, begin=0, **kwargs):
     fig.ax_jhk = ax_jhk
     fig.ax_khk = ax_khk
 
-    ax_j.scatter(date, j, c=date, s=18, edgecolors='k', linewidths=0.5, **kwargs)
-    ax_h.scatter(date, h, c=date, s=18, edgecolors='k', linewidths=0.5, **kwargs)
-    ax_k.scatter(date, k, c=date, s=18, edgecolors='k', linewidths=0.5, **kwargs)
+    ax_j.scatter(date, j, c=date, s=18, edgecolors="k", linewidths=0.5, **kwargs)
+    ax_h.scatter(date, h, c=date, s=18, edgecolors="k", linewidths=0.5, **kwargs)
+    ax_k.scatter(date, k, c=date, s=18, edgecolors="k", linewidths=0.5, **kwargs)
 
-    ax_j.errorbar(date, j, yerr=j_e, fmt="None", ecolor="k", ms=2, elinewidth=0.5, zorder=-1)
-    ax_h.errorbar(date, h, yerr=h_e, fmt="None", ecolor="k", ms=2, elinewidth=0.5, zorder=-1)
-    ax_k.errorbar(date, k, yerr=k_e, fmt="None", ecolor="k", ms=2, elinewidth=0.5, zorder=-1)
+    ax_j.errorbar(
+        date, j, yerr=j_e, fmt="None", ecolor="k", ms=2, elinewidth=0.5, zorder=-1
+    )
+    ax_h.errorbar(
+        date, h, yerr=h_e, fmt="None", ecolor="k", ms=2, elinewidth=0.5, zorder=-1
+    )
+    ax_k.errorbar(
+        date, k, yerr=k_e, fmt="None", ecolor="k", ms=2, elinewidth=0.5, zorder=-1
+    )
 
     ax_jhk.errorbar(
         h - k,
@@ -397,7 +403,9 @@ def scatter_phase_core(
     # Now plot our actual scattered dude
     if not hide:
         # errorbars in the background
-        ax.errorbar(phase, x, yerr=xerr, fmt="None", ecolor="k", elinewidth=0.5, zorder=0)
+        ax.errorbar(
+            phase, x, yerr=xerr, fmt="None", ecolor="k", elinewidth=0.5, zorder=0
+        )
         # scatter in the foreground
         sc = ax.scatter(phase, x, zorder=100, **kwargs)
 
@@ -523,9 +531,48 @@ def simple_phased_lc_scatter(dg, sid, period, offset=0, begin=0, **kwargs):
     fig.ax_jhk = ax_jhk
     fig.ax_khk = ax_khk
 
-    scatter_phase_core(ax_j, date, j, j_e, period, offset=offset, c=date, s=18, edgecolors='k', linewidths=0.5, ms=4, **kwargs)
-    scatter_phase_core(ax_h, date, h, h_e, period, offset=offset, c=date, s=18, edgecolors='k', linewidths=0.5, ms=4, **kwargs)
-    sc = scatter_phase_core(ax_k, date, k, k_e, period, offset=offset, c=date, s=18, edgecolors='k', linewidths=0.5, ms=4, **kwargs)
+    scatter_phase_core(
+        ax_j,
+        date,
+        j,
+        j_e,
+        period,
+        offset=offset,
+        c=date,
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        ms=4,
+        **kwargs,
+    )
+    scatter_phase_core(
+        ax_h,
+        date,
+        h,
+        h_e,
+        period,
+        offset=offset,
+        c=date,
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        ms=4,
+        **kwargs,
+    )
+    sc = scatter_phase_core(
+        ax_k,
+        date,
+        k,
+        k_e,
+        period,
+        offset=offset,
+        c=date,
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        ms=4,
+        **kwargs,
+    )
 
     ax_jhk.errorbar(
         h - k,
@@ -556,10 +603,14 @@ def simple_phased_lc_scatter(dg, sid, period, offset=0, begin=0, **kwargs):
     ax_khk.set_xlabel("H-K")
     ax_khk.set_ylabel("K")  # , {'rotation':'horizontal'})
 
-    cbar = plt.gcf().colorbar(sc, ax=ax_khk) # This should really be changed to the method
+    cbar = plt.gcf().colorbar(
+        sc, ax=ax_khk
+    )  # This should really be changed to the method
     cbar.set_label(f"MJD - {int(begin)}")
 
-    cbar = plt.gcf().colorbar(sc, ax=ax_jhk) # This should really be changed to the method
+    cbar = plt.gcf().colorbar(
+        sc, ax=ax_jhk
+    )  # This should really be changed to the method
     cbar.set_label(f"MJD - {int(begin)}")
 
     return fig
