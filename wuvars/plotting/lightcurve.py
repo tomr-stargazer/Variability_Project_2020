@@ -6,6 +6,10 @@ I plan to put some light curve plotting code here.
 import numpy as np
 import matplotlib.pyplot as plt
 
+from matplotlib.gridspec import GridSpec
+from brokenaxes import brokenaxes
+from wuvars.plotting.lightcurve_helpers import produce_xlims
+
 
 def simple_lc(dg, sid):
     # dg: astropy table that has been grouped by SOURCEID
@@ -160,14 +164,20 @@ def simple_lc_scatter(dg, sid, begin=0, **kwargs):
 
     return fig
 
-def simple_lc_brokenaxes(dg, sid):
+
+ic348_xlims = [(-5.0, 24.0), (74.0, 230.0), (370.0, 390.0)]
+
+
+def simple_lc_brokenaxes(dg, sid, date_offset=None, pad=5, xlims=None, breaks=None):
     # dg: astropy table that has been grouped by SOURCEID
 
     dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
 
     # set up data
 
-    date = dat["MEANMJDOBS"]
+    if date_offset is None:
+        date_offset = np.floor(np.min(dat["MEANMJDOBS"]))
+    date = dat["MEANMJDOBS"] - date_offset
 
     j = dat["JAPERMAG3"]
     h = dat["HAPERMAG3"]
@@ -178,20 +188,66 @@ def simple_lc_brokenaxes(dg, sid):
     k_e = dat["KAPERMAG3ERR"]
 
     # set up plot
+    # OUR brokenaxes changes will all go here
+    # need:
+    #   - how much MJD to subtract
+    #   - where to put the breaks (+how many breaks)
+    #   - ... that's p much it, right?
 
     fig = plt.figure(figsize=(10, 6), dpi=80, facecolor="w", edgecolor="k")
 
-    bottom = 0.1
-    height = 0.25
-    left = 0.075
-    width = 0.5
+    gs0 = fig.add_gridspec(1, 2, width_ratios=[6, 3], wspace=0.2)
+    gs_left = gs0[0].subgridspec(3, 1, hspace=0)
+    gs_right = gs0[1].subgridspec(1, 2, width_ratios=(2, 0.1), wspace=0.15)
+    gs01 = gs_right[0].subgridspec(2, 1)
 
-    ax_k = fig.add_axes((left, bottom, width, height))
-    ax_h = fig.add_axes((left, bottom + 0.3, width, height), sharex=ax_k)
-    ax_j = fig.add_axes((left, bottom + 0.6, width, height), sharex=ax_k)
+    bax_kwargs = dict(despine=False, d=0.0075, tilt=60, wspace=0.04)
 
-    ax_jhk = fig.add_axes((0.65, bottom, 0.3, 0.375))
-    ax_khk = fig.add_axes((0.65, bottom + 0.475, 0.3, 0.375))
+    # xlims = (
+    #     (56848 - date_offset, 56900 - date_offset),
+    #     (56920 - date_offset, 57080 - date_offset),
+    #     (57200 - date_offset, 57250 - date_offset),
+    # )
+
+    # xlims = ((0, 30), (80, 225), (370,390))
+    # xlims = [(0.0, 21.0), (84.0, 222.0), (377.0, 385.0)]
+    if xlims is None:
+        if breaks is None:
+            breaks = [50, 350]
+        xlims = produce_xlims(date, breaks=breaks, pad=pad)
+        print(xlims)
+
+    ax_j = brokenaxes(xlims=xlims, subplot_spec=gs_left[0, 0], **bax_kwargs)
+    ax_h = brokenaxes(xlims=xlims, subplot_spec=gs_left[1, 0], **bax_kwargs)
+    ax_k = brokenaxes(xlims=xlims, subplot_spec=gs_left[2, 0], **bax_kwargs)
+
+    # Make the broken zones gray. (Uses some details from  )
+    ax_j.big_ax.set_zorder(-100)
+    ax_h.big_ax.set_zorder(-100)
+    ax_k.big_ax.set_zorder(-100)
+    ax_j.big_ax.set_facecolor("0.9")
+    ax_h.big_ax.set_facecolor("0.9")
+    ax_k.big_ax.set_facecolor("0.9")
+
+    ax_khk = fig.add_subplot(gs01[0, 0])
+    ax_jhk = fig.add_subplot(gs01[1, 0])
+
+    # ax_cbar = fig.add_subplot(gs_right[1])
+
+    ax_j.tick_params(labelbottom=False)
+    ax_h.tick_params(labelbottom=False)
+
+    # bottom = 0.1
+    # height = 0.25
+    # left = 0.075
+    # width = 0.5
+
+    # ax_k = fig.add_axes((left, bottom, width, height))
+    # ax_h = fig.add_axes((left, bottom + 0.3, width, height), sharex=ax_k)
+    # ax_j = fig.add_axes((left, bottom + 0.6, width, height), sharex=ax_k)
+
+    # ax_jhk = fig.add_axes((0.65, bottom, 0.3, 0.375))
+    # ax_khk = fig.add_axes((0.65, bottom + 0.475, 0.3, 0.375))
 
     fig.ax_k = ax_k
     fig.ax_j = ax_j
@@ -221,11 +277,12 @@ def simple_lc_brokenaxes(dg, sid):
     ax_k.invert_yaxis()
     ax_khk.invert_yaxis()
 
-    ax_j.set_ylabel("J", {"rotation": "horizontal", "fontsize": "large"})
-    ax_h.set_ylabel("H", {"rotation": "horizontal", "fontsize": "large"})
-    ax_k.set_ylabel("K", {"rotation": "horizontal", "fontsize": "large"})
+    ax_j.set_ylabel("J", labelpad=40, fontdict={"rotation": "horizontal"})
+    ax_h.set_ylabel("H", labelpad=40, fontdict={"rotation": "horizontal"})
+    ax_k.set_ylabel("K", labelpad=40, fontdict={"rotation": "horizontal"})
 
-    ax_k.set_xlabel("MJD")
+    # \u2212 is a proper minus sign (better than the hyphen character `-`)
+    ax_k.set_xlabel(f"MJD \u2212 {date_offset}", labelpad=20)
 
     ax_jhk.set_xlabel("H-K")
     ax_jhk.set_ylabel("J-H")  # , {'rotation':'horizontal'})
@@ -233,6 +290,11 @@ def simple_lc_brokenaxes(dg, sid):
     ax_khk.set_ylabel("K")  # , {'rotation':'horizontal'})
 
     return fig
+
+
+def ic348_simple_lc_brokenaxes(dg, sid, date_offset=56849, xlims=ic348_xlims):
+
+    return simple_lc_brokenaxes(dg, sid, date_offset=date_offset, xlims=xlims)
 
 
 # 'hide' parameter is hackish.
