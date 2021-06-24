@@ -6,3 +6,8 @@ __pycache__/
 
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+
+wuvars/*/prototypes/*.png
+wuvars/*/prototypes/*.pdf
+wuvars/*/prototypes/*.h5
+wuvars/*/prototypes/*.hdf5
