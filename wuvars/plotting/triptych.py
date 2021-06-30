@@ -1,4 +1,6 @@
 """
+Update: this is somewhat out of date now. All below is preserved from my last draft.
+
 I'm making a set of triple-plots regarding brown dwarf variables.
 
 """
@@ -11,4 +13,4 @@ I'm making a set of triple-plots regarding brown dwarf variables.
 
 # I think red: variable, blue: BD cand, purple: both is a clear visual cue.
 
-def 
+# def 
