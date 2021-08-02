@@ -719,17 +719,40 @@ def scatter_phase_core(
 
     # Plot the grayed-out guys on the left and right:
     ax.errorbar(
-        phase - 1, x, yerr=xerr, fmt=sym, mfc="0.7", mec="0.7", ecolor="0.7", ms=ms
+        phase - 1,
+        x,
+        yerr=xerr,
+        fmt=sym,
+        mfc="0.7",
+        mec="0.7",
+        ecolor="0.7",
+        ms=ms,
+        alpha=0.5,
     )
     ax.errorbar(
-        phase + 1, x, yerr=xerr, fmt=sym, mfc="0.7", mec="0.7", ecolor="0.7", ms=ms
+        phase + 1,
+        x,
+        yerr=xerr,
+        fmt=sym,
+        mfc="0.7",
+        mec="0.7",
+        ecolor="0.7",
+        ms=ms,
+        alpha=0.5,
     )
 
     # Now plot our actual scattered dude
     if not hide:
         # errorbars in the background
         ax.errorbar(
-            phase, x, yerr=xerr, fmt="None", ecolor="k", elinewidth=0.5, zorder=0
+            phase,
+            x,
+            yerr=xerr,
+            fmt="None",
+            ecolor="k",
+            elinewidth=0.5,
+            zorder=0,
+            alpha=0.5,
         )
         # scatter in the foreground
         sc = ax.scatter(phase, x, zorder=100, **kwargs)
@@ -1059,3 +1082,176 @@ def phase_axes_with_info(
     axes.set_xlim(-0.25, 1.25)
 
     axes.get_figure().canvas.draw()
+
+
+def simple_phased_lc_scatter_gridspec(
+    dg, sid, period, date_offset=None, phase_offset=0, color_by="date", **kwargs
+):
+    # dg: astropy table that has been grouped by SOURCEID
+
+    dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
+
+    # set up data
+
+    if date_offset is None:
+        date_offset = np.floor(np.min(dat["MEANMJDOBS"]))
+    date = dat["MEANMJDOBS"] - date_offset
+    phase = ((date % period) / period + phase_offset) % 1.0
+
+    if color_by == "date":
+        color_array = date
+    elif color_by == "phase":
+        color_array = phase
+    else:
+        raise ValueError("`color_by` option must be 'date' or 'phase'")
+
+    j = dat["JAPERMAG3"]
+    h = dat["HAPERMAG3"]
+    k = dat["KAPERMAG3"]
+
+    j_e = dat["JAPERMAG3ERR"]
+    h_e = dat["HAPERMAG3ERR"]
+    k_e = dat["KAPERMAG3ERR"]
+
+    # set up plot
+    # OUR brokenaxes changes will all go here
+    # need:
+    #   - how much MJD to subtract
+    #   - where to put the breaks (+how many breaks)
+    #   - ... that's p much it, right?
+
+    fig = plt.figure(figsize=(10, 6), dpi=80, facecolor="w", edgecolor="k")
+
+    gs0 = fig.add_gridspec(1, 2, width_ratios=[6, 3], wspace=0.2)
+    gs_left = gs0[0].subgridspec(3, 1, hspace=0)
+    gs_right = gs0[1].subgridspec(1, 2, width_ratios=(2, 0.075), wspace=0.15)
+    gs01 = gs_right[0].subgridspec(2, 1)
+
+    ax_j = fig.add_subplot(gs_left[0, 0])
+    ax_h = fig.add_subplot(gs_left[1, 0])
+    ax_k = fig.add_subplot(gs_left[2, 0])
+
+    ax_khk = fig.add_subplot(gs01[0, 0])
+    ax_jhk = fig.add_subplot(gs01[1, 0])
+
+    # ax_cbar = fig.add_subplot(gs_right[1])
+
+    ax_j.tick_params(labelbottom=False)
+    ax_h.tick_params(labelbottom=False)
+
+    fig.ax_k = ax_k
+    fig.ax_j = ax_j
+    fig.ax_h = ax_h
+    fig.ax_jhk = ax_jhk
+    fig.ax_khk = ax_khk
+
+    scatter_phase_core(
+        ax_j,
+        date,
+        j,
+        j_e,
+        period,
+        offset=phase_offset,
+        c=color_array,
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        ms=4,
+        **kwargs,
+    )
+    scatter_phase_core(
+        ax_h,
+        date,
+        h,
+        h_e,
+        period,
+        offset=phase_offset,
+        c=color_array,
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        ms=4,
+        **kwargs,
+    )
+    sc = scatter_phase_core(
+        ax_k,
+        date,
+        k,
+        k_e,
+        period,
+        offset=phase_offset,
+        c=color_array,
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        ms=4,
+        **kwargs,
+    )
+
+    ax_jhk.scatter(
+        h - k,
+        j - h,
+        c=color_array,
+        vmin=color_array.min(),
+        vmax=color_array.max(),
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        **kwargs,
+    )
+
+    ax_khk.scatter(
+        h - k,
+        k,
+        c=color_array,
+        vmin=color_array.min(),
+        vmax=color_array.max(),
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        **kwargs,
+    )
+
+    ax_jhk.errorbar(
+        h - k,
+        j - h,
+        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
+        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        fmt="None",
+        ecolor="k",
+        ms=2,
+        elinewidth=0.5,
+        zorder=-1,
+        alpha=0.1,
+    )
+
+    ax_khk.errorbar(
+        h - k,
+        k,
+        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
+        yerr=k_e,
+        fmt="None",
+        ecolor="k",
+        ms=2,
+        elinewidth=0.5,
+        zorder=-1,
+        alpha=0.1,
+    )
+
+    ax_j.invert_yaxis()
+    ax_h.invert_yaxis()
+    ax_k.invert_yaxis()
+    ax_khk.invert_yaxis()
+
+    ax_j.set_ylabel("J", {"rotation": "horizontal", "fontsize": "large"})
+    ax_h.set_ylabel("H", {"rotation": "horizontal", "fontsize": "large"})
+    ax_k.set_ylabel("K", {"rotation": "horizontal", "fontsize": "large"})
+
+    ax_k.set_xlabel(f"Phase (Period={period:.2f}d)")
+
+    ax_jhk.set_xlabel("H-K")
+    ax_jhk.set_ylabel("J-H")  # , {'rotation':'horizontal'})
+    ax_khk.set_xlabel("H-K")
+    ax_khk.set_ylabel("K")  # , {'rotation':'horizontal'})
+
+    return fig
