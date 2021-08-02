@@ -43,6 +43,7 @@ for SpT in L16_SpT:
 
 # Choose all objects with spectral type later than M6.0
 L16_bds = np.array(L16_SpT_num) >= 6.0
+L16_lowmass_ngc = np.array(L16_SpT_num) >= 4.5
 
 
 # ======================================= #
@@ -86,6 +87,14 @@ bd_joint_matches = astropy.table.hstack(
 )
 bd_joint_matches.add_column(bd_matches.index, index=0, name="SOURCEID")
 
+lowmass_ngc_matches = sm.iloc[idx[sep_constraint & L16_lowmass_ngc]]
+lowmass_ngc_matched = L16_T2[sep_constraint & L16_lowmass_ngc]
+lowmass_ngc_joint_matches = astropy.table.hstack(
+    [astropy.table.Table.from_pandas(lowmass_ngc_matches), lowmass_ngc_matched]
+)
+lowmass_ngc_joint_matches.add_column(
+    lowmass_ngc_matches.index, index=0, name="SOURCEID"
+)
 
 # =============================================== #
 # === Part 4: Outputting the results to file. === #

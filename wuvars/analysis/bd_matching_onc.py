@@ -61,6 +61,8 @@ robb_coordinates = SkyCoord(ra=robb_joined["RAdeg"], dec=robb_joined["DEdeg"])
 confident_members = robb_joined["log(BF)"] > np.log10(99)
 confident_bds = (robb_joined["Mstar"] < 0.08) & (robb_joined["log(BF)"] > np.log10(99))
 
+confident_lowmass = (robb_joined["Teff"] <= 3200) & (robb_joined["log(BF)"] > np.log10(99))
+
 
 # ======================================= #
 # === Part 2: loading our UKIRT data. === #
@@ -103,6 +105,13 @@ bd_joint_matches = astropy.table.hstack(
 )
 bd_joint_matches.add_column(bd_matches.index, index=0, name="SOURCEID")
 
+
+lowmass_matches = sm.iloc[idx[sep_constraint & confident_lowmass]]
+lowmass_matched = robb_joined[sep_constraint & confident_lowmass]
+lowmass_joint_matches = astropy.table.hstack(
+    [astropy.table.Table.from_pandas(lowmass_matches), lowmass_matched]
+)
+lowmass_joint_matches.add_column(lowmass_matches.index, index=0, name="SOURCEID")
 
 # # =============================================== #
 # # === Part 4: Outputting the results to file. === #
