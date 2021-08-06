@@ -7,6 +7,9 @@ It's really only intended for M and L types.
 
 """
 
+import numpy as np
+
+
 letter_values = {
     "M": 0,
     "L": 10,
@@ -55,9 +58,9 @@ def get_SpT_from_num(num):
     ones_place = num % 10
     tens_place = num - ones_place
 
-    if isinstance(num, int):
+    if isinstance(num, (int, np.integer)):
         return f"{letter_values_inv[tens_place]}{ones_place}"
-    elif isinstance(num, float):
+    elif isinstance(num, (float, np.floating)):
         return f"{letter_values_inv[tens_place]}{ones_place:.1f}"
 
 
@@ -71,7 +74,9 @@ if __name__ == "__main__":
     assert get_num_from_SpT("G2") == -18
 
     assert get_SpT_from_num(0) == "M0"
+    assert get_SpT_from_num(np.int32(0)) == "M0"
     assert get_SpT_from_num(5.5) == "M5.5"
+    assert get_SpT_from_num(np.float32(5.5)) == "M5.5"
     assert get_SpT_from_num(11) == "L1"
     assert get_SpT_from_num(-1) == "K9"
     assert get_SpT_from_num(-18) == "G2"
