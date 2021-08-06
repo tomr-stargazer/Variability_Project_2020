@@ -87,7 +87,7 @@ def get_Teff_from_SpT(SpT):
 
     """
 
-    if type(SpT) is str:
+    if isinstance(SpT, (str, np.str_)):
         SpT_num = get_num_from_SpT(SpT)
     else:
         SpT_num = SpT
@@ -112,6 +112,7 @@ def get_SpT_from_Teff(Teff, out="num"):
 if __name__ == "__main__":
 
     np.testing.assert_equal(get_Teff_from_SpT("M1"), 3705)
+    np.testing.assert_equal(get_Teff_from_SpT(np.str_("M1")), 3705)
     np.testing.assert_equal(get_Teff_from_SpT(1), 3705)
 
     np.testing.assert_equal(get_SpT_from_Teff(2400, out="str"), "M9.0")
