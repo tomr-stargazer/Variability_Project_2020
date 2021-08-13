@@ -11,3 +11,6 @@ wuvars/*/prototypes/*.png
 wuvars/*/prototypes/*.pdf
 wuvars/*/prototypes/*.h5
 wuvars/*/prototypes/*.hdf5
+wuvars/*/prototypes/*.dat
+
+wuvars/analysis/prototypes/BD_lcs_v3/*.p??
