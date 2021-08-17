@@ -85,7 +85,6 @@ approved_sources_onc = inspect_onc["SOURCEID"][inspect_onc["exclude?"] != "yes"]
 approved_sources_ngc = inspect_ngc["SOURCEID"][inspect_ngc["exclude?"] != "yes"]
 approved_sources_ic = inspect_ic["SOURCEID"][inspect_ic["exclude?"] != "yes"]
 
-# if __name__ == "__main__":
 def match_onc():
 
     onc_match = MatchStruct()
@@ -112,16 +111,6 @@ def match_onc():
 
     # # This column contains the Teff.
     confident_members = robb_joined["log(BF)"] > np.log10(99)
-    confident_bds = (robb_joined["Mstar"] < 0.08) & (
-        robb_joined["log(BF)"] > np.log10(99)
-    )
-
-    confident_lowmass = (robb_joined["Teff"] <= 3200) & (
-        robb_joined["log(BF)"] > np.log10(99)
-    )
-
-    # onc_spt = np.array([get_SpT_from_Teff(x) for x in lowmass_matched["Teff"]])
-    # not_lowmass_onc_spt = np.array([get_SpT_from_Teff(x) for x in matched['Teff']])
 
     # ======================================= #
     # === Part 2: loading our UKIRT data. === #
@@ -189,5 +178,209 @@ def match_onc():
     color_criteria = statistical_criteria & onc_q.q2[joint_matches['SOURCEID']].values
     onc_match.color = joint_matches[color_criteria]
 
-# else:
     return onc_match
+
+
+def match_ngc():
+
+    ngc_match = MatchStruct()
+
+    # =========================================== #
+    # === Part 1: loading the input catalogs. === #
+    # =========================================== #
+
+    aux_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/data/auxiliary_catalogs/NGC1333"
+
+    # Luhman et al. 2016, Table 2: Members of NGC 1333.
+    L16_T2_filepath = os.path.join(aux_path, "Luhman2016_Table2_apjaa2cabt1_mrt.txt")
+    L16_T2 = astropy.table.Table.read(L16_T2_filepath, format="ascii.cds")
+
+    # get the coordinates into a usable state
+    L16_T2_coordinates = coords_from_Luhman_table(L16_T2)
+
+    # This column contains the 'adopted' spectral type for each source.
+    L16_SpT = L16_T2["Adopt"]
+
+    # onc_spt = np.array([get_SpT_from_Teff(x) for x in lowmass_matched["Teff"]])
+    # not_lowmass_onc_spt = np.array([get_SpT_from_Teff(x) for x in matched['Teff']])
+    L16_SpT_num = []
+    for SpT in L16_SpT:
+        try:
+            L16_SpT_num.append(get_num_from_SpT(SpT))
+        # This exception applies to any 'masked' entries, which should be treated as NaN.
+        except IndexError:
+            L16_SpT_num.append(np.nan)
+
+    L16_T2["SpT"] = L16_SpT_num
+    ngc_Teff = np.array([get_Teff_from_SpT(x) for x in L16_T2["SpT"]])
+
+    L16_T2["Teff"] = ngc_Teff
+
+    # ======================================= #
+    # === Part 2: loading our UKIRT data. === #
+    # ======================================= #
+
+    # NGC 1333 is WSERV7
+    spread = spreadsheet.load_wserv_v2(7)
+    sm = spread["median"]
+    sv = spread["variability"]
+    ss = spread["std"]
+    sr = spread["range_9010"]
+    spreadsheet_coordinates = SkyCoord(
+        ra=sm["RA"].values * u.rad, dec=sm["DEC"].values * u.rad
+    )
+
+    ngc_q = quality_classes.load_q(7)
+
+    # =================================== #
+    # === Part 3: Doing the matching. === #
+    # =================================== #
+
+    idx, d2d, d3d = L16_T2_coordinates.match_to_catalog_sky(spreadsheet_coordinates)
+
+    # Maximum separation of 0.37'' chosen by inspecting a histogram of closest matches.
+    max_sep = 0.37 * u.arcsec
+    sep_constraint = d2d < max_sep
+
+    matches_sm = sm.iloc[idx[sep_constraint]]
+    matches_sm = matches_sm.rename(columns=lambda name: "median_" + name)
+    matches_sv = sv.iloc[idx[sep_constraint]]
+    matches_sv = matches_sv.rename(columns=lambda name: "var_" + name)
+    matches_ss = ss.iloc[idx[sep_constraint]]
+    matches_ss = matches_ss.rename(columns=lambda name: "std_" + name)
+    matches_sr = sr.iloc[idx[sep_constraint]]
+    matches_sr = matches_sr.rename(columns=lambda name: "range_" + name)
+
+    matched = L16_T2[sep_constraint]
+    joint_matches = astropy.table.hstack(
+        [
+            astropy.table.Table.from_pandas(matches_sm),
+            astropy.table.Table.from_pandas(matches_sv),
+            astropy.table.Table.from_pandas(matches_ss),
+            astropy.table.Table.from_pandas(matches_sr),
+            matched,
+        ]
+    )
+    joint_matches.add_column(matches_sm.index, index=0, name="SOURCEID")
+
+    ngc_match.all_matches = joint_matches
+
+    lowmass_criteria = joint_matches["SpT"] >= 4.5
+    ngc_match.lowmass = joint_matches[lowmass_criteria]
+    ngc_match.not_lowmass = joint_matches[~lowmass_criteria]
+
+    approved_indices_ngc = np.in1d(joint_matches["SOURCEID"], approved_sources_ngc)
+
+    approved_criteria = lowmass_criteria & approved_indices_ngc
+    ngc_match.approved = joint_matches[approved_criteria]
+
+    statistical_criteria = approved_criteria & (
+        joint_matches["median_KAPERMAG3ERR"] < 0.05
+    ) & ngc_q.q1_k[joint_matches['SOURCEID']].values
+    ngc_match.statistical = joint_matches[statistical_criteria]
+
+    color_criteria = statistical_criteria & ngc_q.q2[joint_matches['SOURCEID']].values
+    ngc_match.color = joint_matches[color_criteria]
+
+    return ngc_match
+
+def match_ic():
+
+    ic_match = MatchStruct()
+
+    # =========================================== #
+    # === Part 1: loading the input catalogs. === #
+    # =========================================== #
+
+    aux_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/data/auxiliary_catalogs/IC348"
+
+    # Luhman et al. 2016, Table 1: Members of IC 348.
+    L16_T1_filepath = os.path.join(aux_path, "Luhman2016_Table1_apjaa2cabt1_mrt.txt")
+    L16_T1 = astropy.table.Table.read(L16_T1_filepath, format="ascii.cds")
+
+    # get the coordinates into a usable state
+    L16_T1_coordinates = coords_from_Luhman_table(L16_T1)
+
+    # This column contains the 'adopted' spectral type for each source.
+    L16_SpT = L16_T1["Adopt"]
+    L16_SpT_num = []
+    for SpT in L16_SpT:
+        try:
+            L16_SpT_num.append(get_num_from_SpT(SpT))
+        # This exception applies to any 'masked' entries, which should be treated as NaN.
+        except IndexError:
+            L16_SpT_num.append(np.nan)
+
+    L16_T1["SpT"] = L16_SpT_num
+    ic_Teff = np.array([get_Teff_from_SpT(x) for x in L16_T1["SpT"]])
+
+    L16_T1["Teff"] = ic_Teff
+
+    # ======================================= #
+    # === Part 2: loading our UKIRT data. === #
+    # ======================================= #
+
+    # IC 348 is WSERV8
+    spread = spreadsheet.load_wserv_v2(8)
+    sm = spread["median"]
+    sv = spread["variability"]
+    ss = spread["std"]
+    sr = spread["range_9010"]
+    spreadsheet_coordinates = SkyCoord(
+        ra=sm["RA"].values * u.rad, dec=sm["DEC"].values * u.rad
+    )
+
+    ic_q = quality_classes.load_q(8)
+
+    # =================================== #
+    # === Part 3: Doing the matching. === #
+    # =================================== #
+
+    idx, d2d, d3d = L16_T1_coordinates.match_to_catalog_sky(spreadsheet_coordinates)
+
+    # Maximum separation of 0.37'' chosen by inspecting a histogram of closest matches.
+    max_sep = 0.37 * u.arcsec
+    sep_constraint = d2d < max_sep
+
+    matches_sm = sm.iloc[idx[sep_constraint]]
+    matches_sm = matches_sm.rename(columns=lambda name: "median_" + name)
+    matches_sv = sv.iloc[idx[sep_constraint]]
+    matches_sv = matches_sv.rename(columns=lambda name: "var_" + name)
+    matches_ss = ss.iloc[idx[sep_constraint]]
+    matches_ss = matches_ss.rename(columns=lambda name: "std_" + name)
+    matches_sr = sr.iloc[idx[sep_constraint]]
+    matches_sr = matches_sr.rename(columns=lambda name: "range_" + name)
+
+    matched = L16_T1[sep_constraint]
+    joint_matches = astropy.table.hstack(
+        [
+            astropy.table.Table.from_pandas(matches_sm),
+            astropy.table.Table.from_pandas(matches_sv),
+            astropy.table.Table.from_pandas(matches_ss),
+            astropy.table.Table.from_pandas(matches_sr),
+            matched,
+        ]
+    )
+    joint_matches.add_column(matches_sm.index, index=0, name="SOURCEID")
+
+    ic_match.all_matches = joint_matches
+
+    lowmass_criteria = joint_matches["SpT"] >= 4.5
+    ic_match.lowmass = joint_matches[lowmass_criteria]
+    ic_match.not_lowmass = joint_matches[~lowmass_criteria]
+
+    approved_indices_ic = np.in1d(joint_matches["SOURCEID"], approved_sources_ic)
+
+    approved_criteria = lowmass_criteria & approved_indices_ic
+    ic_match.approved = joint_matches[approved_criteria]
+
+    statistical_criteria = approved_criteria & (
+        joint_matches["median_KAPERMAG3ERR"] < 0.05
+    ) & ic_q.q1_k[joint_matches['SOURCEID']].values
+    ic_match.statistical = joint_matches[statistical_criteria]
+
+    color_criteria = statistical_criteria & ic_q.q2[joint_matches['SOURCEID']].values
+    ic_match.color = joint_matches[color_criteria]
+
+    return ic_match
+
