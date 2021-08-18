@@ -1,5 +1,5 @@
 """
-Given a periodogram, how
+Given a periodogram's peak frequency, how can we find its potential aliases?
 
 """
 
