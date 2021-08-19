@@ -107,6 +107,7 @@ bd_joint_matches.add_column(bd_matches.index, index=0, name="SOURCEID")
 
 
 lowmass_matches = sm.iloc[idx[sep_constraint & confident_lowmass]]
+lowmass_matches_spread = spread.iloc[idx[sep_constraint & confident_lowmass]]
 lowmass_matched = robb_joined[sep_constraint & confident_lowmass]
 lowmass_joint_matches = astropy.table.hstack(
     [astropy.table.Table.from_pandas(lowmass_matches), lowmass_matched]
