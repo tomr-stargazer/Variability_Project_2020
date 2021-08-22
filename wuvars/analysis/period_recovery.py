@@ -67,12 +67,12 @@ def recovery_score(dg, sids, periods, amplitudes):
 
                 dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
 
-                mask = dat['KAPERMAG3'].mask
+                mask = dat["KAPERMAG3"].mask
                 times = dat["MEANMJDOBS"][~mask]
                 mags = dat["KAPERMAG3"][~mask]
                 errs = dat["KAPERMAG3ERR"][~mask]
 
-                sin_mags = amp * np.sin(2*np.pi/period * times) + mags
+                sin_mags = amp * np.sin(2 * np.pi / period * times) + mags
 
                 ls = LombScargle(times, sin_mags, dy=errs)
                 power = ls.power(freq)
@@ -87,9 +87,13 @@ def recovery_score(dg, sids, periods, amplitudes):
 
                 if np.abs(found_period - period) / period < 0.01:
                     correct += 1
-                    print(f"A={amp:.2f} mag. Correct period: {found_period:.2f} v. {period:.2f}")
+                    print(
+                        f"A={amp:.2f} mag. Correct period: {found_period:.2f} v. {period:.2f}"
+                    )
                 else:
-                    print(f"A={amp:.2f} mag. Incorrect period: {found_period:.2f} v. {period:.2f}")
+                    print(
+                        f"A={amp:.2f} mag. Incorrect period: {found_period:.2f} v. {period:.2f}"
+                    )
 
                 # pdb.set_trace()
 
