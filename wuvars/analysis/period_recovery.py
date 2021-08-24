@@ -43,6 +43,7 @@ import pdb
 from astropy.timeseries import LombScargle
 
 from wuvars.analysis.periods import freq
+from wuvars.analysis.alias_hunting import find_aliases
 
 
 def recovery_score(dg, sids, periods, amplitudes):
@@ -50,18 +51,21 @@ def recovery_score(dg, sids, periods, amplitudes):
     scores = []
     found_periods = []
     faps = []
+    alias_scores = []
 
     for period in periods:
 
         _scores = []
         _found_periods = []
         _faps = []
+        _alias_scores = []
 
         for amp in amplitudes:
 
             __found_periods = []
             __faps = []
             correct = 0
+            alias_correct = 0
 
             for sid in sids:
 
@@ -75,25 +79,41 @@ def recovery_score(dg, sids, periods, amplitudes):
                 sin_mags = amp * np.sin(2 * np.pi / period * times) + mags
 
                 ls = LombScargle(times, sin_mags, dy=errs)
-                power = ls.power(freq)
+                power = ls.power(freq, assume_regular_frequency=True).value
 
                 min_freq = 1 / 100
                 power[freq < min_freq] = 0
 
                 fmax = freq[np.nanargmax(power)]
-                fap = ls.false_alarm_probability(np.nanmax(power))
+                fap = ls.false_alarm_probability(np.nanmax(power)).value
+
+                # pdb.set_trace()
 
                 found_period = 1 / fmax
 
-                if np.abs(found_period - period) / period < 0.01:
+                if np.abs(found_period - period) / period < 0.02:
                     correct += 1
                     print(
                         f"A={amp:.2f} mag. Correct period: {found_period:.2f} v. {period:.2f}"
                     )
                 else:
-                    print(
-                        f"A={amp:.2f} mag. Incorrect period: {found_period:.2f} v. {period:.2f}"
-                    )
+                    # CHECK ALIASES
+                    aliases = find_aliases(1/period)
+
+                    # LOOP THROUGH POSSIBLE ALIASES
+                    for alias_freq in aliases:
+                        alias_period = 1/alias_freq
+
+                        if np.abs(found_period - alias_period) / alias_period < 0.02:
+                            alias_correct += 1
+                            print(
+                                f"A={amp:.2f} mag. Aliased period: {found_period:.4f} v. {period:.4f}"
+                            )
+                            break
+                    else:
+                        print(
+                            f"A={amp:.2f} mag. Incorrect period: {found_period:.2f} v. {period:.2f}"
+                        )
 
                 # pdb.set_trace()
 
@@ -104,9 +124,63 @@ def recovery_score(dg, sids, periods, amplitudes):
             _scores.append(score)
             _found_periods.append(__found_periods)
             _faps.append(__faps)
+            alias_score = alias_correct / len(sids)
+            _alias_scores.append(alias_score)
 
         scores.append(_scores)
         found_periods.append(_found_periods)
         faps.append(_faps)
+        alias_scores.append(_alias_scores)
 
-    return scores, found_periods, faps
+    return scores, found_periods, faps, alias_scores
+
+
+def reassess_alias_score(spread, sids, periods, amplitudes, previous_output):
+    """
+    Assess how many of the periods land on aliases.
+
+    """
+
+    alias_scores = []
+    found_periods = previous_output[1]
+    faps = previous_output[2]
+
+    for i, period in enumerate(periods):
+
+        _new_scores = []
+        _found_periods = found_periods[i]
+        _faps = faps[i]
+
+        for j, amp in enumerate(amplitudes):
+
+            __found_periods = _found_periods[j]
+            __faps = _faps[j]
+            correct = 0
+            skip = 0
+
+            for k, sid in enumerate(sids):
+
+                fap = __faps[k]
+                found_period = __found_periods[k]
+
+                if 0 < spread['variability']['Stetson_JHK'][sid] < 0.8:
+
+                    # LOOP THROUGH POSSIBLE ALIASES
+                    aliases = find_aliases(1/period)
+
+                    for alias in aliases:
+                        alias_period = 1/alias
+
+                        if np.abs(found_period - alias_period) / alias_period < 0.01:
+                            correct += 1
+                        else:
+                            pass
+                    else:
+                        skip +=1
+
+                    # pdb.set_trace()
+
+            new_score = correct / (len(sids) - skip)
+            _new_scores.append(new_score)
+        alias_scores.append(_new_scores)
+    return alias_scores, found_periods, faps
