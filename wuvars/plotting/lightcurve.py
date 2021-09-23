@@ -11,6 +11,12 @@ from brokenaxes import brokenaxes
 from wuvars.plotting.lightcurve_helpers import produce_xlims, orion_cmap
 
 
+onc_date_offset = 54034.0
+ngc_date_offset = 56141
+ic_date_offset = 56849
+monr2_date_offset = 57374
+
+
 def simple_lc(dg, sid):
     # dg: astropy table that has been grouped by SOURCEID
 
@@ -329,7 +335,7 @@ def simple_lc_brokenaxes(dg, sid, date_offset=None, pad=5, xlims=None, breaks=No
 ic348_xlims = [(-5.0, 24.0), (74.0, 230.0), (370.0, 390.0)]
 
 
-def ic348_simple_lc_brokenaxes(dg, sid, date_offset=56849, xlims=ic348_xlims):
+def ic348_simple_lc_brokenaxes(dg, sid, date_offset=ic_date_offset, xlims=ic348_xlims):
 
     return simple_lc_brokenaxes(dg, sid, date_offset=date_offset, xlims=xlims)
 
@@ -337,7 +343,9 @@ def ic348_simple_lc_brokenaxes(dg, sid, date_offset=56849, xlims=ic348_xlims):
 ngc1333_xlims = [(-5, 251.0)]
 
 
-def ngc1333_simple_lc_brokenaxes(dg, sid, date_offset=56141, xlims=ngc1333_xlims):
+def ngc1333_simple_lc_brokenaxes(
+    dg, sid, date_offset=ngc_date_offset, xlims=ngc1333_xlims
+):
 
     return simple_lc_brokenaxes(dg, sid, date_offset=date_offset, xlims=xlims)
 
@@ -345,7 +353,9 @@ def ngc1333_simple_lc_brokenaxes(dg, sid, date_offset=56141, xlims=ngc1333_xlims
 monr2_xlims = [(-5.0, 134.0), (291.0, 414.0)]
 
 
-def monr2_simple_lc_brokenaxes(dg, sid, date_offset=57374, xlims=monr2_xlims):
+def monr2_simple_lc_brokenaxes(
+    dg, sid, date_offset=monr2_date_offset, xlims=monr2_xlims
+):
 
     return simple_lc_brokenaxes(dg, sid, date_offset=date_offset, xlims=xlims)
 
@@ -353,7 +363,7 @@ def monr2_simple_lc_brokenaxes(dg, sid, date_offset=57374, xlims=monr2_xlims):
 onc_xlims = [(-7.0, 185.0), (384.0, 410.0), (737.0, 756.0), (822.0, 902.0)]
 
 
-def onc_simple_lc_brokenaxes(dg, sid, date_offset=54034.0, xlims=onc_xlims):
+def onc_simple_lc_brokenaxes(dg, sid, date_offset=onc_date_offset, xlims=onc_xlims):
 
     return simple_lc_brokenaxes(dg, sid, date_offset=date_offset, xlims=xlims)
 
@@ -592,7 +602,7 @@ def simple_lc_scatter_brokenaxes(
 
 
 def ic348_simple_lc_scatter_brokenaxes(
-    dg, sid, date_offset=56849, xlims=ic348_xlims, **kwargs
+    dg, sid, date_offset=ic_date_offset, xlims=ic348_xlims, **kwargs
 ):
 
     return simple_lc_scatter_brokenaxes(
@@ -601,7 +611,7 @@ def ic348_simple_lc_scatter_brokenaxes(
 
 
 def ngc1333_simple_lc_scatter_brokenaxes(
-    dg, sid, date_offset=56141, xlims=ngc1333_xlims, **kwargs
+    dg, sid, date_offset=ngc_date_offset, xlims=ngc1333_xlims, **kwargs
 ):
 
     return simple_lc_scatter_brokenaxes(
@@ -610,7 +620,7 @@ def ngc1333_simple_lc_scatter_brokenaxes(
 
 
 def monr2_simple_lc_scatter_brokenaxes(
-    dg, sid, date_offset=57374, xlims=monr2_xlims, **kwargs
+    dg, sid, date_offset=monr2_date_offset, xlims=monr2_xlims, **kwargs
 ):
 
     return simple_lc_scatter_brokenaxes(
@@ -620,7 +630,7 @@ def monr2_simple_lc_scatter_brokenaxes(
 
 # Note: This one is special, because it has a default cmap assigned
 def onc_simple_lc_scatter_brokenaxes(
-    dg, sid, date_offset=54034.0, xlims=onc_xlims, cmap=orion_cmap, **kwargs
+    dg, sid, date_offset=onc_date_offset, xlims=onc_xlims, cmap=orion_cmap, **kwargs
 ):
 
     return simple_lc_scatter_brokenaxes(
