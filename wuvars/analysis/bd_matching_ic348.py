@@ -55,7 +55,7 @@ L16_lowmass_ic = (np.array(L16_SpT_num) >= 4.5)
 spread = spreadsheet.load_wserv_v2(8)
 sm = spread["median"]
 spreadsheet_coordinates = SkyCoord(
-    ra=sm["RA"].values * u.rad, dec=sm["DEC"].values * u.rad
+    ra=sm["RA"].values * u.rad, dec=sm["DEC"].values * u.rad,
 )
 
 
