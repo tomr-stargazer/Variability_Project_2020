@@ -418,7 +418,7 @@ def simple_lc_scatter_brokenaxes(
             # baked-in default since I was prototyping on IC348; possibly a bad default
             breaks = [50, 350]
         xlims = produce_xlims(date, breaks=breaks, pad=pad)
-        print(xlims)
+        # print(xlims)
 
     ax_j = brokenaxes(xlims=xlims, subplot_spec=gs_left[0, 0], **bax_kwargs)
     ax_h = brokenaxes(xlims=xlims, subplot_spec=gs_left[1, 0], **bax_kwargs)
