@@ -56,22 +56,18 @@ class TableMatcher(object):
             max_sep = 1.0 * u.arcsec
             sep_constraint = d2d < max_sep
 
-            matches = self.spread.iloc[idx[sep_constraint]]
-            non_matches = aux_table[~sep_constraint]
-# 
-            # print("Matches: \n", matches, "\n\n")
-            print(f"Non-matches to {name}:", len(non_matches))
+            aux_table.matches = self.spread.iloc[idx[sep_constraint]]
+            aux_table.non_matches = aux_table[~sep_constraint]
 
-            BD_match_sourceids_list.extend(matches.index)
-            non_matches_dict[name] = non_matches
+            # print("Matches: \n", matches, "\n\n")
+            print(f"Non-matches to {name}:", len(aux_table.non_matches))
+
+            BD_match_sourceids_list.extend(aux_table.matches.index)
+            non_matches_dict[name] = aux_table.non_matches
 
         BD_match_sourceids = np.unique(BD_match_sourceids_list)
-        BD_spreadsheet = self.spread[
-            np.in1d(self.spread.index, BD_match_sourceids)
-        ]
-        BD_coords = self.spread.coords[
-            np.in1d(self.spread.index, BD_match_sourceids)
-        ]
+        BD_spreadsheet = self.spread[np.in1d(self.spread.index, BD_match_sourceids)]
+        BD_coords = self.spread.coords[np.in1d(self.spread.index, BD_match_sourceids)]
 
         match_table = astropy.table.Table()
         match_table["SOURCEID"] = BD_spreadsheet.index
@@ -193,9 +189,7 @@ if __name__ == "__main__":
             # non_matches_dict[name] = non_matches
 
         BD_match_sourceids = np.unique(BD_match_sourceids_list)
-        BD_spreadsheet = spread[
-            np.in1d(spread.index, BD_match_sourceids)
-        ]
+        BD_spreadsheet = spread[np.in1d(spread.index, BD_match_sourceids)]
         BD_coords = spread.coords[np.in1d(spread.index, BD_match_sourceids)]
 
         match_table = astropy.table.Table()
