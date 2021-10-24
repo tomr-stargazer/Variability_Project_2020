@@ -72,3 +72,25 @@ def moving_average_percentile_monotonic(*args, **kwargs):
     x_grid, result_grid = moving_average_percentile(*args, **kwargs)
     result_grid_monotonic = monotone_decline(result_grid)
     return x_grid, result_grid_monotonic
+
+
+def standardize_result(x_array, y_array, flatten_threshold=17):
+    """
+    Create a new `y_array` with all values beyond a specified spot taking on a 
+    fixed or flattened value.
+
+    Good for when there are very few samples beyond a certain point, so you don't 
+    want to be interpolating onto nonsense.
+
+    """
+
+    y_array_standard = np.copy(y_array)
+
+    x_threshold_location = (np.abs(x_array - flatten_threshold) == np.min(np.abs(x_array - flatten_threshold)))
+    x_threshold = x_array[x_threshold_location]
+    y_threshold_value = y_array[x_threshold_location]
+
+    y_array_standard[x_array >= x_threshold] = y_threshold_value
+
+    return y_array_standard
+
