@@ -85,6 +85,7 @@ approved_sources_onc = inspect_onc["SOURCEID"][inspect_onc["exclude?"] != "yes"]
 approved_sources_ngc = inspect_ngc["SOURCEID"][inspect_ngc["exclude?"] != "yes"]
 approved_sources_ic = inspect_ic["SOURCEID"][inspect_ic["exclude?"] != "yes"]
 
+
 def match_onc():
 
     onc_match = MatchStruct()
@@ -170,12 +171,14 @@ def match_onc():
     approved_criteria = lowmass_criteria & approved_indices_onc
     onc_match.approved = joint_matches[approved_criteria]
 
-    statistical_criteria = approved_criteria & (
-        joint_matches["median_KAPERMAG3ERR"] < 0.05
-    ) & onc_q.q1_k[joint_matches['SOURCEID']].values
+    statistical_criteria = (
+        approved_criteria
+        & (joint_matches["median_KAPERMAG3ERR"] < 0.05)
+        & onc_q.q1_k[joint_matches["SOURCEID"]].values
+    )
     onc_match.statistical = joint_matches[statistical_criteria]
 
-    color_criteria = statistical_criteria & onc_q.q2[joint_matches['SOURCEID']].values
+    color_criteria = statistical_criteria & onc_q.q2[joint_matches["SOURCEID"]].values
     onc_match.color = joint_matches[color_criteria]
 
     return onc_match
@@ -274,15 +277,18 @@ def match_ngc():
     approved_criteria = lowmass_criteria & approved_indices_ngc
     ngc_match.approved = joint_matches[approved_criteria]
 
-    statistical_criteria = approved_criteria & (
-        joint_matches["median_KAPERMAG3ERR"] < 0.05
-    ) & ngc_q.q1_k[joint_matches['SOURCEID']].values
+    statistical_criteria = (
+        approved_criteria
+        & (joint_matches["median_KAPERMAG3ERR"] < 0.05)
+        & ngc_q.q1_k[joint_matches["SOURCEID"]].values
+    )
     ngc_match.statistical = joint_matches[statistical_criteria]
 
-    color_criteria = statistical_criteria & ngc_q.q2[joint_matches['SOURCEID']].values
+    color_criteria = statistical_criteria & ngc_q.q2[joint_matches["SOURCEID"]].values
     ngc_match.color = joint_matches[color_criteria]
 
     return ngc_match
+
 
 def match_ic():
 
@@ -374,13 +380,14 @@ def match_ic():
     approved_criteria = lowmass_criteria & approved_indices_ic
     ic_match.approved = joint_matches[approved_criteria]
 
-    statistical_criteria = approved_criteria & (
-        joint_matches["median_KAPERMAG3ERR"] < 0.05
-    ) & ic_q.q1_k[joint_matches['SOURCEID']].values
+    statistical_criteria = (
+        approved_criteria
+        & (joint_matches["median_KAPERMAG3ERR"] < 0.05)
+        & ic_q.q1_k[joint_matches["SOURCEID"]].values
+    )
     ic_match.statistical = joint_matches[statistical_criteria]
 
-    color_criteria = statistical_criteria & ic_q.q2[joint_matches['SOURCEID']].values
+    color_criteria = statistical_criteria & ic_q.q2[joint_matches["SOURCEID"]].values
     ic_match.color = joint_matches[color_criteria]
 
     return ic_match
-
