@@ -44,6 +44,7 @@ ic_match = match_ic()
 
 reference_dict = {5: onc_match, 7: ngc_match, 8: ic_match}
 short_names = {5: "ONC", 7: "NGC", 8: "IC"}
+full_names = {5: "ONC", 7: "NGC 1333", 8: "IC 348"}
 
 
 def select_targets(wserv, attr="approved"):
