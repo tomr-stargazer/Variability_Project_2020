@@ -57,6 +57,19 @@ def select_targets(wserv, attr="approved"):
     return ref
 
 
+def select_disks(wserv, attr="approved", choice="yes"):
+
+    sourceids = getattr(reference_dict[wserv], attr)["SOURCEID"]
+    disk_yn = getattr(reference_dict[wserv], attr)["IRexc"]
+
+    disked_sourceids = sourceids[disk_yn == choice]
+
+    ds = spread[f"wserv{wserv}"]
+    ref = np.in1d(ds.index, disked_sourceids)
+
+    return ref
+
+
 def select_stetson_variables(wserv):
 
     n_min = n_min_dict[wserv]
@@ -196,3 +209,35 @@ if __name__ == "__main__":
         )
 
         print("")
+        if wserv != 5:
+
+            disks = select_disks(wserv)
+            nondisks = select_disks(wserv, choice='no')    
+
+            rate_disks = np.sum(stat & vv & disks) / np.sum(stat & disks)
+            per_rate_disks = np.sum(stat & v_per & disks) / np.sum(stat & disks)
+            rate_nondisks = np.sum(stat & vv & nondisks) / np.sum(stat & nondisks)
+            per_rate_nondisks = np.sum(stat & v_per & nondisks) / np.sum(stat & nondisks)
+
+
+            print(f"Disks: {np.sum(ref & disks)} (Stat: {np.sum(stat & disks)})")
+            print(f"Non-disks: {np.sum(ref & nondisks)} (Stat: {np.sum(stat & nondisks)})")
+
+            print(f"Variable Disks: {np.sum(ref & disks & vv)} (Stat: {np.sum(stat & disks & vv)})")
+            print(f"Variable Non-disks: {np.sum(ref & nondisks & vv)} (Stat: {np.sum(stat & nondisks & vv)})")
+
+            print(
+                f"Statistical DISKED variability rate: {np.sum(stat & vv & disks)}/{np.sum(stat & disks)} = {rate_disks:.2f}"
+            )
+            print(
+                f"Statistical DISKED periodicity rate: {np.sum(stat & v_per & disks)}/{np.sum(stat & disks)} = {per_rate_disks:.2f}"
+            )
+            print(
+                f"Statistical NONDISKED variability rate: {np.sum(stat & vv & nondisks)}/{np.sum(stat & nondisks)} = {rate_nondisks:.2f}"
+            )
+            print(
+                f"Statistical NONDISKED periodicity rate: {np.sum(stat & v_per & nondisks)}/{np.sum(stat & nondisks)} = {per_rate_nondisks:.2f}"
+            )
+
+
+        print("\n")
