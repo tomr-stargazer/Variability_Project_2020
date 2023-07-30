@@ -40,6 +40,7 @@ plt.plot(
     np.degrees(ngc_spread["median"]["DEC"]),
     "k,",
     alpha=0.5,
+    rasterized=True,
 )
 
 plt.plot(
@@ -101,6 +102,7 @@ plt.plot(
     np.degrees(ic_spread["median"]["DEC"]),
     "k,",
     alpha=0.5,
+    rasterized=True,
 )
 
 plt.plot(
