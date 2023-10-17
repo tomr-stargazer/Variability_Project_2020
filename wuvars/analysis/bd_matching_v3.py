@@ -12,6 +12,7 @@ Here are my english-language definitions:
     every source which is
     (a) a confident member of the cluster in question*, and
     (b) matches within some matching radius** of a UKIRT source.
+## WIP - still assessing what I'm calling these categories ##
 - M4:
     subset of the above which has SpT >= M4.0 .
 - approved:
@@ -45,20 +46,19 @@ This supersedes the 0.37'' radius I used in v2.
 
 
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import astropy.table
-from astropy.coordinates import SkyCoord, Angle
-from astropy import units as u
-import pandas as pd
 
-from wuvars.data import spreadsheet, photometry, quality_classes
+import astropy.table
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 from wuvars.analysis.luhman16_coord_handler import coords_from_Luhman_table
-from wuvars.analysis.spectral_type_to_number import get_num_from_SpT, get_SpT_from_num
-from wuvars.analysis.spectral_type_to_temperature import (
-    get_Teff_from_SpT,
-    get_SpT_from_Teff,
-)
+from wuvars.analysis.spectral_type_to_number import (get_num_from_SpT,
+                                                     get_SpT_from_num)
+from wuvars.analysis.spectral_type_to_temperature import (get_SpT_from_Teff,
+                                                          get_Teff_from_SpT)
+from wuvars.data import photometry, quality_classes, spreadsheet
 
 
 class MatchStruct:
@@ -270,6 +270,7 @@ def match_ic():
         ]
     )
     joint_matches.add_column(matches_sm.index, index=0, name="SOURCEID")
+    joint_matches.add_column(d2d[sep_constraint].to(u.arcsec), name="d2d_arcsec")
 
     ic_match.all_matches = joint_matches
 
