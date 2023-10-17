@@ -12,7 +12,21 @@ between 0.37 and 0.5 arcsec; I'll try to re-include them here.
 The activity being undertaken here:
 * I make a bunch of light curves and I save them as graphics files
 * I make a spreadsheet that contains information on those objects
-* I then, separately, 
+* I then, separately, scan through all the lightcurves by eye with the spreadsheet open,
+  and note in the "exclude?" column the word "yes" whenever I see a disqualifiable light
+  curve.
+
+Update: I have done this. The data live in these two files:
+/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes/BD_lcs_v3.5/
+new_inspection_ngc.csv
+new_inspection_ic.csv
+
+I have added the word "yes" to the column "exclude?" wherever I identified a light curve
+that was dominated by obvious artifacts (chip edge issues, barely any data, obviously 
+unphysical stuff, etc). I tried not to over-use this when I was just looking at a 
+not-convincingly-variable Q0 object. I flagged 11 new rejects in IC 348 and one in 
+NGC 1333. One of the IC 348 rejects was the 0.49'' match. (Though I did find a 0.50'' 
+L0 match which I find convincing. I'll chalk its uncertain position up to its faintness.)
 
 """
 
@@ -25,11 +39,8 @@ from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
 from wuvars.analysis.q_string import q_string
 from wuvars.analysis.sidsep import sidsep
 from wuvars.data import photometry, quality_classes, spreadsheet
-from wuvars.plotting.lightcurve import (ic348_simple_lc_brokenaxes,
-                                        ic348_simple_lc_scatter_brokenaxes,
-                                        ngc1333_simple_lc_brokenaxes,
-                                        ngc1333_simple_lc_scatter_brokenaxes,
-                                        simple_lc, simple_lc_brokenaxes)
+from wuvars.plotting.lightcurve import (ic348_simple_lc_scatter_brokenaxes,
+                                        ngc1333_simple_lc_scatter_brokenaxes)
 
 # Let's load up the selection of all the objects we'd like to take a look at.
 ngc_match = match_ngc()
@@ -109,6 +120,7 @@ for name, match, inspect in zip(names, matches, inspects):
 
     new_lc_dir = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes/BD_lcs_v3.5"
 
+    # switch to True if you need to make a new table. This overwrites...
     if False:
         with open(os.path.join(new_lc_dir, f"new_inspection_{name}.csv"), "w+") as f:
 
@@ -144,6 +156,7 @@ for name, match, inspect in zip(names, matches, inspects):
     longname = longnames_dict[name]
     lc_fn = lc_fn_dict[name]
 
+    # This section produces the lightcurves.
     for i, sid in enumerate(gonna_check_sids):
 
         suptitle = ""
