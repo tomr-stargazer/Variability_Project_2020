@@ -13,6 +13,9 @@ Here are my english-language definitions:
     (a) a confident member of the cluster in question*, and
     (b) matches within some matching radius** of a UKIRT source.
 ## WIP - still assessing what I'm calling these categories ##
+## MLdwarfs ? MLmatches? Honestly, it doesn't matter; I'll just use approved
+## approved_v3 ... or just approved
+## statistical
 - M4:
     subset of the above which has SpT >= M4.0 .
 - approved:
@@ -64,7 +67,7 @@ from wuvars.data import photometry, quality_classes, spreadsheet
 class MatchStruct:
     pass
 
-
+# The following is the "old" approved list
 lc_dir = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes/BD_lcs_v3"
 inspect_ngc = pd.read_csv(
     os.path.join(lc_dir, "inspection_ngc.csv"), skipinitialspace=True
@@ -73,12 +76,29 @@ inspect_ic = pd.read_csv(
     os.path.join(lc_dir, "inspection_ic.csv"), skipinitialspace=True
 )
 
-rejected_sources_ngc = inspect_ngc["SOURCEID"][inspect_ngc["exclude?"] == "yes"]
-rejected_sources_ic = inspect_ic["SOURCEID"][inspect_ic["exclude?"] == "yes"]
+rejected_sources_ngc_old = inspect_ngc["SOURCEID"][inspect_ngc["exclude?"] == "yes"]
+rejected_sources_ic_old = inspect_ic["SOURCEID"][inspect_ic["exclude?"] == "yes"]
 
-approved_sources_ngc = inspect_ngc["SOURCEID"][inspect_ngc["exclude?"] != "yes"]
-approved_sources_ic = inspect_ic["SOURCEID"][inspect_ic["exclude?"] != "yes"]
+approved_sources_ngc_old = inspect_ngc["SOURCEID"][inspect_ngc["exclude?"] != "yes"]
+approved_sources_ic_old = inspect_ic["SOURCEID"][inspect_ic["exclude?"] != "yes"]
 
+# The following is the "new" approved list
+lc_dir_v3 = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes/BD_lcs_v3.5"
+inspect_ngc_v3 = pd.read_csv(
+    os.path.join(lc_dir_v3, "new_inspection_ngc.csv"), skipinitialspace=True
+)
+inspect_ic_v3 = pd.read_csv(
+    os.path.join(lc_dir_v3, "new_inspection_ic.csv"), skipinitialspace=True
+)
+
+rejected_sources_ngc_new = inspect_ngc_v3["SOURCEID"][inspect_ngc_v3["exclude?"] == "yes"]
+rejected_sources_ic_new = inspect_ic_v3["SOURCEID"][inspect_ic_v3["exclude?"] == "yes"]
+
+approved_sources_ngc_new = inspect_ngc_v3["SOURCEID"][inspect_ngc_v3["exclude?"] != "yes"]
+approved_sources_ic_new = inspect_ic_v3["SOURCEID"][inspect_ic_v3["exclude?"] != "yes"]
+
+approved_sources_ngc = pd.concat([approved_sources_ngc_new, approved_sources_ngc_old])
+approved_sources_ic = pd.concat([approved_sources_ic_new, approved_sources_ic_old])
 
 def match_ngc():
 
@@ -114,6 +134,8 @@ def match_ngc():
     ngc_Teff = np.array([get_Teff_from_SpT(x) for x in L16_T2["SpT"]])
 
     L16_T2["Teff"] = ngc_Teff
+    L16_T2["RA"] = np.radians(L16_T2_coordinates.ra)
+    L16_T2["DEC"] = np.radians(L16_T2_coordinates.dec)
 
     # ======================================= #
     # === Part 2: loading our UKIRT data. === #
@@ -151,6 +173,8 @@ def match_ngc():
     matches_sr = matches_sr.rename(columns=lambda name: "range_" + name)
 
     matched = L16_T2[sep_constraint]
+    unmatched = L16_T2[~sep_constraint]
+
     joint_matches = astropy.table.hstack(
         [
             astropy.table.Table.from_pandas(matches_sm),
@@ -174,10 +198,17 @@ def match_ngc():
     ngc_match.M4 = joint_matches[M4_criteria]
     ngc_match.not_M4 = joint_matches[~M4_criteria]
 
+    ML_criteria = joint_matches["SpT"] >= 0.0
+    ngc_match.ML = joint_matches[ML_criteria]
+    ngc_match.not_ML = joint_matches[~ML_criteria]
+
     approved_indices_ngc = np.in1d(joint_matches["SOURCEID"], approved_sources_ngc)
 
-    approved_criteria = M4_criteria & approved_indices_ngc
+    approved_criteria = ML_criteria & approved_indices_ngc
+    rejected_criteria = ML_criteria & ~approved_indices_ngc
+
     ngc_match.approved = joint_matches[approved_criteria]
+    ngc_match.rejected = joint_matches[rejected_criteria]
 
     statistical_criteria = (
         approved_criteria
@@ -188,6 +219,8 @@ def match_ngc():
 
     color_criteria = statistical_criteria & ngc_q.q2[joint_matches["SOURCEID"]].values
     ngc_match.color = joint_matches[color_criteria]
+
+    ngc_match.unmatched = L16_T2[~sep_constraint & (L16_T2["SpT"] >= 0.0)]
 
     return ngc_match
 
@@ -223,6 +256,8 @@ def match_ic():
     ic_Teff = np.array([get_Teff_from_SpT(x) for x in L16_T1["SpT"]])
 
     L16_T1["Teff"] = ic_Teff
+    L16_T1["RA"] = np.radians(L16_T1_coordinates.ra)
+    L16_T1["DEC"] = np.radians(L16_T1_coordinates.dec)
 
     # ======================================= #
     # === Part 2: loading our UKIRT data. === #
@@ -260,6 +295,7 @@ def match_ic():
     matches_sr = matches_sr.rename(columns=lambda name: "range_" + name)
 
     matched = L16_T1[sep_constraint]
+    unmatched = L16_T1[~sep_constraint]
     joint_matches = astropy.table.hstack(
         [
             astropy.table.Table.from_pandas(matches_sm),
@@ -283,10 +319,17 @@ def match_ic():
     ic_match.M4 = joint_matches[M4_criteria]
     ic_match.not_M4 = joint_matches[~M4_criteria]
 
+    ML_criteria = joint_matches["SpT"] >= 0.0
+    ic_match.ML = joint_matches[ML_criteria]
+    ic_match.not_ML = joint_matches[~ML_criteria]
+
     approved_indices_ic = np.in1d(joint_matches["SOURCEID"], approved_sources_ic)
 
-    approved_criteria = lowmass_criteria & approved_indices_ic
+    approved_criteria = ML_criteria & approved_indices_ic
+    rejected_criteria = ML_criteria & ~approved_indices_ic
+
     ic_match.approved = joint_matches[approved_criteria]
+    ic_match.rejected = joint_matches[rejected_criteria]
 
     statistical_criteria = (
         approved_criteria
@@ -297,5 +340,7 @@ def match_ic():
 
     color_criteria = statistical_criteria & ic_q.q2[joint_matches["SOURCEID"]].values
     ic_match.color = joint_matches[color_criteria]
+
+    ic_match.unmatched = L16_T1[~sep_constraint & (L16_T1["SpT"] >= 0.0)]
 
     return ic_match
