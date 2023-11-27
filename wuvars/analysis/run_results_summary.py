@@ -1,0 +1,169 @@
+"""
+This is a script that runs through and summarizes what's up with our data.
+
+"""
+import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+import wuvars.analysis.variability_selection as sv
+from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
+from wuvars.analysis.spectral_type_to_number import get_SpT_from_num
+from wuvars.analysis.variability_selection_curved import (curve_Stetson, sv_hk,
+                                                          sv_jh, sv_jhk, sv_jk)
+from wuvars.data import photometry, quality_classes, spreadsheet
+
+warnings.filterwarnings("ignore")
+
+ngc_match = match_ngc()
+ic_match = match_ic()
+
+names = ["ngc", "ic"]
+fullname_dict = {"ngc": "NGC 1333", "ic": "IC 348"}
+match_dict = {"ngc": ngc_match, "ic": ic_match}
+spread_dict = {"ngc": spreadsheet.load_wserv_v2(7), "ic": spreadsheet.load_wserv_v2(8)}
+q_dict = {"ngc": quality_classes.load_q(7), "ic": quality_classes.load_q(8)}
+
+make_figs = True
+
+# Let's do the overview of IC 348 and NGC 1333.
+# How many objects were in the original catalog
+print("The input catalogs (total):\n")
+for name in names:
+    print("***")
+    print(fullname_dict[name], "\n")
+    match = match_dict[name]
+
+    # Simple stats on the input catalog
+    print(f"{len(match.input_catalog)} objects in the input catalog")
+    valid = match.input_catalog["SpT"] >= 0.0
+    print(f"{np.sum(valid)} with an assigned spectral type of M0 or later")
+    print("   and are therefore considered for this study.")
+    invalid_nan = np.isnan(match.input_catalog["SpT"])
+    invalid_early = match.input_catalog["SpT"] < 0.0
+    print(f"({np.sum(invalid_nan)} have no assigned spectral type)")
+    print(f"({np.sum(invalid_early)} have an assigned spectral type earlier than M0)")
+    assert len(match.input_catalog) == np.sum(valid) + np.sum(invalid_nan) + np.sum(
+        invalid_early
+    )
+
+    print("")
+    print(
+        f"{len(match.ML)} objects ({len(match.ML)/np.sum(valid)*100:.1f}%) had a positional match within 0.5''"
+    )
+    print(f"({len(match.unmatched)} objects failed to positionally match)")
+
+    print("")
+    # print(len(match.approved), "Approved")
+    print(
+        f"{len(match.approved)} objects' light curves ({len(match.approved)/len(match.ML)*100:.1f}%) were approved by manual inspection"
+    )
+    print(f"({len(match.rejected)} light curves were rejected by manual inspection)")
+
+    print("")
+    if make_figs:
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.hist(match.approved["SpT"], range=[0, 15], bins=np.arange(0, 15, 0.5))
+
+        ax.set_xlim(0, 14)
+        ax.set_ylabel("Number of sources")
+        ax.set_xlabel("Spectral Type")
+
+        spt_array = np.array([get_SpT_from_num(int(x)) for x in ax.get_xticks()])
+        ax.xaxis.set_tick_params(labelbottom=True)
+        ax.set_xticklabels(spt_array)
+
+        ax.text(0.025, 0.9, fullname_dict[name], transform=ax.transAxes)
+        ax.text(
+            0.025,
+            0.825,
+            str(len(match.approved)) + " approved objects",
+            transform=ax.transAxes,
+        )
+
+        # ax.axvline(4.7, color="k", ls=":")
+        # ax.axvline(6.8, color="k", ls=":")
+        ax.axvspan(4.7, 6.8, hatch="xxxx", facecolor="None", ec="k", lw=0.25, alpha=0.2)
+        ax.grid(True, axis="x", ls=":")
+        plt.show()
+
+    # now... data quality (error) versus spectral type
+
+    if make_figs:
+        fig, axes = plt.subplots(figsize=(6, 8), nrows=2)
+        ax = axes[0]
+        ax.plot(match.approved["SpT"], match.approved["median_KAPERMAG3"], "k.")
+        ax.invert_yaxis()
+
+        ax.set_xlim(0, 14)
+        ax.set_ylabel("median $K$ mag (UKIRT)")
+        ax.set_xlabel("Spectral Type")
+        ax.grid(True, axis="x", ls=":")
+        ax.axvspan(4.7, 6.8, hatch="xxxx", facecolor="None", ec="k", lw=0.25, alpha=0.1)
+
+        ax1 = axes[1]
+        ax1.plot(match.approved["SpT"], match.approved["median_KAPERMAG3ERR"], "k.")
+        ax1.set_xlim(0, 14)
+        ax1.semilogy()
+        ax1.set_xlabel("Spectral Type")
+        ax.set_xticklabels(spt_array)
+        ax1.set_xticklabels(spt_array)
+        ax1.grid(True, axis="x", ls=":")
+        ax1.axvspan(
+            4.7, 6.8, hatch="xxxx", facecolor="None", ec="k", lw=0.25, alpha=0.1
+        )
+
+        plt.show()
+
+    # print("IC 348:")
+    # print("NGC 1333:"
+    # print(f"{len(ngc_match.input_catalog)} objects in IC 348;")
+    # print(f"{} objects in NGC 1333.")
+    # How many objects did we prune down to for our positional matching
+    # How many objects were rejected on lightcurve analysis
+    # What's the breakdown of quality classes among the "remaining" objects
+    # What's the breakdown of spectral types
+
+    print("Variability analysis")
+    print(f"{len(match.approved)} approved")
+    print(f"{len(match.statistical)} statistical")
+    print(f"{len(match.color)} color")
+
+    # borrowed from analysis/prototypes/Prototyping final variable list.ipynb
+    # also see 
+    # wuvars/analysis/prototypes/Prototyping all variables (part 3).ipynb
+
+    # okay. So, let's re-summarize some things...
+    # Variables were selected using 3 criteria:
+    # 1. the automated Stetson selection (with a magnitude-dependent Stetson cut)
+    # 2. the periodic selection (partially manual interpretation of Lomb-Scargle 
+    #    periodograms + some followup including detrending of secular variables)
+    # 3. the “subjective” selection (partially manual inspection of light curves 
+    #    + Stetson values)
+
+
+
+
+    print("TBD")
+    print("")
+# Variability finding
+# What counts as a variable star?
+# Automatic variability finding: print out how many qualify for this
+# How many are "automatically detected" variables?
+# - How about "the statistical sample" here?
+# Periodic (requires some manual intervention)
+# - This cannot be summarized until I've done that
+# Visual inspection of
+
+### Classifying variability
+# Showing the Q, M plot (for variables only)
+
+# Summarizing "types" of variability
+# Don't forget color
+
+# How do these "types" vary with
+
+### Statistical (quantitative) variability trends across spectral type
+# Period trends
+# Amplitude trends
+# (etc)

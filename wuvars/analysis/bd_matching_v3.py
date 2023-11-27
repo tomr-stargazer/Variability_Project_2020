@@ -137,6 +137,8 @@ def match_ngc():
     L16_T2["RA"] = np.radians(L16_T2_coordinates.ra)
     L16_T2["DEC"] = np.radians(L16_T2_coordinates.dec)
 
+    ngc_match.input_catalog = L16_T2
+
     # ======================================= #
     # === Part 2: loading our UKIRT data. === #
     # ======================================= #
@@ -259,6 +261,8 @@ def match_ic():
     L16_T1["RA"] = np.radians(L16_T1_coordinates.ra)
     L16_T1["DEC"] = np.radians(L16_T1_coordinates.dec)
 
+    ic_match.input_catalog = L16_T1
+    
     # ======================================= #
     # === Part 2: loading our UKIRT data. === #
     # ======================================= #
