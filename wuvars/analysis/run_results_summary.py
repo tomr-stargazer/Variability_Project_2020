@@ -15,10 +15,12 @@ from wuvars.data import photometry, quality_classes, spreadsheet
 
 warnings.filterwarnings("ignore")
 
+# This part pulls up the source information from our position-matching scheme.
 ngc_match = match_ngc()
 ic_match = match_ic()
 
 names = ["ngc", "ic"]
+wserv_dict = {"ngc": 7, "ic": 8}
 fullname_dict = {"ngc": "NGC 1333", "ic": "IC 348"}
 match_dict = {"ngc": ngc_match, "ic": ic_match}
 spread_dict = {"ngc": spreadsheet.load_wserv_v2(7), "ic": spreadsheet.load_wserv_v2(8)}
@@ -106,6 +108,8 @@ for name in names:
         ax1.set_xlim(0, 14)
         ax1.semilogy()
         ax1.set_xlabel("Spectral Type")
+        ax1.set_ylabel("median $K$ photometric uncertainty (mag)")
+
         ax.set_xticklabels(spt_array)
         ax1.set_xticklabels(spt_array)
         ax1.grid(True, axis="x", ls=":")
@@ -130,19 +134,80 @@ for name in names:
     print(f"{len(match.color)} color")
 
     # borrowed from analysis/prototypes/Prototyping final variable list.ipynb
-    # also see 
+    # also see
     # wuvars/analysis/prototypes/Prototyping all variables (part 3).ipynb
+
+    """
+    okay. At present...
+    looks like select_stetson_variables() in prototype2...
+    is the function I want!
+    Basically, I want to figure out how to re-generate the Stetson vs K mag plots
+    with the fun little lines in there showing off "2sigma" and "3sigma" lines.
+    This might be more work than I'd hoped for.
+    And to print out:
+    (a) the breakdown of various quality cuts for the approved sample(s)
+    (b) how many objects are automatically detected as variable per the criteria
+        I had laid out
+    """
+
+    from wuvars.analysis.prototype2_of_variability_full_criteria import (
+        select_stetson_variables,
+    )
+
+    # print(f"{name}: Variability stuff from Stetson stuff: ")
+    v2, v1 = select_stetson_variables(wserv_dict[name])
+    # print(np.sum(v2), np.sum(v1), np.sum(v2 & v1))
+    # print(len(v2))
+
+    # OKAY. I believe that we "select" the v1 variables that are in the "approved"
+    # sample using the following syntax:
+
+    approved_v1 = v1[match.approved["SOURCEID"]]
+    approved_v2 = v2[match.approved["SOURCEID"]]
+    print(
+        f"Number of approved sources that are v1 variables: {np.sum(approved_v1)}/{len(match.approved)}"
+    )
+
+    av1 = match.approved
+
+    statistical_v1 = v1[match.statistical["SOURCEID"]]
+    statistical_v2 = v2[match.statistical["SOURCEID"]]
+    print(
+        f"Number of statistical sources that are v1 variables: {np.sum(statistical_v1)}/{len(match.statistical)}"
+        f" ({100*np.sum(statistical_v1)/len(match.statistical):.2f}%)"
+    )
+
+    if make_figs:
+        fig2, ax2 = plt.subplots(figsize=(6, 4))
+        ax2.plot(match.approved["SpT"], match.approved["std_KAPERMAG3"], "k.", ms=2)
+        ax2.plot(
+            match.approved["SpT"][approved_v1],
+            match.approved["std_KAPERMAG3"][approved_v1],
+            "r.",
+            ms=5,
+        )
+        ax2.set_xlim(-0.2, 14.2)
+        ax2.grid(True, axis="x", ls=":")
+        ax2.axvspan(
+            4.7, 6.8, hatch="xxxx", facecolor="None", ec="k", lw=0.25, alpha=0.1
+        )
+
+        spt_array = np.array([get_SpT_from_num(int(x)) for x in ax2.get_xticks()])
+        ax2.xaxis.set_tick_params(labelbottom=True)
+        ax2.set_xticklabels(spt_array)
+
+        ax2.semilogy()
+        ax2.set_xlabel("Spectral Type")
+        ax2.set_ylabel("rms $K$ variability (mag)")
+        plt.show()
 
     # okay. So, let's re-summarize some things...
     # Variables were selected using 3 criteria:
     # 1. the automated Stetson selection (with a magnitude-dependent Stetson cut)
-    # 2. the periodic selection (partially manual interpretation of Lomb-Scargle 
+    # 2. the periodic selection (partially manual interpretation of Lomb-Scargle
     #    periodograms + some followup including detrending of secular variables)
-    # 3. the “subjective” selection (partially manual inspection of light curves 
+    # 3. the “subjective” selection (partially manual inspection of light curves
     #    + Stetson values)
-
-
-
 
     print("TBD")
     print("")
