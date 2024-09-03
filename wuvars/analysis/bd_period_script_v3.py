@@ -6,17 +6,17 @@ to the table columns.
 """
 
 import os
-import warnings
-import numpy as np
-import matplotlib.pyplot as plt
 import pdb
+import warnings
 
 import astropy.table
+import matplotlib.pyplot as plt
+import numpy as np
 from astropy.timeseries import LombScargle
-
-from wuvars.data import spreadsheet, photometry, quality_classes
-from wuvars.analysis.periods import f_max, f_min, N_eval
-from wuvars.analysis.alias_hunting import find_aliases, find_m_aliases, find_n_aliases
+from wuvars.analysis.alias_hunting import (find_aliases, find_m_aliases,
+                                           find_n_aliases)
+from wuvars.analysis.periods import N_eval, f_max, f_min
+from wuvars.data import photometry, quality_classes, spreadsheet
 from wuvars.plotting.lightcurve import simple_phased_lc_scatter_gridspec
 from wuvars.plotting.lightcurve_helpers import orion_cmap
 
@@ -25,15 +25,9 @@ warnings.filterwarnings("ignore")
 
 freq = np.linspace(f_min, f_max, N_eval)
 
-onc = {}
 ngc = {}
 ic = {}
-dicts = [onc, ngc, ic]
-
-onc["dat"] = photometry.group_wserv_v2(photometry.load_wserv_v2(5))
-onc["q"] = quality_classes.load_q(5)
-onc["spread"] = spreadsheet.load_wserv_v2(5)
-onc["cmap"] = orion_cmap
+dicts = [ngc, ic]
 
 ngc["dat"] = photometry.group_wserv_v2(photometry.load_wserv_v2(7))
 ngc["q"] = quality_classes.load_q(7)
@@ -45,8 +39,8 @@ ic["q"] = quality_classes.load_q(8)
 ic["spread"] = spreadsheet.load_wserv_v2(8)
 ic["cmap"] = "jet_r"
 
-region_names = ["ONC", "NGC1333", "IC348"]
-short_names = ["ONC", "NGC", "IC"]
+region_names = ["NGC1333", "IC348"]
+short_names = ["NGC", "IC"]
 
 bands = ["J", "H", "K"]
 
@@ -59,12 +53,12 @@ def write_periods_and_generate_periodograms():
         # don't load the corresponding table. We'll combine them later.
         dir_ = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes"
         source_properties = astropy.table.Table.read(
-            os.path.join(dir_, short_name + "_source_properties.csv")
+            os.path.join(dir_, "v3_" + short_name + "_source_properties.csv")
         )
 
         # place to put periodograms
         results_dir = (
-            "/Users/tsrice/Documents/Variability_Project_2020/Results/periodograms"
+            "/Users/tsrice/Documents/Variability_Project_2020/Results/periodograms_v3"
         )
 
         for i, sid in enumerate(source_properties["SOURCEID"]):
@@ -88,13 +82,13 @@ def write_periods_and_generate_periodograms():
 
                     min_freq = 1 / 100
                     power[freq < min_freq] = 0
-                    power[np.abs(freq-1) < 0.01] = 0
+                    power[np.abs(freq - 1) < 0.01] = 0
 
                     powermax = np.nanmax(power)
                     fmax = freq[np.nanargmax(power)]
                     fap = ls.false_alarm_probability(np.nanmax(power)).value
 
-                    amp = np.sqrt(np.sum(ls.model_parameters(fmax)[1:3]**2))
+                    amp = np.sqrt(np.sum(ls.model_parameters(fmax)[1:3] ** 2))
                     # print(ls.model_parameters(fmax), amp)
 
                     # find aliases
@@ -156,9 +150,9 @@ def write_periods_and_generate_periodograms():
             plt.close(fig)
 
         print("Writing updated source_properties to:")
-        print(os.path.join(dir_, short_name + "_source_properties_periods.csv"))
+        print(os.path.join(dir_, "v3_" + short_name + "_source_properties_periods.csv"))
         source_properties.write(
-            os.path.join(dir_, short_name + "_source_properties_periods.csv")
+            os.path.join(dir_, "v3_" + short_name + "_source_properties_periods.csv")
         )
     return None
 
@@ -171,11 +165,11 @@ def generate_folded_lightcurves():
         # don't load the corresponding table. We'll combine them later.
         dir_ = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes"
         source_properties = astropy.table.Table.read(
-            os.path.join(dir_, short_name + "_source_properties_periods.csv")
+            os.path.join(dir_, "v3_" + short_name + "_source_properties_periods.csv")
         )
 
         # place to put periodograms
-        results_dir = "/Users/tsrice/Documents/Variability_Project_2020/Results/folded_lightcurves"
+        results_dir = "/Users/tsrice/Documents/Variability_Project_2020/Results/folded_lightcurves_v3"
 
         for i, sid in enumerate(source_properties["SOURCEID"]):
 
@@ -198,11 +192,12 @@ def generate_folded_lightcurves():
                         f"{band} period: {period:.2f}d | {name} {i:03d} SID: {sid}"
                     )
 
+                    fig_save_path = os.path.join(
+                        results_dir, name, f"{i:03d}_{band}_folded_lc.png"
+                    )
+
                     fig.savefig(
-                        os.path.join(
-                            results_dir, name, f"{i:03d}_{band}_folded_lc.png"
-                        ),
-                        bbox_inches="tight",
+                        fig_save_path, bbox_inches="tight",
                     )
                     plt.close(fig)
             else:
@@ -218,16 +213,16 @@ def append_images():
 
         dir_ = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes"
         source_properties = astropy.table.Table.read(
-            os.path.join(dir_, short_name + "_source_properties_periods.csv")
+            os.path.join(dir_, "v3_" + short_name + "_source_properties_periods.csv")
         )
 
         # place to put periodograms
         lc_dir = os.path.join(
-            "/Users/tsrice/Documents/Variability_Project_2020/Results/folded_lightcurves",
+            "/Users/tsrice/Documents/Variability_Project_2020/Results/folded_lightcurves_v3",
             name,
         )
         pgram_dir = os.path.join(
-            "/Users/tsrice/Documents/Variability_Project_2020/Results/periodograms",
+            "/Users/tsrice/Documents/Variability_Project_2020/Results/periodograms_v3",
             name,
         )
 
@@ -242,12 +237,12 @@ def append_images():
                 # print(cmd_str1)
                 # print(cmd_str2)
 
-                Popen(cmd_str1+'\n'+cmd_str2, shell=True)
+                Popen(cmd_str1 + "\n" + cmd_str2, shell=True)
                 # Popen(cmd_str2, shell=True)
 
 
 if __name__ == "__main__":
-    if True:
+    if False:
         write_periods_and_generate_periodograms()
         generate_folded_lightcurves()
         append_images()
