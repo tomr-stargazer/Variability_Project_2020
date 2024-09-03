@@ -114,7 +114,9 @@ def mark_one_lightcurve(dat, sid, date_offset=56141, xlims=[(-5, 251.0)]):
 if __name__ == "__main__":
 
     ngc_dat = photometry.group_wserv_v2(photometry.load_wserv_v2(7))
-    new_data = photometry.group_wserv_v2(photometry.load_wserv_v2(7, suffix="_outlier_cleaned_152"))    
+    new_data = photometry.group_wserv_v2(
+        photometry.load_wserv_v2(7, suffix="_outlier_cleaned_152"), max_flags=257
+    )
 
     ngc_date_offset = 56141
     ngc_xlims = [(-5, 251.0)]
@@ -154,5 +156,5 @@ if __name__ == "__main__":
                 ic_dat, sidd, date_offset=ic_date_offset, xlims=ic348_xlims
             )
 
-            if i>10:
+            if i > 10:
                 break
