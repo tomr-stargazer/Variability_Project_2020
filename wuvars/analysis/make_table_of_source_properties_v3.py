@@ -24,13 +24,13 @@ So, for now, we want canonical source names etc.
 
 """
 
-import numpy as np
 import astropy.table
-
-from wuvars.data import spreadsheet, photometry, quality_classes
-from wuvars.analysis.spectral_type_to_number import get_num_from_SpT, get_SpT_from_num
-from wuvars.analysis.bd_matching_v2 import match_onc, match_ngc, match_ic
+import numpy as np
+from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
 from wuvars.analysis.q_string import q_string
+from wuvars.analysis.spectral_type_to_number import (get_num_from_SpT,
+                                                     get_SpT_from_num)
+from wuvars.data import photometry, quality_classes, spreadsheet
 
 # ngc_match = match_ngc()
 # ic_match = match_ic()
@@ -42,7 +42,7 @@ def canonical_sourcenames(match, spread, qset, region: str):
     # which region
     # its running number among 'approved' sources (00-len-1)
     # a/s/c
-    # teff or spectral class
+    # spectral type
     # q level
     #
 
@@ -57,10 +57,7 @@ def canonical_sourcenames(match, spread, qset, region: str):
         else:
             asc_char = "A"
 
-        if region == "ONC":
-            status_str = f"{match.approved['Teff'][i]:4d}K"
-        else:
-            status_str = f"{get_SpT_from_num(match.approved['SpT'][i])}"
+        status_str = f"{get_SpT_from_num(match.approved['SpT'][i])}"
 
         qs = "Q" + q_string(sid, spread, qset)
         name = f"{region}_{i:03d}{asc_char}_{status_str}_{qs}"
@@ -78,7 +75,7 @@ def source_properties(matchstruct, spread, qset, region: str):
     - RA/Dec
     - median JHK
     - Category (approved/statistical/color, or A/S/C)
-    - Teff / SpT
+    - SpT
     - Variable? Y/N
     - Type of variability (qualitative)
     - Periodic? Y/N
@@ -117,7 +114,6 @@ def source_properties(matchstruct, spread, qset, region: str):
     table["H_mag"] = ma["median_HAPERMAG3"]
     table["K_mag"] = ma["median_KAPERMAG3"]
 
-    table["Teff"] = ma["Teff"]
     table["SpT"] = ma["SpT"]
 
     table["Stetson_JHK"] = ma["var_Stetson_JHK"]
@@ -142,22 +138,16 @@ def source_properties(matchstruct, spread, qset, region: str):
 
 if __name__ == "__main__":
 
-    onc_match = match_onc()
     ngc_match = match_ngc()
     ic_match = match_ic()
 
-    onc_q = quality_classes.load_q(5)
-    onc_spread = spreadsheet.load_wserv_v2(5)
     ngc_q = quality_classes.load_q(7)
     ngc_spread = spreadsheet.load_wserv_v2(7)
     ic_q = quality_classes.load_q(8)
     ic_spread = spreadsheet.load_wserv_v2(8)
 
-    onc_table = source_properties(onc_match, onc_spread, onc_q, "onc")
-    onc_table.write("ONC_source_properties.csv")
-
     ngc_table = source_properties(ngc_match, ngc_spread, ngc_q, "ngc")
-    ngc_table.write("NGC_source_properties.csv")
+    ngc_table.write("v3_NGC_source_properties.csv")
 
     ic_table = source_properties(ic_match, ic_spread, ic_q, "ic")
-    ic_table.write("IC_source_properties.csv")
+    ic_table.write("v3_IC_source_properties.csv")
