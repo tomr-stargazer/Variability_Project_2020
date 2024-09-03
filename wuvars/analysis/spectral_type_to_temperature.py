@@ -47,6 +47,7 @@ L4 ................... 1504
 import numpy as np
 from wuvars.analysis.spectral_type_to_number import get_num_from_SpT, get_SpT_from_num
 
+# Luhman 2003
 spt_teff_pairs = [
     ("M1", 3705),
     ("M2", 3560),
@@ -59,6 +60,20 @@ spt_teff_pairs = [
     ("M9", 2400),
 ]
 
+# Herzceg & Hillenbrand 2014
+hh14_spt_teff_pairs = [
+    ("M1", 3720),
+    ("M2", 3560),
+    ("M3", 3410),
+    ("M4", 3190),
+    ("M5", 2980),
+    ("M6", 2860),
+    ("M7", 2770),
+    ("M8", 2670),
+    ("M9", 2570),
+]
+
+# Faherty 2016
 Faherty_spt_teff_pairs = [
     ("L0", 2173),
     ("L1", 1983),
@@ -77,6 +92,18 @@ for spt, teff in all_spt_teff_pairs:
 
 spt_num_array = np.array([get_num_from_SpT(x) for x in all_spts])
 teff_array = np.array(all_teffs)
+
+
+hh14_all_spt_teff_pairs = hh14_spt_teff_pairs + Faherty_spt_teff_pairs
+
+hh14_all_spts = []
+hh14_all_teffs = []
+for spt, teff in hh14_all_spt_teff_pairs:
+    hh14_all_spts.append(spt)
+    hh14_all_teffs.append(teff)
+
+hh14_spt_num_array = np.array([get_num_from_SpT(x) for x in hh14_all_spts])
+hh14_teff_array = np.array(hh14_all_teffs)
 
 
 def get_Teff_from_SpT(SpT):
@@ -100,6 +127,35 @@ def get_Teff_from_SpT(SpT):
 def get_SpT_from_Teff(Teff, out="num"):
 
     SpT_num = np.interp(Teff, teff_array[::-1], spt_num_array[::-1])
+
+    if out == "num":
+        return SpT_num
+    else:
+        SpT = get_SpT_from_num(SpT_num)
+        return SpT
+
+
+def get_Teff_from_SpT_HH14(SpT):
+    """ 
+    Uses simple interpolation to compute Teff for any SpT. 
+
+    Takes strings `"M8"` or numeric values `8`. "M0" is 0; "L0" is 10.
+
+    """
+
+    if isinstance(SpT, (str, np.str_)):
+        SpT_num = get_num_from_SpT(SpT)
+    else:
+        SpT_num = SpT
+
+    teff = np.interp(SpT_num, hh14_spt_num_array, hh14_teff_array)
+
+    return teff
+
+
+def get_SpT_from_Teff_HH14(Teff, out="num"):
+
+    SpT_num = np.interp(Teff, hh14_teff_array[::-1], hh14_spt_num_array[::-1])
 
     if out == "num":
         return SpT_num
