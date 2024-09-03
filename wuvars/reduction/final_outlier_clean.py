@@ -18,8 +18,11 @@ It is not simply “removing data that I don’t like”.
 
 """
 
+import pdb
+
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 from brokenaxes import brokenaxes
 from wuvars.plotting.lightcurve_helpers import orion_cmap, produce_xlims
 
@@ -49,10 +52,6 @@ def simple_lc_scatter_brokenaxes_grade(
     j_grade = dat["JGRADE"]
     h_grade = dat["HGRADE"]
     k_grade = dat["KGRADE"]
-
-    print("J GRADES: ", np.min(j_grade), np.max(j_grade))
-    print("H GRADES: ", np.min(h_grade), np.max(h_grade))
-    print("K GRADES: ", np.min(k_grade), np.max(k_grade))
 
     # set up plot
     # OUR brokenaxes changes will all go here
@@ -353,27 +352,30 @@ def calculate_diff(dat, sid, band="J", verbose=False):
     return diff
 
 
-def calculate_diffs(dat, sid, verbose=True):
+def calculate_diffs(dat, sid):
+    """
+    This calculates a `diff` metric which essentially describes
+    how far each data point is from its neighbors, scaled by the photometric error.
+
+    Most of the logic in the code deals with situations in which the nearest neighbor
+    data point is `nan` or otherwise invalid, prompting the code to progressively 
+    search further right (or left) until it finds valid data to compare against.
+    """
 
     dt = dat.groups[dat.groups.keys["SOURCEID"] == sid]
 
     diffs_list = []
 
     for band in ["J", "H", "K"]:
-        if verbose:
-            print(f"Doing {band}")
 
         b_vals = dt[f"{band}APERMAG3"]
         b_sigs = dt[f"{band}APERMAG3ERR"]
 
         diff = np.zeros_like(b_vals)
 
-        l = len(b_vals)
+        len_ = len(b_vals)
 
-        for i in range(l):
-
-            if verbose:
-                print("i=", i)
+        for i in range(len_):
 
             left_diff = np.nan
             right_diff = np.nan
@@ -387,41 +389,21 @@ def calculate_diffs(dat, sid, verbose=True):
 
                     left_diff = (b_vals[i - a_l] - b_vals[i]) / b_sigs[i]
 
-                    if verbose:
-                        print("Left diff:", left_diff, "a_l = ", a_l)
-
                     if not np.ma.is_masked(left_diff):
-                        if verbose:
-                            print("  Breaking -  we accept left_diff")
                         break
                     else:
-                        if verbose:
-                            print("  Not breaking - we don't accept left_diff")
                         a_l += 1
-                        if verbose:
-                            print("  a_l = ", a_l)
-                if verbose:
-                    print("a_l: ", a_l, "i-a_l=", i - a_l)
-                    print("")
 
                 a_r = 1
 
-                while (i + a_r) < l:
+                while (i + a_r) < len_:
 
                     right_diff = (b_vals[i + a_r] - b_vals[i]) / b_sigs[i]
 
                     if not np.ma.is_masked(right_diff):
-                        if verbose:
-                            print("Breaking")
                         break
                     else:
-                        if verbose:
-                            print("Not breaking")
                         a_r += 1
-                if verbose:
-                    print("a_r: ", a_r, "i+a_r", i + a_r, "l=", l)
-
-                    print(left_diff, right_diff)
 
                 try:
                     diffs = np.array([left_diff, right_diff])
@@ -432,12 +414,72 @@ def calculate_diffs(dat, sid, verbose=True):
                     diff[i] = diff_sgn * diff_abs
                 except IndexError:
                     diff[i] = np.nan
-            else:
-                if verbose:
-                    print(f"i={i}: {band}={b_vals[i]} is masked")
 
         diffs_list.append(diff)
     return diffs_list
+
+
+def vprint(*args, verbose=True, **kwargs):
+    if verbose:
+        print(*args, **kwargs)
+
+
+def identify_outliers(dat, sid, diffs, date_offset=56141, verbose=False):
+
+    j_diff, h_diff, k_diff = diffs
+
+    siddat_ = dat.groups[dat.groups.keys["SOURCEID"] == sid]
+
+    vprint(f"For source {sid}: ", verbose=verbose)
+
+    j_diff_mad = scipy.stats.median_abs_deviation(j_diff, nan_policy="omit")
+    h_diff_mad = scipy.stats.median_abs_deviation(h_diff, nan_policy="omit")
+    k_diff_mad = scipy.stats.median_abs_deviation(k_diff, nan_policy="omit")
+
+    k_mad = 1.4826
+    bands = ["J", "H", "K"]
+    diffs = {"J": j_diff, "H": h_diff, "K": k_diff}
+    mads = {"J": j_diff_mad, "H": h_diff_mad, "K": k_diff_mad}
+
+    results = {"J": [], "H": [], "K": []}
+
+    for i in range(len(j_diff)):
+
+        for b in range(len(bands)):
+            b0 = bands[b]  # J, H, K
+            b1 = bands[b - 1]  # K, J, H
+            b2 = bands[b - 2]  # H, K, J
+
+            this_datum = diffs[b0][i]
+            this_grade = siddat_[f"{b0}GRADE"][i]
+            this_date = siddat_["MEANMJDOBS"][i]
+
+            if (np.abs(this_datum) > max(3 * k_mad * mads[b0], 5)) and (
+                this_grade < 0.98
+            ):
+                vprint(
+                    f"Found an outlier! {b0}: {this_datum} and {this_grade}",
+                    verbose=verbose,
+                )
+                vprint(
+                    f"  at date={this_date-date_offset:.1f} (i={i})", verbose=verbose
+                )
+                #             vprint(f"  Found an outlier! {this_datum=} and {this_grade=}")
+
+                # pdb.set_trace()
+
+                if (np.abs(diffs[b1][i]) > 3 * k_mad * mads[b1]) or (
+                    np.abs(diffs[b2][i]) > 3 * k_mad * mads[b2]
+                ):
+                    vprint(
+                        "*** But there are outliers in other bands at that time too. No flag. ***",
+                        verbose=verbose,
+                    )
+                else:
+
+                    results[b0].append(this_date)
+
+    return results
 
 
 def clean(df):
