@@ -152,10 +152,14 @@ for name in names:
 
     from wuvars.analysis.prototype2_of_variability_full_criteria import (
         select_stetson_variables,
+        select_periodic_variables,
+        select_periodic_variables_experimental,
     )
 
+    wserv = wserv_dict[name]
+
     # print(f"{name}: Variability stuff from Stetson stuff: ")
-    v2, v1 = select_stetson_variables(wserv_dict[name])
+    v2, v1 = select_stetson_variables(wserv)
     # print(np.sum(v2), np.sum(v1), np.sum(v2 & v1))
     # print(len(v2))
 
@@ -177,28 +181,159 @@ for name in names:
         f" ({100*np.sum(statistical_v1)/len(match.statistical):.2f}%)"
     )
 
+    v_per = select_periodic_variables_experimental(wserv)
+
+    print(f"Len of v_per: {len(v_per)}")
+    # print(f"Sum of v_per: {np.sum(v_per)}")
+
+    periodics = np.in1d(match.approved["SOURCEID"], v_per.index)
+
     if make_figs:
-        fig2, ax2 = plt.subplots(figsize=(6, 4))
-        ax2.plot(match.approved["SpT"], match.approved["std_KAPERMAG3"], "k.", ms=2)
+        fig2, axes2 = plt.subplots(figsize=(6, 12), nrows=3, sharex=True)
+        ax2, ax2_2, ax2_3 = axes2
+        ax2.plot(
+            match.approved["SpT"][periodics],
+            match.approved["std_KAPERMAG3"][periodics],
+            marker="o",
+            ls="None",
+            mec="k",
+            mfc="None",
+            ms=8,
+            label="periodic variable",
+        )
+
         ax2.plot(
             match.approved["SpT"][approved_v1],
             match.approved["std_KAPERMAG3"][approved_v1],
             "r.",
             ms=5,
+            label="automatic Stetson variable",
+        )
+        ax2.plot(
+            match.approved["SpT"],
+            match.approved["std_KAPERMAG3"],
+            "k.",
+            ms=2,
+            label="not automatic Stetson variable",
+            zorder=-5,
         )
         ax2.set_xlim(-0.2, 14.2)
         ax2.grid(True, axis="x", ls=":")
         ax2.axvspan(
             4.7, 6.8, hatch="xxxx", facecolor="None", ec="k", lw=0.25, alpha=0.1
         )
+        ax2.legend(loc="lower right", fontsize=6)
+
+        ax2_2.plot(
+            match.approved["SpT"][periodics],
+            match.approved["var_Stetson_JHK"][periodics],
+            marker="o",
+            ls="None",
+            mec="k",
+            mfc="None",
+            ms=8,
+            label="periodic variable",
+        )
+
+        ax2_2.plot(
+            match.approved["SpT"][approved_v1],
+            match.approved["var_Stetson_JHK"][approved_v1],
+            "r.",
+            ms=5,
+            label="automatic Stetson variable",
+        )
+        ax2_2.plot(
+            match.approved["SpT"],
+            match.approved["var_Stetson_JHK"],
+            "k.",
+            ms=2,
+            label="not automatic Stetson variable",
+            zorder=-5,
+        )
+        ax2_2.set_xlim(-0.2, 14.2)
+        ax2_2.grid(True, axis="x", ls=":")
+        ax2_2.axvspan(
+            4.7, 6.8, hatch="xxxx", facecolor="None", ec="k", lw=0.25, alpha=0.1
+        )
+        ax2_2.axhline(1, color="k", lw=0.25, ls="--")
+
+        ax2_2.legend(loc="lower right", fontsize=6)
+
+        ###
+        ax2_3.plot(
+            match.approved["SpT"][periodics],
+            match.approved["var_K_red_chisq"][periodics],
+            marker="o",
+            ls="None",
+            mec="k",
+            mfc="None",
+            ms=8,
+            label="periodic variable",
+        )
+
+        ax2_3.plot(
+            match.approved["SpT"][approved_v1],
+            match.approved["var_K_red_chisq"][approved_v1],
+            "r.",
+            ms=5,
+            label="automatic Stetson variable",
+        )
+        ax2_3.plot(
+            match.approved["SpT"],
+            match.approved["var_K_red_chisq"],
+            "k.",
+            ms=2,
+            label="not automatic Stetson variable",
+            zorder=-5,
+        )
+        ax2_3.set_xlim(-0.2, 14.2)
+        ax2_3.grid(True, axis="x", ls=":")
+        ax2_3.axvspan(
+            4.7, 6.8, hatch="xxxx", facecolor="None", ec="k", lw=0.25, alpha=0.1
+        )
+        ax2_3.legend(loc="upper right", fontsize=6)
+        ####
 
         spt_array = np.array([get_SpT_from_num(int(x)) for x in ax2.get_xticks()])
         ax2.xaxis.set_tick_params(labelbottom=True)
         ax2.set_xticklabels(spt_array)
+        ax2_2.xaxis.set_tick_params(labelbottom=True)
+        ax2_2.set_xticklabels(spt_array)
 
         ax2.semilogy()
         ax2.set_xlabel("Spectral Type")
         ax2.set_ylabel("rms $K$ variability (mag)")
+
+        ax2_2.semilogy()
+        ax2_2.set_ylim(1e-2, None)
+
+        ax2_2.set_xlabel("Spectral Type")
+        ax2_2.set_ylabel("$JHK$ Stetson index")
+
+        ax2_3.semilogy()
+        # ax2_3.set_ylim(1e-2, None)
+
+        ax2_3.set_xlabel("Spectral Type")
+        ax2_3.set_ylabel(r"$\chi^2_{\nu}$ ($K$)")
+
+        fig3, axes3 = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
+
+        # let's divide up by infrared excess
+        ir_exc = match.approved["IRexc"] == 'yes'
+
+        axes3[0].plot(match.approved['range_KAPERMAG3'][ir_exc], match.approved["SpT"][ir_exc], 'r.')
+        axes3[1].plot(match.approved['range_KAPERMAG3'][~ir_exc], match.approved["SpT"][~ir_exc], 'k.')
+        axes3[0].invert_yaxis()
+
+        fig4, ax4 = plt.subplots(figsize=(8,5))
+
+        ax4.plot(match.approved['range_KAPERMAG3'][ir_exc], match.approved["SpT"][ir_exc], 'r+')
+        ax4.plot(match.approved['range_KAPERMAG3'][~ir_exc], match.approved["SpT"][~ir_exc], 'k+')
+        ax4.invert_yaxis()
+        ax4.set_ylim(13.5, -0.5)
+        ax4.set_xlim(0, 1.2)
+        ax4.set_title(name)
+
         plt.show()
 
     # okay. So, let's re-summarize some things...
