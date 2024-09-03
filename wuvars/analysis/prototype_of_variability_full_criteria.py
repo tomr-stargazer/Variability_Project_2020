@@ -3,20 +3,15 @@
 # imagine we are loading things up just for NGC 1333.
 
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 
-from wuvars.data import spreadsheet, photometry, quality_classes
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import wuvars.analysis.variability_selection as sv
 from wuvars.analysis.bd_matching_v2 import match_ngc
-from wuvars.analysis.variability_selection_curved import (
-    curve_Stetson,
-    sv_jh,
-    sv_hk,
-    sv_jk,
-    sv_jhk,
-)
+from wuvars.analysis.variability_selection_curved import (curve_Stetson, sv_hk,
+                                                          sv_jh, sv_jhk, sv_jk)
+from wuvars.data import photometry, quality_classes, spreadsheet
 
 spread = spreadsheet.load_v2()
 
@@ -40,6 +35,7 @@ r50 = np.load(
     os.path.join(load_dir, f"WSERV{wserv}_result_grid_50.npy")
 )
 StetsonJHK_dict_50[wserv] = r50     
+
 flags = ['Y', 'Yw', 'N', 'YfY', '?fY', 'YfYw', '?fYw', "YfN", "?fN"]
 periodic_flags = [flag for flag in flags if flag[-1] in ('Y', 'w')]
 spreadsheet_dir = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes"
