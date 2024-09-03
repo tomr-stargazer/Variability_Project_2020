@@ -46,20 +46,19 @@ color variability.
 
 
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import astropy.table
-from astropy.coordinates import SkyCoord, Angle
-from astropy import units as u
-import pandas as pd
 
-from wuvars.data import spreadsheet, photometry, quality_classes
+import astropy.table
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 from wuvars.analysis.luhman16_coord_handler import coords_from_Luhman_table
-from wuvars.analysis.spectral_type_to_number import get_num_from_SpT, get_SpT_from_num
-from wuvars.analysis.spectral_type_to_temperature import (
-    get_Teff_from_SpT,
-    get_SpT_from_Teff,
-)
+from wuvars.analysis.spectral_type_to_number import (get_num_from_SpT,
+                                                     get_SpT_from_num)
+from wuvars.analysis.spectral_type_to_temperature import (get_SpT_from_Teff,
+                                                          get_Teff_from_SpT)
+from wuvars.data import photometry, quality_classes, spreadsheet
 
 
 class MatchStruct:
@@ -272,6 +271,11 @@ def match_ngc():
     ngc_match.lowmass = joint_matches[lowmass_criteria]
     ngc_match.not_lowmass = joint_matches[~lowmass_criteria]
 
+    # New as of Oct 2023.
+    M4_criteria = joint_matches["SpT"] >= 4.0
+    ngc_match.M4 = joint_matches[M4_criteria]
+    ngc_match.not_M4 = joint_matches[~M4_criteria]
+
     approved_indices_ngc = np.in1d(joint_matches["SOURCEID"], approved_sources_ngc)
 
     approved_criteria = lowmass_criteria & approved_indices_ngc
@@ -374,6 +378,11 @@ def match_ic():
     lowmass_criteria = joint_matches["SpT"] >= 4.5
     ic_match.lowmass = joint_matches[lowmass_criteria]
     ic_match.not_lowmass = joint_matches[~lowmass_criteria]
+
+    # New as of Oct 2023.
+    M4_criteria = joint_matches["SpT"] >= 4.0
+    ic_match.M4 = joint_matches[M4_criteria]
+    ic_match.not_M4 = joint_matches[~M4_criteria]
 
     approved_indices_ic = np.in1d(joint_matches["SOURCEID"], approved_sources_ic)
 
