@@ -136,4 +136,4 @@ def compute_Q_band(times, mags, errs, verbose=True):
 
     Q = Q_score(mags, sigma, residual)
 
-    return Q
+    return Q, fmax
