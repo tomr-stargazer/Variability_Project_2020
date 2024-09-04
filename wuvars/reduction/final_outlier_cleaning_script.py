@@ -126,8 +126,22 @@ if __name__ == "__main__":
     sid3 = 44508746107259
     sid4 = 44508746116310
     sid5 = 44508746098496
+    sid6 = 44508746117256
+    sid7 = 44508746117472
 
-    sid_list = [sid, sid2, sid3, sid4, sid5]
+    sid_list = [sid, sid2, sid3, sid4, sid5, sid6, sid7]
+    unspecial_sids = [
+        44508746127117,
+        44508746127678,
+        44508746098400,
+        44508746116125,
+        44508746116568,
+        44508746116800,
+        44508746117093,
+        44508746117189,
+        44508746117406,
+    ]
+    sid_list.extend(unspecial_sids)
 
     from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
 
@@ -138,6 +152,7 @@ if __name__ == "__main__":
             fig = mark_one_lightcurve(
                 ngc_dat, sidd, date_offset=ngc_date_offset, xlims=ngc_xlims
             )
+            fig.suptitle(sidd)
 
             fig2 = mark_one_lightcurve(
                 new_data, sidd, date_offset=ngc_date_offset, xlims=ngc_xlims
