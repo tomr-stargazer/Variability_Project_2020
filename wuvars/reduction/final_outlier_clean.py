@@ -424,7 +424,7 @@ def vprint(*args, verbose=True, **kwargs):
         print(*args, **kwargs)
 
 
-def identify_outliers(dat, sid, diffs, date_offset=56141, verbose=False):
+def identify_outliers(dat, sid, diffs, grade_threshold=0.98, diff_threshold=3, date_offset=56141, verbose=False):
 
     j_diff, h_diff, k_diff = diffs
 
@@ -454,8 +454,8 @@ def identify_outliers(dat, sid, diffs, date_offset=56141, verbose=False):
             this_grade = siddat_[f"{b0}GRADE"][i]
             this_date = siddat_["MEANMJDOBS"][i]
 
-            if (np.abs(this_datum) > max(3 * k_mad * mads[b0], 5)) and (
-                this_grade < 0.98
+            if (np.abs(this_datum) > max(diff_threshold * k_mad * mads[b0], 5)) and (
+                this_grade < grade_threshold
             ):
                 vprint(
                     f"Found an outlier! {b0}: {this_datum} and {this_grade}",
@@ -468,8 +468,8 @@ def identify_outliers(dat, sid, diffs, date_offset=56141, verbose=False):
 
                 # pdb.set_trace()
 
-                if (np.abs(diffs[b1][i]) > 3 * k_mad * mads[b1]) or (
-                    np.abs(diffs[b2][i]) > 3 * k_mad * mads[b2]
+                if (np.abs(diffs[b1][i]) > diff_threshold * k_mad * mads[b1]) or (
+                    np.abs(diffs[b2][i]) > diff_threshold * k_mad * mads[b2]
                 ):
                     vprint(
                         "*** But there are outliers in other bands at that time too. No flag. ***",
