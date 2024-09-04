@@ -40,8 +40,39 @@ def nullify_outliers(dataset, raw_dataset, source_list):
     for sid in source_list:
 
         diffs = calculate_diffs(subdat_grouped, sid)
+
+        # special-casing two objects:
+        special_sids = [44508746117256, 44508746117472, 44508746107265]
+        if sid in special_sids:
+            grade_threshold = 0.99
+        else:
+            grade_threshold = 0.98
+
+        unspecial_sids = [
+            44508746098496,
+            44508746127117,
+            44508746127678,
+            44508746098400,
+            44508746116125,
+            44508746116568,
+            44508746116800,
+            44508746117093,
+            44508746117189,
+            44508746117406,
+        ]
+        if sid in unspecial_sids:
+            diff_threshold = 15
+        else:
+            diff_threshold = 3
+
         outliers = identify_outliers(
-            subdat_grouped, sid, diffs, date_offset=56141, verbose=False
+            subdat_grouped,
+            sid,
+            diffs,
+            grade_threshold=grade_threshold,
+            diff_threshold=diff_threshold,
+            date_offset=56141,
+            verbose=False,
         )
 
         this_sid = cleaned_dataset["SOURCEID"] == sid
@@ -52,7 +83,7 @@ def nullify_outliers(dataset, raw_dataset, source_list):
                 # nullify this one
 
                 outlier_selection = cleaned_dataset["MEANMJDOBS"] == b_date
-                # I apparently had been selecting way too many before, so this ensures 
+                # I apparently had been selecting way too many before, so this ensures
                 # it's just one data point being nulled at a time.
                 assert np.sum(outlier_selection & this_sid) == 1
                 cleaned_dataset[f"{band}APERMAG3"][outlier_selection & this_sid] = null
@@ -76,7 +107,11 @@ if __name__ == "__main__":
     output_path = "/Users/tsrice/Documents/Variability_Project_2020/wuvars/Data/reduction_artifacts/"
     filename = f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_new_error_corrected{suffix}.fits"
     full_output = os.path.join(output_path, f"wserv{str(wserv)}", filename)
-    test_output = os.path.join(output_path, f"wserv{str(wserv)}", f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_new_error_corrected_152.fits")
+    test_output = os.path.join(
+        output_path,
+        f"wserv{str(wserv)}",
+        f"WSERV{str(wserv)}_graded_clipped0.95_scrubbed0.1_dusted0.5_new_error_corrected_152.fits",
+    )
 
     subdat = raw_ngc_dat[np.in1d(ngc_dat["SOURCEID"], ngc_match.approved["SOURCEID"])]
     subdat.write(test_output, overwrite=True)
@@ -86,7 +121,9 @@ if __name__ == "__main__":
         cleaned_dataset = nullify_outliers(ngc_dat, raw_ngc_dat, [44508746107200])
     if True:
 
-        cleaned_dataset = nullify_outliers(ngc_dat, raw_ngc_dat, ngc_match.approved["SOURCEID"])
+        cleaned_dataset = nullify_outliers(
+            ngc_dat, raw_ngc_dat, ngc_match.approved["SOURCEID"]
+        )
         print(f"Writing to {full_output}")
         cleaned_dataset.write(full_output, overwrite=True)
 
