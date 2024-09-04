@@ -319,16 +319,32 @@ for name in names:
         fig3, axes3 = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
 
         # let's divide up by infrared excess
-        ir_exc = match.approved["IRexc"] == 'yes'
+        ir_exc = match.approved["IRexc"] == "yes"
 
-        axes3[0].plot(match.approved['range_KAPERMAG3'][ir_exc], match.approved["SpT"][ir_exc], 'r.')
-        axes3[1].plot(match.approved['range_KAPERMAG3'][~ir_exc], match.approved["SpT"][~ir_exc], 'k.')
+        axes3[0].plot(
+            match.approved["range_KAPERMAG3"][ir_exc],
+            match.approved["SpT"][ir_exc],
+            "r.",
+        )
+        axes3[1].plot(
+            match.approved["range_KAPERMAG3"][~ir_exc],
+            match.approved["SpT"][~ir_exc],
+            "k.",
+        )
         axes3[0].invert_yaxis()
 
-        fig4, ax4 = plt.subplots(figsize=(8,5))
+        fig4, ax4 = plt.subplots(figsize=(8, 5))
 
-        ax4.plot(match.approved['range_KAPERMAG3'][ir_exc], match.approved["SpT"][ir_exc], 'r+')
-        ax4.plot(match.approved['range_KAPERMAG3'][~ir_exc], match.approved["SpT"][~ir_exc], 'k+')
+        ax4.plot(
+            match.approved["range_KAPERMAG3"][ir_exc],
+            match.approved["SpT"][ir_exc],
+            "r+",
+        )
+        ax4.plot(
+            match.approved["range_KAPERMAG3"][~ir_exc],
+            match.approved["SpT"][~ir_exc],
+            "k+",
+        )
         ax4.invert_yaxis()
         ax4.set_ylim(13.5, -0.5)
         ax4.set_xlim(0, 1.2)
