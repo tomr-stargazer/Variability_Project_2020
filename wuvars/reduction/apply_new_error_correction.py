@@ -14,6 +14,7 @@ The second approach is more testable. But this is SO simple.
 import os
 import pathlib
 from datetime import datetime
+
 import numpy as np
 from astropy.table import Table
 from wuvars.analysis.rederive_error_correction import decorrect_error
