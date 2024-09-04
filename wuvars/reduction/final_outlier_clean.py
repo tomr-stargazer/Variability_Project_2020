@@ -424,7 +424,15 @@ def vprint(*args, verbose=True, **kwargs):
         print(*args, **kwargs)
 
 
-def identify_outliers(dat, sid, diffs, grade_threshold=0.98, diff_threshold=3, date_offset=56141, verbose=False):
+def identify_outliers(
+    dat,
+    sid,
+    diffs,
+    grade_threshold=0.98,
+    diff_threshold=3,
+    date_offset=56141,
+    verbose=False,
+):
 
     j_diff, h_diff, k_diff = diffs
 
