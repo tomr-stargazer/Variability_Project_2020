@@ -99,9 +99,12 @@ def write_periods_and_generate_periodograms():
                     # don't need to prune dates for `method`=='vanilla'
                     dat = dat_raw
 
-                fig, axes = plt.subplots(
-                    nrows=3, ncols=1, sharex=True, figsize=(10, 10), dpi=200
-                )
+                if i > 315:
+                    fig, axes = plt.subplots(
+                        nrows=3, ncols=1, sharex=True, figsize=(10, 10), dpi=200
+                    )
+                else:
+                    axes = [None, None, None]
 
                 for (band, ax) in zip(bands, axes):
 
@@ -155,31 +158,32 @@ def write_periods_and_generate_periodograms():
                         n_aliases = np.array(find_n_aliases(fmax))
 
                         # plot it in period space.
-                        ax.plot(1 / freq, power, "k", lw=0.8, rasterized=True)
-                        ax.set_ylabel(f"{band} power")
-                        if band == "K":
-                            ax.set_xlabel("Period (d)")
-                            ax.set_xscale("log")
-                            ax.set_xlim(1 / 24, 100)
-                        # ax.axvline(1, ls="--", lw=0.5, alpha=0.3)
+                        if i > 315:
+                            ax.plot(1 / freq, power, "k", lw=0.8, rasterized=True)
+                            ax.set_ylabel(f"{band} power")
+                            if band == "K":
+                                ax.set_xlabel("Period (d)")
+                                ax.set_xscale("log")
+                                ax.set_xlim(1 / 24, 100)
+                            # ax.axvline(1, ls="--", lw=0.5, alpha=0.3)
 
-                        # tag aliases
-                        ax.set_ylim(0, powermax)
-                        ymin, ymax = ax.get_ylim()
+                            # tag aliases
+                            ax.set_ylim(0, powermax)
+                            ymin, ymax = ax.get_ylim()
 
-                        outside_line = ax.vlines(
-                            1 / fmax, ymax * 1.05, ymax * 1.1, color="k"
-                        )
-                        red_line = ax.vlines(
-                            1 / m_aliases, ymax * 1.0, ymax * 1.05, color="C3"
-                        )
-                        blue_line = ax.vlines(
-                            1 / n_aliases, ymax * 1.01, ymax * 1.06, color="C9"
-                        )
+                            outside_line = ax.vlines(
+                                1 / fmax, ymax * 1.05, ymax * 1.1, color="k"
+                            )
+                            red_line = ax.vlines(
+                                1 / m_aliases, ymax * 1.0, ymax * 1.05, color="C3"
+                            )
+                            blue_line = ax.vlines(
+                                1 / n_aliases, ymax * 1.01, ymax * 1.06, color="C9"
+                            )
 
-                        outside_line.set_clip_on(False)
-                        red_line.set_clip_on(False)
-                        blue_line.set_clip_on(False)
+                            outside_line.set_clip_on(False)
+                            red_line.set_clip_on(False)
+                            blue_line.set_clip_on(False)
 
                     except ValueError:
                         fmax = 1
@@ -191,7 +195,8 @@ def write_periods_and_generate_periodograms():
                     source_properties[f"{method}_per_amp_{band}"][i] = amp
                     source_properties[f"{method}_per_fap_{band}"][i] = fap
 
-                fig.suptitle(f"{name} {i:03d} SID: {sid} ({method})")
+                if i > 315:
+                    fig.suptitle(f"{name} {i:03d} SID: {sid} ({method})")
 
                 min_fap = np.nanmin(
                     [source_properties[f"{method}_per_fap_{band}"][i] for band in bands]
@@ -210,14 +215,15 @@ def write_periods_and_generate_periodograms():
                     )
 
                 # save this, at least, at this point
-                fig.savefig(
-                    os.path.join(
-                        results_dir, name, method, f"{i:03d}_periodogram.png"
-                    ),
-                    bbox_inches="tight",
-                )
+                if i > 315:
+                    fig.savefig(
+                        os.path.join(
+                            results_dir, name, method, f"{i:03d}_periodogram.png"
+                        ),
+                        bbox_inches="tight",
+                    )
 
-                plt.close(fig)
+                    plt.close(fig)
 
             # if i == 5:
             #     print(f"Breaking at {i}")
