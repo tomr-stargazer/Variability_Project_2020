@@ -3,16 +3,13 @@ Functions to remove secular trends in lightcurves in order to search for periodi
 
 """
 
-from numpy.polynomial.polynomial import polyfit, polyval
-import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
 from astropy.timeseries import LombScargle
-from wuvars.analysis.periods import f_max, f_min, N_eval
-from wuvars.plotting.lightcurve import (
-    simple_lc_scatter_brokenaxes,
-    simple_phased_lc_scatter_gridspec,
-)
+from numpy.polynomial.polynomial import polyfit, polyval
+from wuvars.analysis.periods import N_eval, f_max, f_min
+from wuvars.plotting.lightcurve import (simple_lc_scatter_brokenaxes,
+                                        simple_phased_lc_scatter_gridspec)
 
 
 def poly_detrend(
