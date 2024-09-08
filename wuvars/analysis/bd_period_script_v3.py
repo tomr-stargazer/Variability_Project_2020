@@ -29,7 +29,9 @@ ngc = {}
 ic = {}
 dicts = [ngc, ic]
 
-ngc["dat"] = photometry.group_wserv_v2(photometry.load_wserv_v2(7))
+ngc["dat"] = photometry.group_wserv_v2(
+    photometry.load_wserv_v2(7, suffix="_outlier_cleaned_152")
+)
 ngc["q"] = quality_classes.load_q(7)
 ngc["spread"] = spreadsheet.load_wserv_v2(7)
 ngc["cmap"] = "jet"
