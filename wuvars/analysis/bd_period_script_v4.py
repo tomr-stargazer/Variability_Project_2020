@@ -11,16 +11,22 @@ import warnings
 from datetime import datetime
 
 import astropy.table
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.timeseries import LombScargle
 from numpy.polynomial.polynomial import polyfit, polyval
 from wuvars.analysis.alias_hunting import (find_aliases, find_m_aliases,
                                            find_n_aliases)
+from wuvars.analysis.detrending import poly_detrend
 from wuvars.analysis.periods import N_eval, f_max, f_min
 from wuvars.data import photometry, quality_classes, spreadsheet
-from wuvars.plotting.lightcurve import simple_phased_lc_scatter_gridspec
+from wuvars.plotting.lightcurve import (simple_lc_scatter_brokenaxes,
+                                        simple_phased_lc_scatter_gridspec)
 from wuvars.plotting.lightcurve_helpers import orion_cmap
+
+# this attempts to solve a memory leak, per https://stackoverflow.com/a/55834853/646549
+matplotlib.use("TkAgg")
 
 plt.style.use("seaborn-whitegrid")
 warnings.filterwarnings("ignore")
@@ -47,12 +53,17 @@ region_names = ["NGC1333", "IC348"]
 short_names = ["NGC", "IC"]
 
 bands = ["J", "H", "K"]
+methods = ["vanilla", "poly2", "poly4"]
+
+detrend_params = {}
+detrend_params["NGC"] = {"date_offset": 56141, "data_start": 0, "data_end": np.inf}
+detrend_params["IC"] = {"date_offset": 56849, "data_start": 60, "data_end": 250}
 
 
 def write_periods_and_generate_periodograms():
     for dict_, name, short_name in zip(dicts, region_names, short_names):
 
-        if 'NGC' in name: 
+        if "NGC" in name:
             print("Skipping NGC")
             continue
         dg = dict_["dat"]
@@ -72,7 +83,7 @@ def write_periods_and_generate_periodograms():
 
             dat_raw = dg.groups[dg.groups.keys["SOURCEID"] == sid]
 
-            for method in ["vanilla", "poly2", "poly4"]:
+            for method in methods:
                 os.makedirs(os.path.join(results_dir, name, method), exist_ok=True)
 
                 if "poly" in method:
@@ -122,7 +133,9 @@ def write_periods_and_generate_periodograms():
                         try:
                             poly_order = int(method[-1])
 
-                            fit_params = polyfit(times, mags_raw, poly_order, w=1 / errs)
+                            fit_params = polyfit(
+                                times, mags_raw, poly_order, w=1 / errs
+                            )
                             fit_mag = polyval(times, fit_params)
 
                             mags = mags_raw - fit_mag
@@ -251,40 +264,131 @@ def generate_folded_lightcurves():
         # place to put periodograms
         results_dir = "/Users/tsrice/Documents/Variability_Project_2020/Results/folded_lightcurves_v4"
 
+        # place to put detrended and trend-fit lightcurves
+        detrended_dir = "/Users/tsrice/Documents/Variability_Project_2020/Results/detrended_lightcurves_v4"
+
         for i, sid in enumerate(source_properties["SOURCEID"]):
 
-            # TODO: rewrite the following to take into account that each source 
-            #       has three methods that it's being considered under.
-            #       if the min_fap for any of the three triggers the flag, we should 
-            #       make all the plots!
-
-            min_fap = min([source_properties[f"per_fap_{band}"][i] for band in bands])
+            min_fap = min(
+                [
+                    source_properties[f"{method}_per_fap_{band}"][i]
+                    for band in bands
+                    for method in methods
+                ]
+            )
             if -np.log10(min_fap) > 5:
                 print(f"{name} {i:03d} is a periodic candidate (FAP={min_fap:.2e})")
 
-                dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
+                dat_raw = dg.groups[dg.groups.keys["SOURCEID"] == sid]
 
-                for band in bands:
+                for method in methods:
+                    os.makedirs(os.path.join(results_dir, name, method), exist_ok=True)
+                    os.makedirs(os.path.join(detrended_dir, name), exist_ok=True)
 
-                    period = source_properties[f"period_{band}"][i]
-                    fap = source_properties[f"per_fap_{band}"][i]
+                    if method == "vanilla":
+                        dat = dat_raw.group_by("SOURCEID")
 
-                    # make its 3 folded lightcurves, colored by time
-                    fig = simple_phased_lc_scatter_gridspec(
-                        dat, sid, period, cmap=dict_["cmap"]
-                    )
-                    fig.suptitle(
-                        f"{band} period: {period:.2f}d | {name} {i:03d} SID: {sid}"
-                    )
+                        # make the vanilla lightcurve
+                        season_selection = (
+                            dat["MEANMJDOBS"]
+                            >= detrend_params[short_name]["data_start"]
+                            + detrend_params[short_name]["date_offset"]
+                        ) & (
+                            dat["MEANMJDOBS"]
+                            <= detrend_params[short_name]["data_end"]
+                            + detrend_params[short_name]["date_offset"]
+                        )
+                        fig_1 = simple_lc_scatter_brokenaxes(
+                            dat[season_selection].group_by("SOURCEID"),
+                            sid,
+                            cmap=dict_["cmap"],
+                            breaks=[],
+                        )
+                        fig_1.suptitle(
+                            f"{name} {i:03d} SID: {sid} detrended with {method}"
+                        )
 
-                    fig_save_path = os.path.join(
-                        results_dir, name, f"{i:03d}_{band}_folded_lc.png"
-                    )
+                        fig1_save_path = os.path.join(
+                            detrended_dir, name, f"{i:03d}_vanilla_lc.png"
+                        )
+                        fig_1.savefig(
+                            fig1_save_path, bbox_inches="tight",
+                        )
+                        plt.close(fig_1)
 
-                    fig.savefig(
-                        fig_save_path, bbox_inches="tight",
-                    )
-                    plt.close(fig)
+                    else:
+                        poly_order = int(method[-1])
+
+                        detrended_dat, fit_dat = poly_detrend(
+                            dat_raw,
+                            date_offset=detrend_params[short_name]["date_offset"],
+                            data_start=detrend_params[short_name]["data_start"],
+                            data_end=detrend_params[short_name]["data_end"],
+                            poly_order=poly_order,
+                        )
+
+                        dat = detrended_dat.group_by("SOURCEID")
+
+                        fig_2 = simple_lc_scatter_brokenaxes(
+                            detrended_dat.group_by("SOURCEID"),
+                            sid,
+                            cmap=dict_["cmap"],
+                            breaks=[],
+                        )
+                        fig_2.suptitle(
+                            f"{name} {i:03d} SID: {sid} detrended with {method}"
+                        )
+
+                        fig2_save_path = os.path.join(
+                            detrended_dir, name, f"{i:03d}_{method}_detrended_lc.png"
+                        )
+
+                        fig_2.savefig(
+                            fig2_save_path, bbox_inches="tight",
+                        )
+
+                        fig_3 = simple_lc_scatter_brokenaxes(
+                            fit_dat.group_by("SOURCEID"),
+                            sid,
+                            cmap=dict_["cmap"],
+                            breaks=[],
+                        )
+                        fig_3.suptitle(
+                            f"{name} {i:03d} SID: {sid} - {method} fit used in detrend"
+                        )
+                        fig3_save_path = os.path.join(
+                            detrended_dir, name, f"{i:03d}_{method}_detrend_fit.png"
+                        )
+
+                        fig_3.savefig(
+                            fig3_save_path, bbox_inches="tight",
+                        )
+
+                        plt.close(fig_2)
+                        plt.close(fig_3)
+
+                    for band in bands:
+
+                        period = source_properties[f"{method}_period_{band}"][i]
+                        fap = source_properties[f"{method}_per_fap_{band}"][i]
+
+                        # make its 3 folded lightcurves, colored by time
+                        fig = simple_phased_lc_scatter_gridspec(
+                            dat, sid, period, cmap=dict_["cmap"]
+                        )
+                        fig.suptitle(
+                            f"{band} period: {period:.2f}d | {name} {i:03d} SID: {sid} with {method}"
+                        )
+
+                        fig_save_path = os.path.join(
+                            results_dir, name, method, f"{i:03d}_{band}_folded_lc.png"
+                        )
+
+                        fig.savefig(
+                            fig_save_path, bbox_inches="tight",
+                        )
+                        plt.close(fig)
+
             else:
                 print(f"{name} {i:03d} is not a periodic candidate (FAP={min_fap:.2e})")
 
@@ -331,8 +435,8 @@ if __name__ == "__main__":
         startTime = datetime.now()
         print(f"Starting at: {startTime}")
 
-        write_periods_and_generate_periodograms()
-        # generate_folded_lightcurves()
+        # write_periods_and_generate_periodograms()
+        generate_folded_lightcurves()
         # append_images()
 
         print(f"Elapsed time: ", datetime.now() - startTime)
