@@ -49,8 +49,11 @@ def poly_detrend(
         mags = dp[f"{band}APERMAG3"][~mask]
         errs = dp[f"{band}APERMAG3ERR"][~mask]
 
-        fit_params = polyfit(times, mags, poly_order, w=1 / errs)
-        fit_mag = polyval(date, fit_params)
+        try:
+            fit_params = polyfit(times, mags, poly_order, w=1 / errs)
+            fit_mag = polyval(date, fit_params)
+        except TypeError:
+            fit_mag = np.zeros_like(mags_raw)
 
         mag_mean = np.mean(mags)
         detrended_mags = mags_raw - fit_mag + mag_mean
