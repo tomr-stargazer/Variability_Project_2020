@@ -26,7 +26,7 @@ from wuvars.plotting.lightcurve import (simple_lc_scatter_brokenaxes,
 from wuvars.plotting.lightcurve_helpers import orion_cmap
 
 # this attempts to solve a memory leak, per https://stackoverflow.com/a/55834853/646549
-matplotlib.use("TkAgg")
+# matplotlib.use("TkAgg")
 
 plt.style.use("seaborn-whitegrid")
 warnings.filterwarnings("ignore")
@@ -415,18 +415,51 @@ def append_images():
             name,
         )
 
+        joined_dir = os.path.join(
+            "/Users/tsrice/Documents/Variability_Project_2020/Results/joined_pgrams_folded_lcs_v4",
+            name,
+        )
+
+        detrend_dir = os.path.join(
+            "/Users/tsrice/Documents/Variability_Project_2020/Results/detrended_lightcurves_v4/",
+            name,
+        )
+
         for i, sid in enumerate(source_properties["SOURCEID"]):
 
-            min_fap = min([source_properties[f"per_fap_{band}"][i] for band in bands])
+
+            min_fap = min(
+                [
+                    source_properties[f"{method}_per_fap_{band}"][i]
+                    for band in bands
+                    for method in methods
+                ]
+            )
             if -np.log10(min_fap) > 5:
+                print(f"{name} {i:03d} is a periodic candidate (FAP={min_fap:.2e})")
 
-                cmd_str1 = f"convert {lc_dir}/{i:03d}_J_folded_lc.png {lc_dir}/{i:03d}_H_folded_lc.png {lc_dir}/{i:03d}_K_folded_lc.png -append {lc_dir}/{i:03d}_JHK_folded_lc.png"
-                cmd_str2 = f"convert {lc_dir}/{i:03d}_JHK_folded_lc.png \\( {pgram_dir}/{i:03d}_periodogram.png -resize 78% \\) -gravity center +append {pgram_dir}/{i:03d}_JHK_lc_pgram_composite.png"
+                print(f"  Generating stacked detrended lightcurves for {name} {i:03d}")
 
-                # print(cmd_str1)
-                # print(cmd_str2)
+                # # placeholder
+                # cmd_stack_detrends = "echo 'cmd_stack_detrends Not implemented yet.'"
 
-                Popen(cmd_str1 + "\n" + cmd_str2, shell=True)
+                k = 'a'
+                cmd_stack_detrends = fr"magick \( {detrend_dir}/{i:03d}_vanilla_lc.png +append \) \( {detrend_dir}/{i:03d}_poly2_detrended_lc.png {detrend_dir}/{i:03d}_poly2_detrend_fit.png +append \) \( {detrend_dir}/{i:03d}_poly4_detrended_lc.png {detrend_dir}/{i:03d}_poly4_detrend_fit.png +append \) -append {joined_dir}/{i:03d}_{k}_joined_lcs.png"
+                # print(cmd_stack_detrends)
+                Popen(cmd_stack_detrends, shell=True)
+
+                for method, k in zip(methods, ['b', 'c', 'd']):
+                    print(
+                        f"  Generating joined pgram + folded lightcurves for {name} {i:03d}, method={method}"
+                    )
+
+                    cmd_str1 = f"convert {lc_dir}/{method}/{i:03d}_J_folded_lc.png {lc_dir}/{method}/{i:03d}_H_folded_lc.png {lc_dir}/{method}/{i:03d}_K_folded_lc.png -append {lc_dir}/{method}/{i:03d}_JHK_folded_lc.png"
+                    cmd_str2 = f"convert {lc_dir}/{method}/{i:03d}_JHK_folded_lc.png \\( {pgram_dir}/{method}/{i:03d}_periodogram.png -resize 78% \\) -gravity center +append {joined_dir}/{i:03d}_{k}_{method}_JHK_lc_pgram_composite.png"
+
+                    # print(cmd_str1)
+                    # print(cmd_str2)
+                    # print(cmd_str1 + "\n" + cmd_str2)
+                    Popen(cmd_str1 + "\n" + cmd_str2, shell=True)
                 # Popen(cmd_str2, shell=True)
 
 
@@ -436,7 +469,7 @@ if __name__ == "__main__":
         print(f"Starting at: {startTime}")
 
         # write_periods_and_generate_periodograms()
-        generate_folded_lightcurves()
-        # append_images()
+        # generate_folded_lightcurves()
+        append_images()
 
         print(f"Elapsed time: ", datetime.now() - startTime)
