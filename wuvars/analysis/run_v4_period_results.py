@@ -262,3 +262,101 @@ for name in names:
     # IN PARTICULAR! periodic non IR exc sources should be strongly regarded as rotators
     # and therefore any trend with non-IR exc periods vs spectral type is a
     # mass-rotation sequence
+
+    fig_pers_binned = plt.figure(figsize=(6, 6))
+
+    ax_pers_binned = fig_pers_binned.add_subplot(111)
+
+    bin_edges = [0, 2, 4, 6, 8, 15]
+    left_edges = bin_edges[:-1]
+    right_edges = bin_edges[1:]
+
+    for left, right in zip(left_edges, right_edges):
+
+        for ir_status, color, offset in zip([ir_exc, ~ir_exc], ["r", "k"], [0.2, 0]):
+
+            in_this_bin = (match.approved["SpT"] >= left) & (
+                match.approved["SpT"] < right
+            )
+            print(left, right)
+
+            # collect periods
+
+            median_period = np.nanmedian(periods["Period"][ir_status & in_this_bin])
+            per_84 = np.nanpercentile(periods["Period"][ir_status & in_this_bin], 84)
+            per_16 = np.nanpercentile(periods["Period"][ir_status & in_this_bin], 16)
+
+            up_err = per_84 - median_period
+            down_err = median_period - per_16
+
+            ax_pers_binned.errorbar(
+                [(left + right) / 2 + offset],
+                [median_period],
+                fmt=".",
+                color=color,
+                yerr=np.array([[down_err, up_err]]).T,
+            )
+            ax_pers_binned.hlines(y=median_period, xmin=left, xmax=right, color=color)
+
+            center_dict = {
+                "verticalalignment": "center",
+                "horizontalalignment": "center",
+                "color": color,
+            }
+            ax_pers_binned.text(left, median_period, "[", center_dict)
+            ax_pers_binned.text(right, median_period, ")", center_dict)
+
+    ax_pers_binned.semilogy()
+    ax_pers_binned.set_xlabel("SpT")
+    ax_pers_binned.set_ylabel("Period (d)")
+
+    ###
+
+    fig_amps_binned = plt.figure(figsize=(6, 6))
+
+    ax_amps_binned = fig_amps_binned.add_subplot(111)
+
+    bin_edges = [0, 2, 4, 6, 8, 15]
+    left_edges = bin_edges[:-1]
+    right_edges = bin_edges[1:]
+
+    for left, right in zip(left_edges, right_edges):
+
+        for ir_status, color, offset in zip([ir_exc, ~ir_exc], ["r", "k"], [0.2, 0]):
+
+            in_this_bin = (match.approved["SpT"] >= left) & (
+                match.approved["SpT"] < right
+            )
+            print(left, right)
+
+            # collect periods
+
+            median_amp = np.nanmedian(periods["Amp"][ir_status & in_this_bin])
+            amp_84 = np.nanpercentile(periods["Amp"][ir_status & in_this_bin], 84)
+            amp_16 = np.nanpercentile(periods["Amp"][ir_status & in_this_bin], 16)
+
+            up_err = amp_84 - median_amp
+            down_err = median_amp - amp_16
+
+            ax_amps_binned.errorbar(
+                [(left + right) / 2 + offset],
+                [median_amp],
+                fmt=".",
+                color=color,
+                yerr=np.array([[down_err, up_err]]).T,
+            )
+            ax_amps_binned.hlines(y=median_amp, xmin=left, xmax=right, color=color)
+
+            center_dict = {
+                "verticalalignment": "center",
+                "horizontalalignment": "center",
+                "color": color,
+            }
+            ax_amps_binned.text(left, median_amp, "[", center_dict)
+            ax_amps_binned.text(right, median_amp, ")", center_dict)
+
+    ax_amps_binned.semilogy()
+    ax_amps_binned.set_xlabel("SpT")
+    ax_amps_binned.set_ylabel("Amplitude (mag)")        
+
+    # okay. I want to do some
