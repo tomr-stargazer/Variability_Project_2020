@@ -35,6 +35,7 @@ for name in names:
     print("***")
     print(fullname_dict[name], "\n")
     match = match_dict[name]
+    spread = spread_dict[name]
 
     # Simple stats on the input catalog
     print(f"{len(match.input_catalog)} objects in the input catalog")
@@ -62,8 +63,46 @@ for name in names:
     )
     print(f"({len(match.rejected)} light curves were rejected by manual inspection)")
 
+    # let's divide up by infrared excess
+    ir_exc = match.approved["IRexc"] == "yes"
+
+    print(
+        f"{np.sum(ir_exc)} of the {len(match.approved)} approved objects have an IR excess"
+        f" ({100 * np.sum(ir_exc) / len(match.approved):.1f}%)"
+    )
+
     print("")
     if make_figs:
+
+        # let's put an HR diagram here
+        fig_hr, ax_hr = plt.subplots(figsize=(6, 6))
+
+        ax_hr.plot(
+            spread["median"]["HMKPNT"],
+            spread["median"]["KAPERMAG3"],
+            "k,",
+            alpha=0.25,
+        )
+        ax_hr.plot(
+            match.approved["median_HMKPNT"],
+            match.approved["median_KAPERMAG3"],
+            "k.",
+            label="without IR exc",
+        )
+        ax_hr.plot(
+            match.approved["median_HMKPNT"][ir_exc],
+            match.approved["median_KAPERMAG3"][ir_exc],
+            "r.",
+            label="with IR exc",
+        )
+
+        ax_hr.set_title(f"CMD in {fullname_dict[name]}")
+        ax_hr.set_xlabel("$H-K$ color")
+        ax_hr.set_ylabel("$K$ mag")
+        ax_hr.invert_yaxis()
+        ax_hr.set_xlim(0, None)
+        ax_hr.legend()
+
         fig, ax = plt.subplots(figsize=(6, 3))
         ax.hist(match.approved["SpT"], range=[0, 15], bins=np.arange(0, 15, 0.5))
 
@@ -156,6 +195,8 @@ for name in names:
         select_periodic_variables_experimental,
     )
 
+    from wuvars.analysis.load_periodics_v4 import select_periodic_variables_v4
+
     wserv = wserv_dict[name]
 
     # print(f"{name}: Variability stuff from Stetson stuff: ")
@@ -181,16 +222,21 @@ for name in names:
         f" ({100*np.sum(statistical_v1)/len(match.statistical):.2f}%)"
     )
 
-    v_per = select_periodic_variables_experimental(wserv)
+    # trying the new one!
+    v_per = select_periodic_variables_v4(wserv)
+    # v_per is
 
-    print(f"Len of v_per: {len(v_per)}")
+    print(
+        f"Number of periodic variables found: {len(v_per)} / {len(match.approved)}"
+        f" ({100*len(v_per)/len(match.approved):.2f}%)"
+    )
     # print(f"Sum of v_per: {np.sum(v_per)}")
 
     periodics = np.in1d(match.approved["SOURCEID"], v_per.index)
 
     if make_figs:
-        fig2, axes2 = plt.subplots(figsize=(6, 12), nrows=3, sharex=True)
-        ax2, ax2_2, ax2_3 = axes2
+        fig2, axes2 = plt.subplots(figsize=(6, 12*4/3), nrows=4, sharex=True)
+        ax2, ax2_2, ax2_3, ax2_4 = axes2
         ax2.plot(
             match.approved["SpT"][periodics],
             match.approved["std_KAPERMAG3"][periodics],
@@ -294,6 +340,44 @@ for name in names:
         ax2_3.legend(loc="upper right", fontsize=6)
         ####
 
+        ax2_4.plot(
+            match.approved["SpT"][periodics],
+            match.approved["median_KAPERMAG3ERR"][periodics],
+            marker="o",
+            ls="None",
+            mec="k",
+            mfc="None",
+            ms=8,
+            label="periodic variable",
+        )
+
+        ax2_4.plot(
+            match.approved["SpT"][approved_v1],
+            match.approved["median_KAPERMAG3ERR"][approved_v1],
+            "r.",
+            ms=5,
+            label="automatic Stetson variable",
+        )
+        ax2_4.plot(
+            match.approved["SpT"],
+            match.approved["median_KAPERMAG3ERR"],
+            "k.",
+            ms=2,
+            label="not automatic Stetson variable",
+            zorder=-5,
+        )
+        ax2_4.set_xlim(-0.2, 14.2)
+        ax2_4.grid(True, axis="x", ls=":")
+        ax2_4.axvspan(
+            4.7, 6.8, hatch="xxxx", facecolor="None", ec="k", lw=0.25, alpha=0.1
+        )
+        ax2_4.legend(loc="upper left", fontsize=6)
+        ax2_4.semilogy()
+        ax2_4.set_ylabel("median $K$ photometric uncertainty (mag)")
+
+
+        ####
+
         spt_array = np.array([get_SpT_from_num(int(x)) for x in ax2.get_xticks()])
         ax2.xaxis.set_tick_params(labelbottom=True)
         ax2.set_xticklabels(spt_array)
@@ -317,9 +401,6 @@ for name in names:
         ax2_3.set_ylabel(r"$\chi^2_{\nu}$ ($K$)")
 
         fig3, axes3 = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
-
-        # let's divide up by infrared excess
-        ir_exc = match.approved["IRexc"] == "yes"
 
         axes3[0].plot(
             match.approved["range_KAPERMAG3"][ir_exc],
