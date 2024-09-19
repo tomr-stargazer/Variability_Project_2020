@@ -267,7 +267,16 @@ for name in names:
 
     ax_pers_binned = fig_pers_binned.add_subplot(111)
 
-    bin_edges = [0, 2, 4, 6, 8, 15]
+    ax_pers_binned.plot(
+        periods["SpT"][ir_exc], periods["Period"][ir_exc], "r.", label="IR excess"
+    )
+    ax_pers_binned.plot(
+        periods["SpT"][~ir_exc], periods["Period"][~ir_exc], "k.", label="no IR excess"
+    )
+
+    # bin_edges = [0, 2, 4, 6, 8, 15]
+    # bin_edges = [0, 2.5, 5, 7.5, 12.5]
+    bin_edges = [0, 3, 6, 9.05]
     left_edges = bin_edges[:-1]
     right_edges = bin_edges[1:]
 
@@ -292,8 +301,10 @@ for name in names:
             ax_pers_binned.errorbar(
                 [(left + right) / 2 + offset],
                 [median_period],
-                fmt=".",
+                fmt="o",
                 color=color,
+                markerfacecolor="w",
+                markeredgecolor=color,
                 yerr=np.array([[down_err, up_err]]).T,
             )
             ax_pers_binned.hlines(y=median_period, xmin=left, xmax=right, color=color)
@@ -309,6 +320,11 @@ for name in names:
     ax_pers_binned.semilogy()
     ax_pers_binned.set_xlabel("SpT")
     ax_pers_binned.set_ylabel("Period (d)")
+    ax_pers_binned.set_title(f"Period versus SpT in {fullname_dict[name]}")
+
+    ax_pers_binned.set_ylim(10 ** min_per_bin, 10 ** max_per_bin)
+
+    ax_pers_binned.legend()
 
     ###
 
@@ -316,9 +332,16 @@ for name in names:
 
     ax_amps_binned = fig_amps_binned.add_subplot(111)
 
-    bin_edges = [0, 2, 4, 6, 8, 15]
-    left_edges = bin_edges[:-1]
-    right_edges = bin_edges[1:]
+    ax_amps_binned.plot(
+        periods["SpT"][ir_exc], periods["Amp"][ir_exc], "r.", label="IR excess"
+    )
+    ax_amps_binned.plot(
+        periods["SpT"][~ir_exc], periods["Amp"][~ir_exc], "k.", label="no IR excess"
+    )
+
+    # bin_edges = [0, 2, 4, 6, 8, 15]
+    # left_edges = bin_edges[:-1]
+    # right_edges = bin_edges[1:]
 
     for left, right in zip(left_edges, right_edges):
 
@@ -341,8 +364,10 @@ for name in names:
             ax_amps_binned.errorbar(
                 [(left + right) / 2 + offset],
                 [median_amp],
-                fmt=".",
+                fmt="o",
                 color=color,
+                markerfacecolor="w",
+                markeredgecolor=color,
                 yerr=np.array([[down_err, up_err]]).T,
             )
             ax_amps_binned.hlines(y=median_amp, xmin=left, xmax=right, color=color)
@@ -357,6 +382,12 @@ for name in names:
 
     ax_amps_binned.semilogy()
     ax_amps_binned.set_xlabel("SpT")
-    ax_amps_binned.set_ylabel("Amplitude (mag)")        
+    ax_amps_binned.set_ylabel("Amplitude (mag)")
+    ax_amps_binned.set_title(f"Amplitude versus SpT in {fullname_dict[name]}")
+
+    ax_amps_binned.set_ylim(10 ** min_amp_bin, 10 ** max_amp_bin)
+
+
+    ax_amps_binned.legend()
 
     # okay. I want to do some
