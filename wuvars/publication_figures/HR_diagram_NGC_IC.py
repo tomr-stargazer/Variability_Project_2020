@@ -140,7 +140,8 @@ def mock_lalchand_figure():
     return fig
 
 
-lw_array = [0.5, 0.75, 1.0, 1.25]
+lw_array = [0.25, 0.75, 1.5, 2]
+
 
 def mock_lalchand_figure_v2():
     # Let's reproduce something very much like Lalchand et al. 2022
@@ -264,11 +265,13 @@ def mock_lalchand_figure_v3():
 
     return fig
 
+
 def mock_lalchand_figure_v4():
     # Let's reproduce something very much like Lalchand et al. 2022
     # Mass vs Teff!
 
-    fig, ax = plt.subplots(1, dpi=150)
+    fig, ax = plt.subplots(figsize=(5, 5), dpi=150)
+    plt.grid(True, linestyle="--", lw=0.25)
 
     ages = [0.5, 2.0, 5.0, 10.0]
 
@@ -281,7 +284,7 @@ def mock_lalchand_figure_v4():
         Mk = myr_x[:, -1]
         M = myr_x[:, 0]
 
-        u = M <= 0.3
+        u = M <= 0.8
 
         plt.plot(teff[u], mass[u], "k", lw=lw, label=f"{age} Myr")
 
@@ -317,10 +320,70 @@ def mock_lalchand_figure_v4():
     # ax.invert_yaxis()
     # ax.invert_xaxis()
     ax.set_xlabel(r"$T_{\rm{eff}}$ (K)")
-    ax.set_ylabel("Mass (M$_{\odot}$")
+    ax.set_ylabel("Mass (M$_{\odot})$")
     plt.legend()
 
     return fig
+
+
+def mock_lalchand_figure_v5():
+    # Teff vs Mass!
+
+    fig, ax = plt.subplots(figsize=(5, 5), dpi=150)
+    plt.grid(True, linestyle="--", lw=0.25)
+
+    ages = [0.5, 2.0, 5.0, 10.0]
+
+    for age, lw in zip(ages, lw_array):
+
+        myr_x = load_isochrone_generic(age)
+
+        mass = myr_x[:, 0]
+        teff = myr_x[:, 1]
+        Mk = myr_x[:, -1]
+        M = myr_x[:, 0]
+
+        u = M <= 0.8
+
+        plt.plot(mass[u], teff[u], "k", lw=lw, label=f"{age} Myr")
+
+    all_ages_Gyr = extract_age_array_Gyr(filepath)
+
+    # masses = [0.2, 0.1, 0.05, 0.03, 0.01]
+    # myr_0_5 = load_isochrone_generic(0.5)
+    # mass_array = myr_0_5[:, 0]
+
+    # for i, mass in enumerate(masses):
+    #     # get the evolutionary track for all ages
+    #     all_isochrones = []
+    #     for age in all_ages_Gyr[all_ages_Gyr < 0.5]:
+    #         all_isochrones.append(load_isochrone_generic(age * 1e3))
+    #     myr_stack = np.vstack(all_isochrones).reshape(len(all_isochrones), 30, 11)
+
+    #     mass_index = np.where(mass == mass_array)[0]
+    #     mi = mass_index
+    #     print(f"mass_index={mass_index}")
+
+    #     teff_i = myr_stack[:, mi, 1]
+    #     Mk_i = myr_stack[:, mi, -1]
+    #     M_i = myr_stack[:, mi, 0]
+
+    #     plt.plot(teff_i, Mk_i + distmod, "--", label=f"{mass} M$_{{\odot}}$")
+
+    #     if M_i[0] <= 0.3:
+    #         if M_i[0] in masslist:
+    #             print("M = ", M_i[0])
+    #             plt.plot(SpT_i, Mk_i + distmod, label=f"{M_i[0]} M$_{{\odot}}$")
+
+    # ax.set_xlim(3, 13)
+    # ax.invert_yaxis()
+    # ax.invert_xaxis()
+    ax.set_ylabel(r"$T_{\rm{eff}}$ (K)")
+    ax.set_xlabel("Mass (M$_{\odot})$")
+    plt.legend()
+
+    return fig
+
 
 if __name__ == "__main__":
     mock_lalchand_figure()
