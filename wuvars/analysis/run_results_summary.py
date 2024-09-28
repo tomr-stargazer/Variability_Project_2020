@@ -78,10 +78,7 @@ for name in names:
         fig_hr, ax_hr = plt.subplots(figsize=(6, 6))
 
         ax_hr.plot(
-            spread["median"]["HMKPNT"],
-            spread["median"]["KAPERMAG3"],
-            "k,",
-            alpha=0.25,
+            spread["median"]["HMKPNT"], spread["median"]["KAPERMAG3"], "k,", alpha=0.25,
         )
         ax_hr.plot(
             match.approved["median_HMKPNT"],
@@ -105,10 +102,22 @@ for name in names:
 
         fig, ax = plt.subplots(figsize=(6, 3))
         ax.hist(match.approved["SpT"], range=[0, 15], bins=np.arange(0, 15, 0.5))
+        ax.hist(
+            match.statistical["SpT"],
+            edgecolor="k",
+            facecolor="None",
+            hatch="..",
+            range=[0, 15],
+            bins=np.arange(0, 15, 0.5),
+            histtype="stepfilled",
+            label="'statistical' sample\n($K_{\\rm{err}} \\leq 0.05$ mag)\n"
+            f"$n$={len(match.statistical)}"
+        )
 
         ax.set_xlim(0, 14)
         ax.set_ylabel("Number of sources")
         ax.set_xlabel("Spectral Type")
+        ax.legend()
 
         spt_array = np.array([get_SpT_from_num(int(x)) for x in ax.get_xticks()])
         ax.xaxis.set_tick_params(labelbottom=True)
@@ -235,7 +244,7 @@ for name in names:
     periodics = np.in1d(match.approved["SOURCEID"], v_per.index)
 
     if make_figs:
-        fig2, axes2 = plt.subplots(figsize=(6, 12*4/3), nrows=4, sharex=True)
+        fig2, axes2 = plt.subplots(figsize=(6, 12 * 4 / 3), nrows=4, sharex=True)
         ax2, ax2_2, ax2_3, ax2_4 = axes2
         ax2.plot(
             match.approved["SpT"][periodics],
@@ -375,7 +384,6 @@ for name in names:
         ax2_4.semilogy()
         ax2_4.set_ylabel("median $K$ photometric uncertainty (mag)")
 
-
         ####
 
         spt_array = np.array([get_SpT_from_num(int(x)) for x in ax2.get_xticks()])
@@ -400,36 +408,38 @@ for name in names:
         ax2_3.set_xlabel("Spectral Type")
         ax2_3.set_ylabel(r"$\chi^2_{\nu}$ ($K$)")
 
-        fig3, axes3 = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
+        plot_SpT_vs_rms = False
+        if plot_SpT_vs_rms:
+            fig3, axes3 = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
 
-        axes3[0].plot(
-            match.approved["range_KAPERMAG3"][ir_exc],
-            match.approved["SpT"][ir_exc],
-            "r.",
-        )
-        axes3[1].plot(
-            match.approved["range_KAPERMAG3"][~ir_exc],
-            match.approved["SpT"][~ir_exc],
-            "k.",
-        )
-        axes3[0].invert_yaxis()
+            axes3[0].plot(
+                match.approved["range_KAPERMAG3"][ir_exc],
+                match.approved["SpT"][ir_exc],
+                "r.",
+            )
+            axes3[1].plot(
+                match.approved["range_KAPERMAG3"][~ir_exc],
+                match.approved["SpT"][~ir_exc],
+                "k.",
+            )
+            axes3[0].invert_yaxis()
 
-        fig4, ax4 = plt.subplots(figsize=(8, 5))
+            fig4, ax4 = plt.subplots(figsize=(8, 5))
 
-        ax4.plot(
-            match.approved["range_KAPERMAG3"][ir_exc],
-            match.approved["SpT"][ir_exc],
-            "r+",
-        )
-        ax4.plot(
-            match.approved["range_KAPERMAG3"][~ir_exc],
-            match.approved["SpT"][~ir_exc],
-            "k+",
-        )
-        ax4.invert_yaxis()
-        ax4.set_ylim(13.5, -0.5)
-        ax4.set_xlim(0, 1.2)
-        ax4.set_title(name)
+            ax4.plot(
+                match.approved["range_KAPERMAG3"][ir_exc],
+                match.approved["SpT"][ir_exc],
+                "r+",
+            )
+            ax4.plot(
+                match.approved["range_KAPERMAG3"][~ir_exc],
+                match.approved["SpT"][~ir_exc],
+                "k+",
+            )
+            ax4.invert_yaxis()
+            ax4.set_ylim(13.5, -0.5)
+            ax4.set_xlim(0, 1.2)
+            ax4.set_title(name)
 
         plt.show()
 
@@ -441,7 +451,7 @@ for name in names:
     # 3. the “subjective” selection (partially manual inspection of light curves
     #    + Stetson values)
 
-    print("TBD")
+    # print("TBD")
     print("")
 # Variability finding
 # What counts as a variable star?
