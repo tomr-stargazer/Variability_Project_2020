@@ -148,11 +148,7 @@ def combined_legacy_maps():
     pass
 
 
-if __name__ == "__main__":
-    if False:
-        legacy_NGC1333_map_figure()
-        legacy_IC348_map_figure()
-
+def maps_v2():
     fig = plt.figure(figsize=(5 * 2, 5), dpi=150)
     ax_ngc = fig.add_subplot(122)
     ax_ic = fig.add_subplot(121)
@@ -259,5 +255,130 @@ if __name__ == "__main__":
     ax_ngc.set_aspect(1 / np.cos(np.radians(31)))
     ax_ic.set_aspect(1 / np.cos(np.radians(31)))
 
-    plt.savefig("test_IC348_NGC1333_map.png", bbox_inches='tight')
-    plt.savefig("test_IC348_NGC1333_map.pdf", bbox_inches='tight')
+    plt.savefig("test_IC348_NGC1333_map.png", bbox_inches="tight")
+    plt.savefig("test_IC348_NGC1333_map.pdf", bbox_inches="tight")
+
+    return fig
+
+
+if __name__ == "__main__":
+    if False:
+        legacy_NGC1333_map_figure()
+        legacy_IC348_map_figure()
+        maps_v2()
+
+    from wuvars.analysis.bd_matching_v3 import match_ngc, match_ic
+
+    ngc_match = match_ngc()
+    ic_match = match_ic()
+
+    print(len(ngc_match.approved))
+
+    fig = plt.figure(figsize=(5 * 2, 5), dpi=150)
+    ax_ngc = fig.add_subplot(122)
+    ax_ic = fig.add_subplot(121)
+
+    ax_ngc.plot(
+        np.degrees(ngc_spread["median"]["RA"]),
+        np.degrees(ngc_spread["median"]["DEC"]),
+        "k,",
+        alpha=0.25,
+        rasterized=True,
+    )
+
+    ax_ngc.plot(
+        np.degrees(ngc_match.approved['median_RA']),
+        np.degrees(ngc_match.approved['median_DEC']),
+        "k.",
+        ms=4,
+        label=f"Good match (n={len(ngc_match.approved)})",
+    )
+    ax_ngc.plot(
+        np.degrees(ngc_match.rejected["median_RA"]),
+        np.degrees(ngc_match.rejected["median_DEC"]),
+        "rx",
+        ms=6,
+        mew=1.2,
+        label=f"Unusable lightcurve (n={len(ngc_match.rejected)})",
+    )
+    ax_ngc.invert_xaxis()
+    ax_ngc.set_xlabel("RA (deg)")
+    ax_ngc.set_ylabel("Dec (deg)")
+
+    ax_ngc.set_xlim(
+        np.degrees(ngc_spread["median"]["RA"][ngc_q.q2]).max(),
+        np.degrees(ngc_spread["median"]["RA"][ngc_q.q2]).min(),
+    )
+    ax_ngc.set_ylim(
+        np.degrees(ngc_spread["median"]["DEC"]).min(),
+        np.degrees(ngc_spread["median"]["DEC"]).max(),
+    )
+
+    ax_ngc.legend(fontsize=9, loc="upper left")
+    ax_ngc.set_title("NGC 1333", fontsize=18)
+
+    ax_ic.plot(
+        np.degrees(ic_spread["median"]["RA"]),
+        np.degrees(ic_spread["median"]["DEC"]),
+        "k,",
+        alpha=0.25,
+        rasterized=True,
+    )
+
+    ax_ic.plot(
+        np.degrees(ic_match.approved["median_RA"]),
+        np.degrees(ic_match.approved["median_DEC"]),
+        "k.",
+        ms=4,
+        label=f"Good match (n={len(ic_match.approved)})",
+    )
+    ax_ic.plot(
+        np.degrees(ic_match.rejected["median_RA"]),
+        np.degrees(ic_match.rejected["median_DEC"]),
+        "rx",
+        ms=6,
+        mew=1.2,
+        label=f"Unusable lightcurve (n={len(ic_match.rejected)})",
+    )
+    ax_ic.invert_xaxis()
+    ax_ic.set_xlabel("RA (deg)")
+    ax_ic.set_ylabel("Dec (deg)")
+
+    ax_ic.set_xlim(
+        np.degrees(ic_spread["median"]["RA"][ic_q.q2]).max(),
+        np.degrees(ic_spread["median"]["RA"][ic_q.q2]).min(),
+    )
+    ax_ic.set_ylim(
+        np.degrees(ic_spread["median"]["DEC"]).min(),
+        np.degrees(ic_spread["median"]["DEC"]).max(),
+    )
+
+    # ic_unmatched_coords = np.array(
+    #     [
+    #         (55.99654167, 32.04758333),
+    #         (56.04529167, 32.20408333),
+    #         (56.11066667, 32.13905556),
+    #         (56.17625, 32.20786111),
+    #     ]
+    # )
+
+    # for pair in ic_unmatched_coords:
+    ax_ic.plot(
+        np.degrees(ic_match.unmatched["RA"]),
+        np.degrees(ic_match.unmatched["DEC"]),
+        color="b",
+        linestyle="none",
+        marker=(6, 2, 0),
+        ms=8,
+        mew=1,
+        label=f"No match w/in 0.5'' (n={len(ic_match.unmatched)})",
+    )
+
+    ax_ic.legend(fontsize=9, loc="upper left")
+    ax_ic.set_title("IC 348", fontsize=18)
+
+    ax_ngc.set_aspect(1 / np.cos(np.radians(31)))
+    ax_ic.set_aspect(1 / np.cos(np.radians(31)))
+
+    plt.savefig("test_IC348_NGC1333_map.png", bbox_inches="tight")
+    plt.savefig("test_IC348_NGC1333_map.pdf", bbox_inches="tight")
