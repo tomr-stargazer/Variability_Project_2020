@@ -263,9 +263,10 @@ for name in names:
     # and therefore any trend with non-IR exc periods vs spectral type is a
     # mass-rotation sequence
 
-    fig_pers_binned = plt.figure(figsize=(6, 6))
+    fig_pers_binned = plt.figure(figsize=(4, 4), dpi=150)
 
     ax_pers_binned = fig_pers_binned.add_subplot(111)
+    ax_pers_binned.grid(True, linestyle="--", lw=0.25)
 
     ax_pers_binned.plot(
         periods["SpT"][ir_exc], periods["Period"][ir_exc], "r.", label="IR excess"
@@ -317,12 +318,31 @@ for name in names:
             ax_pers_binned.text(left, median_period, "[", center_dict)
             ax_pers_binned.text(right, median_period, ")", center_dict)
 
+    def days2hours(x):
+        return x * 24
+
+
+    def hours2days(x):
+        return x / 24
+
+
+    secax = ax_pers_binned.secondary_yaxis('right', functions=(days2hours, hours2days))
+    secax.set_ylabel('Period (hr)')
+
+    secax_x2 = ax_pers_binned.secondary_xaxis(
+        -0.15, functions=(lambda x: x, lambda x: x))
+    secax_x2.set_xlabel(r'Mass $(M_{\odot})$')
+    secax_x2.set_xticklabels([None, 0.55, 0.35, 0.2, 0.08, 0.02])
+
     ax_pers_binned.semilogy()
     ax_pers_binned.set_xlabel("SpT")
+    ax_pers_binned.set_xticklabels([f'M{int(x)}' for x in ax_pers_binned.get_xticks()])
+
     ax_pers_binned.set_ylabel("Period (d)")
     ax_pers_binned.set_title(f"Period versus SpT in {fullname_dict[name]}")
 
-    ax_pers_binned.set_ylim(10 ** min_per_bin, 10 ** max_per_bin)
+    # ax_pers_binned.set_ylim(10 ** min_per_bin * 0.95, 10 ** max_per_bin * 1.05)
+    ax_pers_binned.set_ylim(10/24, 10 ** max_per_bin * 1.05)
 
     ax_pers_binned.legend()
 
