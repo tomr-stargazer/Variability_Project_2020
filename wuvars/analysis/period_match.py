@@ -154,8 +154,11 @@ if __name__ == "__main__":
 
     cluster_litpertable_lists = [
         (r1_litpertable, w1_litpertable),
-        (g1_litpertable, w1_litpertable, f1_litpertable),
+        (f1_litpertable, w1_litpertable, g1_litpertable),
     ]
+
+    symbols = ['o', 'o', 'o', 'v']
+    ms_list = [3.5, 3, 2.5]
 
     for _periods, _coords, _name, litpertable_list in zip(
         cluster_periods, cluster_coords, cluster_names, cluster_litpertable_lists
@@ -169,7 +172,7 @@ if __name__ == "__main__":
 
         period_plots = []
 
-        for litpertable in litpertable_list:
+        for litpertable, symbol, ms in zip(litpertable_list, symbols, ms_list):
 
             idx, d2d, d3d = _coords.match_to_catalog_sky(litpertable.coords)
 
@@ -181,6 +184,13 @@ if __name__ == "__main__":
             print(
                 f"Farthest used match: {np.max(d2d[sep_constraint]).to(u.arcsec):.2f}"
             )
+
+            n_overlap = np.sum(
+                np.isfinite(_periods["Period"][sep_constraint])
+                & np.isfinite(litpertable.period[idx[sep_constraint]])
+            )
+            print(f"Number of overlapping periods: {n_overlap}")
+
             print("")
 
             matches = litpertable.table[idx[sep_constraint]]
@@ -189,9 +199,11 @@ if __name__ == "__main__":
                 ax.plot(
                     _periods["Period"][sep_constraint],
                     litpertable.period[idx[sep_constraint]],
-                    ".",
-                    ms=4,
-                    label=litpertable.short_name,
+                    marker=symbol,
+                    linestyle='None',
+                    ms=ms,
+                    label=litpertable.long_name + f" (n={n_overlap})",
+                    zorder=20,
                 )
             )
 
@@ -207,11 +219,15 @@ if __name__ == "__main__":
             ax.plot([0.01, 100], [0.01, 100], "k--", lw=0.25, label="$y=x$",)
         )
         alias_plots.extend(
-            ax.plot([0.01, 100], [0.01 * 2, 100 * 2], "k--", lw=0.1, label="$y=2x$",)
+            ax.plot(
+                [0.01, 100],
+                [0.01 * 2, 100 * 2],
+                "k--",
+                lw=0.1,
+                label="$y=2x$, $y=x/2$",
+            )
         )
-        alias_plots.extend(
-            ax.plot([0.01, 100], [0.01 / 2, 100 / 2], "k--", lw=0.1, label=r"$y=x/2$",)
-        )
+        alias_plots.extend(ax.plot([0.01, 100], [0.01 / 2, 100 / 2], "k--", lw=0.1))
 
         # do the hyperbolic ones
         xs_a = np.linspace(1.01, 20, 200)
@@ -222,14 +238,16 @@ if __name__ == "__main__":
         ys3_inv = 1 / xs_c - 1
 
         alias_plots.extend(
-            ax.plot(xs_a, 1 / ys1_inv, "k:", lw=0.1, label="$1/y = 1 - 1/x$")
+            ax.plot(
+                xs_a,
+                1 / ys1_inv,
+                "k:",
+                lw=0.1,
+                label=r"$y = \rm{abs} \left( \pm \left( \frac{1}{x} \pm 1 \right) \right ) ^{-1}$",
+            )
         )
-        alias_plots.extend(
-            ax.plot(xs_b, 1 / ys2_inv, "k:", lw=0.1, label="$1/y = 1 + 1/x$")
-        )
-        alias_plots.extend(
-            ax.plot(xs_c, 1 / ys3_inv, "k:", lw=0.1, label="$1/y = 1/x - 1$")
-        )
+        alias_plots.extend(ax.plot(xs_b, 1 / ys2_inv, "k:", lw=0.1,))
+        alias_plots.extend(ax.plot(xs_c, 1 / ys3_inv, "k:", lw=0.1,))
 
         ax.axvline(1, color="k", linestyle=":", lw=0.25)
         ax.axhline(1, color="k", linestyle=":", lw=0.25)
