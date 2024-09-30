@@ -27,7 +27,7 @@ class LitPeriodTable(object):
         self.dec = dec
 
         if coords is None:
-            coords = SkyCoord(ra=ra, dec=dec, unit=u.deg)
+            coords = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg)).flatten()
 
         self.coords = coords
         self.period = period
@@ -146,43 +146,85 @@ if __name__ == "__main__":
         ra=ngc_periods["RA_deg"], dec=ngc_periods["DE_deg"], unit=u.deg
     )
 
-    fig = plt.figure(figsize=(4, 4))
-    ax = fig.add_subplot(111)
-
     # start with NGC
 
     cluster_coords = [ngc_coords, ic_coords]
     cluster_periods = [ngc_periods, ic_periods]
+    cluster_names = ["NGC 1333", "IC 348"]
 
-    # for _periods, _coords in zip()
-    for litpertable in (r1_litpertable, w1_litpertable):
+    cluster_litpertable_lists = [
+        (r1_litpertable, w1_litpertable),
+        (g1_litpertable, w1_litpertable, f1_litpertable),
+    ]
 
-        idx, d2d, d3d = ngc_coords.match_to_catalog_sky(litpertable.coords)
-
-        max_sep = 1.0 * u.arcsec
-        sep_constraint = d2d < max_sep
-
-        print(f"Matches to {litpertable.long_name}: {np.sum(sep_constraint)}")
-        print(f"Closest match: {np.min(d2d).to(u.arcsec):.2f}")
-        print(f"Farthest used match: {np.max(d2d[sep_constraint]).to(u.arcsec):.2f}")
+    for _periods, _coords, _name, litpertable_list in zip(
+        cluster_periods, cluster_coords, cluster_names, cluster_litpertable_lists
+    ):
+        print(f"{_name}")
         print("")
 
-        matches = litpertable.table[idx[sep_constraint]]
+        fig = plt.figure(figsize=(5, 5), dpi=150)
+        ax = fig.add_subplot(111)
+        ax.set_aspect("equal")
+
+        for litpertable in litpertable_list:
+
+            idx, d2d, d3d = _coords.match_to_catalog_sky(litpertable.coords)
+
+            max_sep = 1.0 * u.arcsec
+            sep_constraint = d2d < max_sep
+
+            print(f"Matches to {litpertable.long_name}: {np.sum(sep_constraint)}")
+            print(f"Closest match: {np.min(d2d).to(u.arcsec):.2f}")
+            print(
+                f"Farthest used match: {np.max(d2d[sep_constraint]).to(u.arcsec):.2f}"
+            )
+            print("")
+
+            matches = litpertable.table[idx[sep_constraint]]
+
+            ax.plot(
+                _periods["Period"][sep_constraint],
+                litpertable.period[idx[sep_constraint]],
+                ".",
+                ms=4,
+                label=litpertable.short_name,
+            )
+
+        ax.get_xlim()
+        ax.get_ylim()
 
         ax.plot(
-            litpertable.period[idx[sep_constraint]],
-            ngc_periods["Period"][sep_constraint],
-            ".",
-            label=litpertable.short_name,
+            [0.01, 100], [0.01, 100], "k--", lw=0.25, label="$y=x$",
         )
-    ax.plot([0.01, 100], [0.01, 100], "k--", lw=0.25, scalex=False, scaley=False)
-    ax.plot([0.01, 100], [0.01 * 2, 100 * 2], "k--", lw=0.1, scalex=False, scaley=False)
-    ax.plot([0.01, 100], [0.01 / 2, 100 / 2], "k--", lw=0.1, scalex=False, scaley=False)
+        ax.plot(
+            [0.01, 100], [0.01 * 2, 100 * 2], "k--", lw=0.1, label="$y=2x$",
+        )
+        ax.plot(
+            [0.01, 100], [0.01 / 2, 100 / 2], "k--", lw=0.1, label=r"$y=x/2$",
+        )
 
-    ax.axvline(1, color="k", linestyle=":", lw=0.25)
-    ax.axhline(1, color="k", linestyle=":", lw=0.25)
+        # do the hyperbolic ones
+        xs_a = np.linspace(1.01, 20, 200)
+        xs_b = np.linspace(0.01, 20, 200)
+        xs_c = np.linspace(0.01, 0.99, 50)
+        ys1_inv = 1 - 1 / xs_a
+        ys2_inv = 1 + 1 / xs_b
+        ys3_inv = 1 / xs_c - 1
 
-    ax.set_xlim(0, 14)
-    ax.set_ylim(0, 14)
+        ax.plot(xs_a, 1 / ys1_inv, "k:", lw=0.1, label="$1/y = 1 - 1/x$")
+        ax.plot(xs_b, 1 / ys2_inv, "k--", lw=0.1, label="$1/y = 1 + 1/x$")
+        ax.plot(xs_c, 1 / ys3_inv, "k--", lw=0.1, label="$1/y = 1/x - 1$")
 
-    ax.legend()
+        ax.axvline(1, color="k", linestyle=":", lw=0.25)
+        ax.axhline(1, color="k", linestyle=":", lw=0.25)
+
+        ax.set_xlim(0, 17)
+        ax.set_ylim(0, 17)
+
+        ax.set_xlabel("Our period (d)")
+        ax.set_ylabel("Literature period (d)")
+
+        ax.set_title(f"Literature period comparisons in {_name}")
+
+        ax.legend(loc="upper left")
