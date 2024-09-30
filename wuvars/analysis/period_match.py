@@ -167,6 +167,8 @@ if __name__ == "__main__":
         ax = fig.add_subplot(111)
         ax.set_aspect("equal")
 
+        period_plots = []
+
         for litpertable in litpertable_list:
 
             idx, d2d, d3d = _coords.match_to_catalog_sky(litpertable.coords)
@@ -183,25 +185,32 @@ if __name__ == "__main__":
 
             matches = litpertable.table[idx[sep_constraint]]
 
-            ax.plot(
-                _periods["Period"][sep_constraint],
-                litpertable.period[idx[sep_constraint]],
-                ".",
-                ms=4,
-                label=litpertable.short_name,
+            period_plots.extend(
+                ax.plot(
+                    _periods["Period"][sep_constraint],
+                    litpertable.period[idx[sep_constraint]],
+                    ".",
+                    ms=4,
+                    label=litpertable.short_name,
+                )
             )
 
-        ax.get_xlim()
-        ax.get_ylim()
+        # Create a legend for the first line.
+        first_legend = ax.legend(handles=period_plots, loc="upper left")
 
-        ax.plot(
-            [0.01, 100], [0.01, 100], "k--", lw=0.25, label="$y=x$",
+        # Add the legend manually to the Axes.
+        ax.add_artist(first_legend)
+
+        alias_plots = []
+
+        alias_plots.extend(
+            ax.plot([0.01, 100], [0.01, 100], "k--", lw=0.25, label="$y=x$",)
         )
-        ax.plot(
-            [0.01, 100], [0.01 * 2, 100 * 2], "k--", lw=0.1, label="$y=2x$",
+        alias_plots.extend(
+            ax.plot([0.01, 100], [0.01 * 2, 100 * 2], "k--", lw=0.1, label="$y=2x$",)
         )
-        ax.plot(
-            [0.01, 100], [0.01 / 2, 100 / 2], "k--", lw=0.1, label=r"$y=x/2$",
+        alias_plots.extend(
+            ax.plot([0.01, 100], [0.01 / 2, 100 / 2], "k--", lw=0.1, label=r"$y=x/2$",)
         )
 
         # do the hyperbolic ones
@@ -212,9 +221,15 @@ if __name__ == "__main__":
         ys2_inv = 1 + 1 / xs_b
         ys3_inv = 1 / xs_c - 1
 
-        ax.plot(xs_a, 1 / ys1_inv, "k:", lw=0.1, label="$1/y = 1 - 1/x$")
-        ax.plot(xs_b, 1 / ys2_inv, "k--", lw=0.1, label="$1/y = 1 + 1/x$")
-        ax.plot(xs_c, 1 / ys3_inv, "k--", lw=0.1, label="$1/y = 1/x - 1$")
+        alias_plots.extend(
+            ax.plot(xs_a, 1 / ys1_inv, "k:", lw=0.1, label="$1/y = 1 - 1/x$")
+        )
+        alias_plots.extend(
+            ax.plot(xs_b, 1 / ys2_inv, "k:", lw=0.1, label="$1/y = 1 + 1/x$")
+        )
+        alias_plots.extend(
+            ax.plot(xs_c, 1 / ys3_inv, "k:", lw=0.1, label="$1/y = 1/x - 1$")
+        )
 
         ax.axvline(1, color="k", linestyle=":", lw=0.25)
         ax.axhline(1, color="k", linestyle=":", lw=0.25)
@@ -227,4 +242,4 @@ if __name__ == "__main__":
 
         ax.set_title(f"Literature period comparisons in {_name}")
 
-        ax.legend(loc="upper left")
+        ax.legend(handles=alias_plots, loc="lower right")
