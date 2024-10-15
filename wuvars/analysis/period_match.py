@@ -8,6 +8,8 @@ References the IPython notebook `Exploring literature periods.ipynb` a lot.
 
 """
 
+import pdb
+
 import astropy.table
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -157,13 +159,14 @@ if __name__ == "__main__":
         (f1_litpertable, w1_litpertable, g1_litpertable),
     ]
 
-    symbols = ['o', 'o', 'o', 'v']
+    symbols = ["o", "o", "o", "v"]
     ms_list = [3.5, 3, 2.5]
 
     for _periods, _coords, _name, litpertable_list in zip(
         cluster_periods, cluster_coords, cluster_names, cluster_litpertable_lists
     ):
         print(f"{_name}")
+        print(f"{np.sum(np.isfinite(_periods['Period']))} periodic objects")
         print("")
 
         fig = plt.figure(figsize=(5, 5), dpi=150)
@@ -179,33 +182,144 @@ if __name__ == "__main__":
             max_sep = 1.0 * u.arcsec
             sep_constraint = d2d < max_sep
 
-            print(f"Matches to {litpertable.long_name}: {np.sum(sep_constraint)}")
-            print(f"Closest match: {np.min(d2d).to(u.arcsec):.2f}")
+            litpertable.idx = idx
+            litpertable.sep_constraint = sep_constraint
+
+            print(f"  Matches to {litpertable.long_name}: {np.sum(sep_constraint)}")
             print(
-                f"Farthest used match: {np.max(d2d[sep_constraint]).to(u.arcsec):.2f}"
+                f"    Of these, {np.sum(np.isfinite(litpertable.period[idx[sep_constraint]]))} were identified by {litpertable.short_name} as periodic"
+            )
+            print(f"  Closest match: {np.min(d2d).to(u.arcsec):.2f}")
+            print(
+                f"  Farthest used match: {np.max(d2d[sep_constraint]).to(u.arcsec):.2f}"
             )
 
-            n_overlap = np.sum(
+            litpertable.overlaps = (
                 np.isfinite(_periods["Period"][sep_constraint])
                 & np.isfinite(litpertable.period[idx[sep_constraint]])
-            )
-            print(f"Number of overlapping periods: {n_overlap}")
+            ) == True
+
+            litpertable.alt_overlaps = (
+                np.isfinite(_periods["Period"])
+                & np.isfinite(litpertable.period[idx])
+                & sep_constraint
+            ) == True
+
+            litpertable.was_periodic = (
+                np.isfinite(litpertable.period[idx]) & sep_constraint
+            ) == True
+
+            n_overlap = np.sum(litpertable.overlaps)
+            print(f"  Number of overlapping periods: {n_overlap}")
 
             print("")
 
+            # Not sure I'm calculating this right.
+            # What exactly are we measuring?
+
+            # There are two things we might measure.
+
+            # One is the literal "how many periodic objects, total, did I find
+            # that are not literally listed as periodic in their catalog?"
+            # and this would be a sum of the following two groups:
+            #   (a) our-periodics that positionally matched to a non-periodic in their catalog;
+            #   (b) our-periodics that did not match to their catalog.
+
+            # It should literally be # of our found periods minus the number of periodic objects that matched to a periodic object
+
+            # Break it down a little more finely...
+            # a row in our table is flagged as a new period IF
+            #   (a) it has a finite period in our data AND EITHER
+            #      (b) it is not in the overlap period set among positional matches, OR
+            #      (c) it did not match to an object in their catalog at all
+
+            # I think I'm running into a challenge re: indexing on that latter bit.
+            # Because I want everything indexed to
+            our_new_periods = np.isfinite(_periods["Period"]) & (
+                ~litpertable.alt_overlaps | ~sep_constraint
+            )
+            assert np.sum(our_new_periods) == np.sum(
+                np.isfinite(_periods["Period"])
+            ) - np.sum(litpertable.overlaps)
+
+            our_new_periods_among_matches = np.isfinite(
+                _periods["Period"][sep_constraint]
+            ) & (~litpertable.overlaps)
+
+            periods_we_missed = ~np.isfinite(
+                _periods["Period"][sep_constraint]
+            ) & np.isfinite(litpertable.period[idx[sep_constraint]])
+
+            print(
+                f"  Number of our new periods [relative to {litpertable.long_name}]: {np.sum(our_new_periods)}"
+            )
+            print(
+                f"    Of which {np.sum(our_new_periods_among_matches)} were affirmatively not identified by {litpertable.short_name} as periodic"
+            )
+            print(
+                f"  Number of periods we missed [relative to {litpertable.long_name}]: {np.sum(periods_we_missed)}"
+            )
+            print("")
+            print("")
+
             matches = litpertable.table[idx[sep_constraint]]
+            litpertable.matches = matches
+
+            # pdb.set_trace()
 
             period_plots.extend(
                 ax.plot(
                     _periods["Period"][sep_constraint],
                     litpertable.period[idx[sep_constraint]],
                     marker=symbol,
-                    linestyle='None',
+                    linestyle="None",
                     ms=ms,
                     label=litpertable.long_name + f" (n={n_overlap})",
                     zorder=20,
                 )
             )
+
+        ###
+        # Here's where it makes sense to do some math on the periodic recovery fraction / number of new periodics.
+
+        # total number of sources
+        print(f"Total number of sources (periodic and not) in {_name}: {len(_periods)}")
+
+        is_periodic = np.isfinite(_periods["Period"])
+        n_is_periodic = np.sum(is_periodic)
+        print(f"Number of periodics: {n_is_periodic}")
+
+        overlaps_any = np.vstack(
+            [litpertable.alt_overlaps for litpertable in litpertable_list]
+        )
+        overlaps = np.any(overlaps_any, axis=0)
+
+        # was periodic in at least one of the literatures
+        # may require some kind of list comprehension over listpertable_list
+
+        was_periodic_any = np.vstack(
+            [litpertable.was_periodic for litpertable in litpertable_list]
+        )
+        was_periodic = np.any(was_periodic_any, axis=0)
+
+        print(
+            f"  Of these, {np.sum(overlaps)} were previously identified as periodic by {[x.short_name for x in litpertable_list]}"
+        )
+
+        new_periodics = np.isfinite(_periods["Period"]) & ~was_periodic
+        print("******** ********** ******** ****** ********")
+        print(f"Number of **new** periodics we found: {np.sum(new_periodics)}")
+        print("******** ********** ******** ****** ********")
+
+        missed_periodics = ~np.isfinite(_periods["Period"]) & was_periodic
+
+        print("")
+        print(f"Number of known periodics we missed: {np.sum(missed_periodics)}")
+
+        print("")
+        print("")
+
+        # pdb.set_trace()
 
         # Create a legend for the first line.
         first_legend = ax.legend(handles=period_plots, loc="upper left")
