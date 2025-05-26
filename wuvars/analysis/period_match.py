@@ -135,9 +135,48 @@ f1_litpertable = LitPeriodTable(
     long_name="Fritzewski et al. 2016",
 )
 
+fla_1 = astropy.table.Table.read(
+    "../literature_periods/Flaherty13_aj456236t1_mrt.txt", format="ascii"
+)
 
-# All of this prep is somewhat sloppy.
+fla_4 = astropy.table.Table.read(
+    "../literature_periods/Flaherty13_aj456236t4_ascii.txt",
+    format="ascii",
+    delimiter="\t",
+    header_start=2,
+    data_start=4,
+    data_end=25+6,
+)
 
+fla4_pers = []
+
+for row in fla_4:
+
+    sigs = [row["[3.6] Significance"], row["[4.5] Significance"]]
+    choice = np.argmax(sigs)
+    per = [row["[3.6] Period"], row["[4.5] Period"]][choice]
+
+    fla4_pers.append(per)
+
+fla_4_lrll = np.array([(x[5:]) for x in fla_4["Star ID"]])
+fla1_pers = []
+
+for row in fla_1:
+    if "LRLL " + str(row["LRLL"]) in fla_4["Star ID"]:
+        fla_4_match_index = np.int(np.where(row["LRLL"] == fla_4_lrll)[0])
+        fla1_pers.append(fla4_pers[fla_4_match_index].rstrip('^a'))
+    else:
+        fla1_pers.append(np.nan)
+
+
+fla1_litpertable = LitPeriodTable(
+    fla_1,
+    fla_1["RAdeg"],
+    fla_1["DEdeg"],
+    np.array(fla1_pers).astype(np.float),
+    short_name="F13",
+    long_name="Flaherty et al. 2013",
+)
 
 if __name__ == "__main__":
 
@@ -156,11 +195,11 @@ if __name__ == "__main__":
 
     cluster_litpertable_lists = [
         (r1_litpertable, w1_litpertable),
-        (f1_litpertable, w1_litpertable, g1_litpertable),
+        (f1_litpertable, w1_litpertable, fla1_litpertable, g1_litpertable),
     ]
 
-    symbols = ["o", "o", "o", "v"]
-    ms_list = [3.5, 3, 2.5]
+    symbols = ["o", "o", "o", "o"]
+    ms_list = [3.5, 3, 2.5, 2]
 
     for _periods, _coords, _name, litpertable_list in zip(
         cluster_periods, cluster_coords, cluster_names, cluster_litpertable_lists
