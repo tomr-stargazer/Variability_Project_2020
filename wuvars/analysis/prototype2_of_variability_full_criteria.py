@@ -1,21 +1,17 @@
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import astropy.table
-import astropy.coordinates
-import astropy.units as u
 
-from wuvars.data import spreadsheet, photometry, quality_classes
+import astropy.coordinates
+import astropy.table
+import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import wuvars.analysis.variability_selection as sv
-from wuvars.analysis.bd_matching_v2 import match_onc, match_ngc, match_ic
-from wuvars.analysis.variability_selection_curved import (
-    curve_Stetson,
-    sv_jh,
-    sv_hk,
-    sv_jk,
-    sv_jhk,
-)
+from wuvars.analysis.bd_matching_v2 import match_ic, match_ngc, match_onc
+from wuvars.analysis.variability_selection import sv_h, sv_j, sv_k
+from wuvars.analysis.variability_selection_curved import (curve_Stetson, sv_hk,
+                                                          sv_jh, sv_jhk, sv_jk)
+from wuvars.data import photometry, quality_classes, spreadsheet
 
 # general setup
 
@@ -163,7 +159,7 @@ def select_disks(wserv, attr="approved", choice="yes"):
     return ref
 
 
-def select_stetson_variables(wserv):
+def select_stetson_variables(wserv, return_v0=False):
 
     n_min = n_min_dict[wserv]
     n_max = n_max_dict[wserv]
@@ -205,6 +201,10 @@ def select_stetson_variables(wserv):
     v_jk = sv_jk(ds, Stetson_cutoff=0, suffix=suffix_997)
     v_hk = sv_hk(ds, Stetson_cutoff=0, suffix=suffix_997)
 
+    v_j = sv_j(ds, red_chisq_cutoff=2.5)
+    v_h = sv_h(ds, red_chisq_cutoff=2.5)
+    v_k = sv_k(ds, red_chisq_cutoff=2.5)
+
     v2 = q2 & (v_jhk | v_jk | v_hk | v_jh)
 
     v1_jh = q1_j & q1_h & v_jh
@@ -218,7 +218,12 @@ def select_stetson_variables(wserv):
         | (q2 & (v_jhk | v_jk | v_hk | v_jh))
     )
 
-    return v2, v1
+    v0 = v_jhk | v_jh | v_jk | v_hk | v_j | v_h | v_k
+
+    if return_v0:
+        return v2, v1, v0
+    else:
+        return v2, v1
 
 
 def select_periodic_variables(wserv):
