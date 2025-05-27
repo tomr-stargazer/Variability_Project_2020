@@ -178,7 +178,7 @@ if __name__ == "__main__":
         # What's the breakdown of quality classes among the "remaining" objects
         # What's the breakdown of spectral types
 
-        print("Variability analysis")
+        print(f"{fullname_dict[name]} Variability analysis")
         print(f"{len(match.approved)} approved")
         print(f"{len(match.statistical)} statistical")
         print(f"{len(match.color)} color")
@@ -245,7 +245,42 @@ if __name__ == "__main__":
 
         periodics = np.in1d(match.approved["SOURCEID"], v_per.index)
 
-        # now let's 
+        # now let's select the subjectives
+        from wuvars.analysis.load_subjective_variables import select_subjective_variables
+
+        v_subj = select_subjective_variables(wserv)
+
+        print(
+            f"Number of subjective variables found: {len(v_subj)} / {len(match.approved)}"
+            f" ({100*len(v_subj)/len(match.approved):.2f}%)"
+        )
+
+        subjectives = np.in1d(match.approved["SOURCEID"], v_subj.index)
+
+        # Final count of variables
+        # and nonvariables
+
+        # Total number of objects designated as variable
+
+        vars = (approved_v1 | periodics | subjectives)
+        print(f"Total number of variables: {np.sum(vars)}/{len(vars)}")
+        print(f" ({100*np.sum(vars)/len(match.approved):.2f}%)")
+
+
+        # Total number of objects not designated as variable
+        print(f"Total number of not variables: {np.sum(~vars)}/{len(vars)}")
+        print(f" ({100*np.sum(~vars)/len(match.approved):.2f}%)")
+
+        # Now I want Total variability rate among “statistical sample”
+        # and
+        # Periodic variability rate among “statistical sample”
+
+        statisticals = np.in1d(match.approved["SOURCEID"], match.statistical['SOURCEID'])
+
+        print(f"{np.sum(vars & statisticals)}")
+
+
+        # let's make figures.
 
         if make_figs:
             fig2, axes2 = plt.subplots(figsize=(6, 12 * 4 / 3), nrows=4, sharex=True)
@@ -268,12 +303,21 @@ if __name__ == "__main__":
                 ms=5,
                 label="automatic Stetson variable",
             )
+
+            ax2.plot(
+                match.approved["SpT"][subjectives],
+                match.approved["std_KAPERMAG3"][subjectives],
+                "s",
+                c="#800020",
+                ms=2,
+                label="subjective variable",
+            )
             ax2.plot(
                 match.approved["SpT"],
                 match.approved["std_KAPERMAG3"],
                 "k.",
                 ms=2,
-                label="not automatic Stetson variable",
+                label="not identified as variable",
                 zorder=-5,
             )
             ax2.set_xlim(-0.2, 14.2)
@@ -301,12 +345,22 @@ if __name__ == "__main__":
                 ms=5,
                 label="automatic Stetson variable",
             )
+
+            ax2_2.plot(
+                match.approved["SpT"][subjectives],
+                match.approved["var_Stetson_JHK"][subjectives],
+                "s",
+                c="#800020",
+                ms=2,
+                label="subjective variable",
+            )
+
             ax2_2.plot(
                 match.approved["SpT"],
                 match.approved["var_Stetson_JHK"],
                 "k.",
                 ms=2,
-                label="not automatic Stetson variable",
+                label="not identified as variable",
                 zorder=-5,
             )
             ax2_2.set_xlim(-0.2, 14.2)
@@ -338,11 +392,20 @@ if __name__ == "__main__":
                 label="automatic Stetson variable",
             )
             ax2_3.plot(
+                match.approved["SpT"][subjectives],
+                match.approved["var_K_red_chisq"][subjectives],
+                "s",
+                c="#800020",
+                ms=2,
+                label="subjective variable",
+            )
+
+            ax2_3.plot(
                 match.approved["SpT"],
                 match.approved["var_K_red_chisq"],
                 "k.",
                 ms=2,
-                label="not automatic Stetson variable",
+                label="not identified as variable",
                 zorder=-5,
             )
             ax2_3.set_xlim(-0.2, 14.2)
@@ -372,11 +435,19 @@ if __name__ == "__main__":
                 label="automatic Stetson variable",
             )
             ax2_4.plot(
+                match.approved["SpT"][subjectives],
+                match.approved["median_KAPERMAG3ERR"][subjectives],
+                "s",
+                c="#800020",
+                ms=2,
+                label="subjective variable",
+            )            
+            ax2_4.plot(
                 match.approved["SpT"],
                 match.approved["median_KAPERMAG3ERR"],
                 "k.",
                 ms=2,
-                label="not automatic Stetson variable",
+                label="not identified as variable",
                 zorder=-5,
             )
             ax2_4.set_xlim(-0.2, 14.2)
