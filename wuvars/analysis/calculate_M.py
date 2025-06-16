@@ -29,7 +29,10 @@ def compute_M(dataset, sid):
         mags = dat[f"{band}APERMAG3"][~mask]
         errs = dat[f"{band}APERMAG3ERR"][~mask]
 
-        M_dict[band] = compute_M_band(times, mags, errs)
+        try:
+            M_dict[band] = compute_M_band(times, mags, errs)
+        except IndexError:
+            M_dict[band] = np.nan
 
     return M_dict
 

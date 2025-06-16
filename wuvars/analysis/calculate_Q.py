@@ -82,7 +82,7 @@ def Q_score(mags, err, residual):
 # calculate Q via the equation
 
 
-def compute_Q_automatically(dataset, sid):
+def compute_Q_automatically(dataset, sid, **kwargs):
     """ 
     Given a photometry dataset and a SID, I want you to compute Q.
 
@@ -108,7 +108,10 @@ def compute_Q_automatically(dataset, sid):
         mags = dat[f"{band}APERMAG3"][~mask]
         errs = dat[f"{band}APERMAG3ERR"][~mask]
 
-        Q_dict[band] = compute_Q_band(times, mags, errs)
+        try:
+            Q_dict[band] = compute_Q_band(times, mags, errs, **kwargs)
+        except ValueError:
+            Q_dict[band] = (np.nan, np.nan)
 
     return Q_dict
 
