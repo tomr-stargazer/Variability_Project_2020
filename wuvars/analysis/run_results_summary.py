@@ -2,10 +2,12 @@
 This is a script that runs through and summarizes what's up with our data.
 
 """
+import os
 import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import wuvars.analysis.variability_selection as sv
 from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
 from wuvars.analysis.spectral_type_to_number import get_SpT_from_num
@@ -25,6 +27,10 @@ fullname_dict = {"ngc": "NGC 1333", "ic": "IC 348"}
 match_dict = {"ngc": ngc_match, "ic": ic_match}
 spread_dict = {"ngc": spreadsheet.load_wserv_v2(7), "ic": spreadsheet.load_wserv_v2(8)}
 q_dict = {"ngc": quality_classes.load_q(7), "ic": quality_classes.load_q(8)}
+qm_dict = {
+    "ngc": pd.read_hdf(os.path.join(os.getcwd(),"ngc_QM.h5")),
+    "ic": pd.read_hdf(os.path.join(os.getcwd(),"ic_QM.h5")),
+    }
 
 make_figs = True
 
