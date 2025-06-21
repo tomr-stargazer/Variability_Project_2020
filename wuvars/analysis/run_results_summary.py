@@ -523,6 +523,42 @@ if __name__ == "__main__":
                 ax4.set_xlim(0, 1.2)
                 ax4.set_title(name)
 
+            # Counting number of good lightcurves to analyze...
+            # in each band.
+
+            fig_bands, axes_bands = plt.subplots(nrows=3, ncols=1, sharex=True)
+
+            q = q_dict[name]
+
+            for ax, band in zip(axes_bands, ["J", "H", "K"]):
+
+                approved_q1_b = q[f'q1_{band.lower()}'][match.approved["SOURCEID"]]                
+
+                ax.plot(
+                    match.approved["SpT"][approved_q1_b],
+                    match.approved[f"median_{band}APERMAG3"][approved_q1_b],
+                    'k.')
+                ax.invert_yaxis()
+                ax.text(
+                    10, 
+                    12.5, 
+                    f"n (>M6) ={np.sum(approved_q1_b & (match.approved['SpT'] > 6))}"
+                )
+                ax.set_ylabel(band)
+                ax.set_xlabel("SpT")
+                print("XXX "+ band)
+
+                # ok - from this I learned that K band is best for the late types. 
+                # (unsurprising) but it's good to confirm.
+
+                # Therefore I'll stick to K (and use Q1_K) for the Q, M plots.
+
+                # Building that in soon...
+
+
+
+
+
             # Exploring Q, M
 
             vanilla_v_per = v_per[v_per['Method'] != 'poly4']
@@ -567,7 +603,6 @@ if __name__ == "__main__":
 
             # build a new one...
             fig_qm1b, ax_qm1b = plt.subplots(figsize=(8, 6))
-
 
             sc = ax_qm1b.scatter(
                 qm['Q_H'][v2], 
@@ -744,6 +779,147 @@ if __name__ == "__main__":
 
             # third test -  can I plot stuff from QM versus stuff from period
             fig_qm3, ax_qm3 = plt.subplots(figsize=(6,6))            
+
+            plt.show()
+
+
+            # NOW with ir-excess encoded
+            fig_irexc_qm1b, ax_irexc_qm1b = plt.subplots(figsize=(8, 6))
+
+            sc = ax_irexc_qm1b.scatter(
+                qm['Q_H'][v2], 
+                qm['M_H'][v2], 
+                c=ir_exc[approved_v2], 
+                s=10 + match.approved['range_HAPERMAG3'][approved_v2]*100,                
+                cmap='hot',
+                vmin=0,
+                vmax=3,
+                ec='k',
+                lw=0.5,
+            )
+
+            ax_irexc_qm1b.scatter(
+                qm['Q_H'][v_per.index][v2], 
+                qm['M_H'][v_per.index][v2],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80 + match.approved['range_HAPERMAG3'][approved_v2 & periodics]*100,
+                zorder=10,
+                alpha=0.5,
+                )
+
+            ax_irexc_qm1b.axhline(-0.25, 0, 1, color='k', ls=':', lw=0.5)
+            ax_irexc_qm1b.axhline(0.25, 0, 1, color='k', ls=':', lw=0.5)
+
+            ax_irexc_qm1b.axvline(0.3, 0, 1, color='k', ls=':', lw=0.5)
+            ax_irexc_qm1b.axvline(0.7, 0, 1, color='k', ls=':', lw=0.5)
+
+            plt.colorbar(mappable=sc, label="IR_exc (1=yes)", ax=ax_irexc_qm1b)
+
+            ax_irexc_qm1b.set_xlabel("$Q_H$ score")
+            ax_irexc_qm1b.set_ylabel("$M_H$ score")
+            ax_irexc_qm1b.set_title(f"$M$ vs. $Q$ plot for v2 variables in {fullname_dict[name]}")
+
+            ax_irexc_qm1b.set_xlim(-0.4, 0.9)
+            ax_irexc_qm1b.invert_yaxis()
+
+
+            # second test -  can I plot stuff from QM versus stuff from approved (e.g. SpT)
+            fig_irexc_qm2, ax_irexc_qm2 = plt.subplots(figsize=(6,4))
+
+
+            sc = ax_irexc_qm2.scatter(
+                match.approved["SpT"][approved_v2], 
+                qm['M_H'][v2], 
+                c=ir_exc[approved_v2], 
+                s=10 + match.approved['range_HAPERMAG3'][approved_v2]*100,                
+                cmap='hot',
+                vmin=0,
+                vmax=3,
+                ec='k',
+                lw=0.5,
+            )
+            plt.colorbar(mappable=sc, label="IR_exc (1=yes)", ax=ax_irexc_qm2)
+
+            ax_irexc_qm2.scatter(
+                match.approved["SpT"][approved_v2 & periodics], 
+                qm['M_H'][v_per.index][v2],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80 + match.approved['range_HAPERMAG3'][approved_v2 & periodics]*100,
+                zorder=10,
+                alpha=0.5,
+                )         
+            ax_irexc_qm2.axhline(-0.25, 0, 1, color='k', ls=':', lw=0.5)
+            ax_irexc_qm2.axhline(0.25, 0, 1, color='k', ls=':', lw=0.5)
+
+            ax_irexc_qm2.set_xlabel("SpT")
+            ax_irexc_qm2.set_ylabel("$M_H$ score")
+            ax_irexc_qm2.set_title(f"$M$ vs. SpT plot for v2 variables in {fullname_dict[name]}")
+
+            # ax_irexc_qm2.plot(match.approved["SpT"][approved_v2], qm['M_H'][v2], 'k.') 
+
+            # # now overlay periodics on this
+            # ax_irexc_qm2.plot(
+            #     match.approved["SpT"][approved_v2 & periodics], qm['M_H'][v_per.index][v2],
+            #     marker="o",
+            #     ls="None",
+            #     mec="k",
+            #     mfc="None",
+            #     ms=8,) 
+
+            ax_irexc_qm2.set_xlim(-0.2, 10.5)
+            ax_irexc_qm2.invert_yaxis()
+
+            qm2_spt_array = np.array([get_SpT_from_num(int(x)) for x in ax_irexc_qm2.get_xticks()])
+            ax_irexc_qm2.xaxis.set_tick_params(labelbottom=True)
+            ax_irexc_qm2.set_xticklabels(qm2_spt_array)
+
+            fig_irexc_qm2b, ax_irexc_qm2b = plt.subplots(figsize=(6,4))
+
+            sc = ax_irexc_qm2b.scatter(
+                match.approved["SpT"][approved_v2], 
+                qm['Q_H'][v2], 
+                c=ir_exc[approved_v2], 
+                s=10 + match.approved['range_HAPERMAG3'][approved_v2]*100,                
+                cmap='hot',
+                vmin=0,
+                vmax=3,
+                ec='k',
+                lw=0.5,
+            )
+
+            ax_irexc_qm2b.scatter(
+                match.approved["SpT"][approved_v2 & periodics], 
+                qm['Q_H'][v_per.index][v2],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80 + match.approved['range_HAPERMAG3'][approved_v2 & periodics]*100,
+                zorder=10,
+                alpha=0.5,
+                )         
+
+            plt.colorbar(mappable=sc, label="IR_exc (1=yes)", ax=ax_irexc_qm2b)     
+
+            ax_irexc_qm2b.axhline(0.3, 0, 1, color='k', ls=':', lw=0.5)
+            ax_irexc_qm2b.axhline(0.7, 0, 1, color='k', ls=':', lw=0.5)                   
+
+            ax_irexc_qm2b.set_xlabel("SpT")
+            ax_irexc_qm2b.set_ylabel("$Q_H$ score")
+            ax_irexc_qm2b.set_title(f"$Q$ vs. SpT plot for v2 variables in {fullname_dict[name]}")
+
+            ax_irexc_qm2b.set_xlim(-0.2, 10.5)
+            ax_irexc_qm2b.set_ylim(-0.3, 0.9)
+
+            qm2b_spt_array = np.array([get_SpT_from_num(int(x)) for x in ax_irexc_qm2b.get_xticks()])
+            ax_irexc_qm2b.xaxis.set_tick_params(labelbottom=True)
+            ax_irexc_qm2b.set_xticklabels(qm2b_spt_array)
+
+            # third test -  can I plot stuff from QM versus stuff from period
+            fig_irexc_qm3, ax_irexc_qm3 = plt.subplots(figsize=(6,6))            
 
             plt.show()
 
