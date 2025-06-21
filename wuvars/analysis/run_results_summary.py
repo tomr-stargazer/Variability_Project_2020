@@ -28,8 +28,8 @@ match_dict = {"ngc": ngc_match, "ic": ic_match}
 spread_dict = {"ngc": spreadsheet.load_wserv_v2(7), "ic": spreadsheet.load_wserv_v2(8)}
 q_dict = {"ngc": quality_classes.load_q(7), "ic": quality_classes.load_q(8)}
 qm_dict = {
-    "ngc": pd.read_hdf(os.path.join(os.getcwd(),"ngc_QM.h5")),
-    "ic": pd.read_hdf(os.path.join(os.getcwd(),"ic_QM.h5")),
+    "ngc": pd.read_hdf(os.path.join(os.getcwd(),"ngc_QM.h5")).set_index('SOURCEID'),
+    "ic": pd.read_hdf(os.path.join(os.getcwd(),"ic_QM.h5")).set_index('SOURCEID'),
     }
 
 make_figs = True
@@ -44,6 +44,7 @@ if __name__ == "__main__":
         print(fullname_dict[name], "\n")
         match = match_dict[name]
         spread = spread_dict[name]
+        qm = qm_dict[name]
 
         # Simple stats on the input catalog
         print(f"{len(match.input_catalog)} objects in the input catalog")
@@ -521,6 +522,180 @@ if __name__ == "__main__":
                 ax4.set_ylim(13.5, -0.5)
                 ax4.set_xlim(0, 1.2)
                 ax4.set_title(name)
+
+            # Exploring Q, M
+
+            vanilla_v_per = v_per[v_per['Method'] != 'poly4']
+            poly_v_per = v_per[v_per['Method'] == 'poly4']
+
+            # first test - can I plot ~anything~
+            fig_qm1, ax_qm1 = plt.subplots(figsize=(6, 6))
+            ax_qm1.plot(qm['Q_K'][v2], qm['M_K'][v2], 'k.')
+
+            ax_qm1.plot(
+                qm['Q_K'][poly_v_per.index], qm['M_K'][poly_v_per.index],
+                marker="s",
+                ls="None",
+                mec="g",
+                mfc="None",
+                ms=6,) 
+
+            ax_qm1.plot(
+                qm['Q_K'][vanilla_v_per.index], qm['M_K'][vanilla_v_per.index],
+                marker="o",
+                ls="None",
+                mec="k",
+                mfc="None",
+                ms=8,) 
+
+            # ax_qm1.set_xlim(-0.5, 1.5)
+
+            ax_qm1.set_title("Prototyping something here.")
+
+            # Okay. Some observations. 
+            # I expected the periodic circles to be HIGHLY concentrated around 0. 
+            # Not.. spread evenly throughout.
+            # Makes me worried that I am either 
+            # (a) making this plot wrog (indexing errors etc), or
+            # (b) I have computed Q wrong.
+
+            # So - before we proceed in doing anything with Q, we NEED to look at Q scores
+            # from various light curves.
+
+            # OK! Did that. I am no longer worried about the Q scores! or my indexing.
+            # The culprit was the fact that my period recovery with detrending was ~quite good actually~.
+
+            # build a new one...
+            fig_qm1b, ax_qm1b = plt.subplots(figsize=(8, 6))
+
+
+            sc = ax_qm1b.scatter(
+                qm['Q_H'][v2], 
+                qm['M_H'][v2], 
+                c=(qm['M_J'][v2]-qm['M_K'][v2]), 
+                cmap='RdBu_r',
+                vmin=-1,
+                vmax=1,
+                ec='k',
+                lw=0.5,
+            )
+
+            ax_qm1b.scatter(
+                qm['Q_H'][v_per.index][v2], 
+                qm['M_H'][v_per.index][v2],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80,
+                zorder=10,
+                )
+
+            ax_qm1b.axhline(-0.25, 0, 1, color='k', ls=':', lw=0.5)
+            ax_qm1b.axhline(0.25, 0, 1, color='k', ls=':', lw=0.5)
+
+            ax_qm1b.axvline(0.3, 0, 1, color='k', ls=':', lw=0.5)
+            ax_qm1b.axvline(0.7, 0, 1, color='k', ls=':', lw=0.5)
+
+            plt.colorbar(mappable=sc, label="$M_J - M_K$", ax=ax_qm1b)
+
+            ax_qm1b.set_xlabel("$Q_H$ score")
+            ax_qm1b.set_ylabel("$M_H$ score")
+            ax_qm1b.set_title(f"$M$ vs. $Q$ plot for v2 variables in {fullname_dict[name]}")
+
+            ax_qm1b.set_xlim(-0.4, 0.9)
+            ax_qm1b.invert_yaxis()
+
+            # second test -  can I plot stuff from QM versus stuff from approved (e.g. SpT)
+            fig_qm2, ax_qm2 = plt.subplots(figsize=(6,4))
+
+
+            sc = ax_qm2.scatter(
+                match.approved["SpT"][approved_v2], 
+                qm['M_H'][v2], 
+                c=(qm['M_J'][v2]-qm['M_K'][v2]), 
+                cmap='RdBu_r',
+                vmin=-1,
+                vmax=1,
+                ec='k',
+                lw=0.5,
+            )
+            plt.colorbar(mappable=sc, label="$M_J - M_K$", ax=ax_qm2)
+
+            ax_qm2.scatter(
+                match.approved["SpT"][approved_v2 & periodics], 
+                qm['M_H'][v_per.index][v2],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80,
+                zorder=10,
+                )         
+            ax_qm2.axhline(-0.25, 0, 1, color='k', ls=':', lw=0.5)
+            ax_qm2.axhline(0.25, 0, 1, color='k', ls=':', lw=0.5)
+
+            ax_qm2.set_xlabel("SpT")
+            ax_qm2.set_ylabel("$M_H$ score")
+            ax_qm2.set_title(f"$M$ vs. SpT plot for v2 variables in {fullname_dict[name]}")
+
+            # ax_qm2.plot(match.approved["SpT"][approved_v2], qm['M_H'][v2], 'k.') 
+
+            # # now overlay periodics on this
+            # ax_qm2.plot(
+            #     match.approved["SpT"][approved_v2 & periodics], qm['M_H'][v_per.index][v2],
+            #     marker="o",
+            #     ls="None",
+            #     mec="k",
+            #     mfc="None",
+            #     ms=8,) 
+
+            ax_qm2.set_xlim(-0.2, 10.5)
+            ax_qm2.invert_yaxis()
+
+            qm2_spt_array = np.array([get_SpT_from_num(int(x)) for x in ax_qm2.get_xticks()])
+            ax_qm2.xaxis.set_tick_params(labelbottom=True)
+            ax_qm2.set_xticklabels(qm2_spt_array)
+
+            fig_qm2b, ax_qm2b = plt.subplots(figsize=(6,4))
+
+            sc = ax_qm2b.scatter(
+                match.approved["SpT"][approved_v2], 
+                qm['Q_H'][v2], 
+                c=(qm['M_J'][v2]-qm['M_K'][v2]), 
+                cmap='RdBu_r',
+                vmin=-1,
+                vmax=1,
+                ec='k',
+                lw=0.5,
+            )
+
+            ax_qm2b.scatter(
+                match.approved["SpT"][approved_v2 & periodics], 
+                qm['Q_H'][v_per.index][v2],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80,
+                zorder=10,
+                )         
+
+            plt.colorbar(mappable=sc, label="$M_J - M_K$", ax=ax_qm2b)     
+
+            ax_qm2b.axhline(0.3, 0, 1, color='k', ls=':', lw=0.5)
+            ax_qm2b.axhline(0.7, 0, 1, color='k', ls=':', lw=0.5)                   
+
+            ax_qm2b.set_xlabel("SpT")
+            ax_qm2b.set_ylabel("$Q_H$ score")
+            ax_qm2b.set_title(f"$Q$ vs. SpT plot for v2 variables in {fullname_dict[name]}")
+
+            ax_qm2b.set_xlim(-0.2, 10.5)
+            ax_qm2b.set_ylim(-0.3, 0.9)
+
+            qm2b_spt_array = np.array([get_SpT_from_num(int(x)) for x in ax_qm2b.get_xticks()])
+            ax_qm2b.xaxis.set_tick_params(labelbottom=True)
+            ax_qm2b.set_xticklabels(qm2b_spt_array)
+
+            # third test -  can I plot stuff from QM versus stuff from period
+            fig_qm3, ax_qm3 = plt.subplots(figsize=(6,6))            
 
             plt.show()
 
