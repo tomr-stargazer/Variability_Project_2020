@@ -573,6 +573,7 @@ if __name__ == "__main__":
                 qm['Q_H'][v2], 
                 qm['M_H'][v2], 
                 c=(qm['M_J'][v2]-qm['M_K'][v2]), 
+                s=10 + match.approved['range_HAPERMAG3'][approved_v2]*100,                
                 cmap='RdBu_r',
                 vmin=-1,
                 vmax=1,
@@ -586,8 +587,9 @@ if __name__ == "__main__":
                 ec="k",
                 lw=0.5,
                 c="None",
-                s=80,
+                s=80 + match.approved['range_HAPERMAG3'][approved_v2 & periodics]*100,
                 zorder=10,
+                alpha=0.5,
                 )
 
             ax_qm1b.axhline(-0.25, 0, 1, color='k', ls=':', lw=0.5)
@@ -605,6 +607,48 @@ if __name__ == "__main__":
             ax_qm1b.set_xlim(-0.4, 0.9)
             ax_qm1b.invert_yaxis()
 
+            # NOW: do the Q, M, SpT one. Color is black to white.
+            fig_qm1c, ax_qm1c = plt.subplots(figsize=(8, 6))
+
+
+            sc = ax_qm1c.scatter(
+                qm['Q_H'][v2], 
+                qm['M_H'][v2], 
+                c=match.approved["SpT"][approved_v2], 
+                s=10 + match.approved['range_HAPERMAG3'][approved_v2]*100,
+                cmap='viridis',
+                vmin=0,
+                vmax=10,
+                ec='k',
+                lw=0.5,
+            )
+
+            ax_qm1c.scatter(
+                qm['Q_H'][v_per.index][v2], 
+                qm['M_H'][v_per.index][v2],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80 + match.approved['range_HAPERMAG3'][approved_v2 & periodics]*100,
+                zorder=10,
+                alpha=0.5,                
+                )
+
+            ax_qm1c.axhline(-0.25, 0, 1, color='k', ls=':', lw=0.5)
+            ax_qm1c.axhline(0.25, 0, 1, color='k', ls=':', lw=0.5)
+
+            ax_qm1c.axvline(0.3, 0, 1, color='k', ls=':', lw=0.5)
+            ax_qm1c.axvline(0.7, 0, 1, color='k', ls=':', lw=0.5)
+
+            plt.colorbar(mappable=sc, label="SpT", ax=ax_qm1c)
+
+            ax_qm1c.set_xlabel("$Q_H$ score")
+            ax_qm1c.set_ylabel("$M_H$ score")
+            ax_qm1c.set_title(f"$M$ vs. $Q$ plot for v2 variables in {fullname_dict[name]}")
+
+            ax_qm1c.set_xlim(-0.4, 0.9)
+            ax_qm1c.invert_yaxis()
+
             # second test -  can I plot stuff from QM versus stuff from approved (e.g. SpT)
             fig_qm2, ax_qm2 = plt.subplots(figsize=(6,4))
 
@@ -613,6 +657,7 @@ if __name__ == "__main__":
                 match.approved["SpT"][approved_v2], 
                 qm['M_H'][v2], 
                 c=(qm['M_J'][v2]-qm['M_K'][v2]), 
+                s=10 + match.approved['range_HAPERMAG3'][approved_v2]*100,                                
                 cmap='RdBu_r',
                 vmin=-1,
                 vmax=1,
@@ -627,8 +672,9 @@ if __name__ == "__main__":
                 ec="k",
                 lw=0.5,
                 c="None",
-                s=80,
+                s=80 + match.approved['range_HAPERMAG3'][approved_v2 & periodics]*100,
                 zorder=10,
+                alpha=0.5,
                 )         
             ax_qm2.axhline(-0.25, 0, 1, color='k', ls=':', lw=0.5)
             ax_qm2.axhline(0.25, 0, 1, color='k', ls=':', lw=0.5)
@@ -661,6 +707,7 @@ if __name__ == "__main__":
                 match.approved["SpT"][approved_v2], 
                 qm['Q_H'][v2], 
                 c=(qm['M_J'][v2]-qm['M_K'][v2]), 
+                s=10 + match.approved['range_HAPERMAG3'][approved_v2]*100,                                                
                 cmap='RdBu_r',
                 vmin=-1,
                 vmax=1,
@@ -674,8 +721,9 @@ if __name__ == "__main__":
                 ec="k",
                 lw=0.5,
                 c="None",
-                s=80,
+                s=80 + match.approved['range_HAPERMAG3'][approved_v2 & periodics]*100,
                 zorder=10,
+                alpha=0.5,
                 )         
 
             plt.colorbar(mappable=sc, label="$M_J - M_K$", ax=ax_qm2b)     
