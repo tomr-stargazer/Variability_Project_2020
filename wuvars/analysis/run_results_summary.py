@@ -828,8 +828,128 @@ if __name__ == "__main__":
                 ax.set_ylim(1.275, -1.275)
 
 
-                # The above has not yet been updated for SpT
+            fig_M_vs_SpT, axes_M_vs_SpT = plt.subplots(nrows=3, sharex=True, sharey=True, figsize=(5,10))
 
+            for ax, band in zip(axes_M_vs_SpT, ['J', 'H', 'K']):
+
+                q1_b = q[f"q1_{band.lower()}"]
+                approved_q1_b = q1_b[match.approved["SOURCEID"]]
+
+                # draw all the points
+                ax.scatter(
+                    match.approved["SpT"][approved_q1_b & variable],
+                    qm[f"M_{band}"][approved_q1_b & variable],
+                    c='k',
+                    s=10 + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
+                    ec="k",
+                    lw=0.5,
+                )                
+
+                # draw just the red ones
+                ax.scatter(
+                    match.approved["SpT"][approved_q1_b & variable & ir_exc.data],
+                    qm[f"M_{band}"][approved_q1_b & variable & ir_exc.data],
+                    c='r',
+                    s=10 + match.approved[f"range_{band}APERMAG3"][ir_exc.data & approved_q1_b & variable] * 100,
+                    ec="k",
+                    lw=0.5,
+                )                
+
+                # draw the little circles
+                ax.scatter(
+                    match.approved["SpT"][approved_q1_b & periodics],
+                    qm[f"M_{band}"][v_per.index][q1_b],
+                    ec="k",
+                    lw=0.5,
+                    c="None",
+                    s=80 + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics] * 100,
+                    zorder=10,
+                    alpha=0.5,
+                )
+                # set the axis labels etc
+                ax.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
+                ax.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+                # ax.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
+                # ax.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
+
+                if band == 'K':
+                    ax.set_xlabel(f"SpT")
+
+                ax.set_ylabel(f"$M_{band}$ score")
+                ax.set_title(
+                    f"$M$ vs. SpT plot for q1_{band.lower()} variables in {fullname_dict[name]}",
+                    fontsize=8
+                )            
+
+                ax.set_xlim(-0.1, 10.1)
+                ax.invert_yaxis()
+
+                spt_array = np.array([get_SpT_from_num(int(x)) for x in ax.get_xticks()])
+                ax.xaxis.set_tick_params(labelbottom=True)
+                ax.set_xticklabels(spt_array)
+
+                # ax.set_ylim(1.275, -1.275)
+
+            fig_Q_vs_SpT, axes_Q_vs_SpT = plt.subplots(nrows=3, sharex=True, sharey=True, figsize=(5,10))
+
+            for ax, band in zip(axes_Q_vs_SpT, ['J', 'H', 'K']):
+
+                q1_b = q[f"q1_{band.lower()}"]
+                approved_q1_b = q1_b[match.approved["SOURCEID"]]
+
+                # draw all the points
+                ax.scatter(
+                    match.approved["SpT"][approved_q1_b & variable],
+                    qm[f"Q_{band}"][approved_q1_b & variable],
+                    c='k',
+                    s=10 + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
+                    ec="k",
+                    lw=0.5,
+                )                
+
+                # draw just the red ones
+                ax.scatter(
+                    match.approved["SpT"][approved_q1_b & variable & ir_exc.data],
+                    qm[f"Q_{band}"][approved_q1_b & variable & ir_exc.data],
+                    c='r',
+                    s=10 + match.approved[f"range_{band}APERMAG3"][ir_exc.data & approved_q1_b & variable] * 100,
+                    ec="k",
+                    lw=0.5,
+                )                
+
+                # draw the little circles
+                ax.scatter(
+                    match.approved["SpT"][approved_q1_b & periodics],
+                    qm[f"Q_{band}"][v_per.index][q1_b],
+                    ec="k",
+                    lw=0.5,
+                    c="None",
+                    s=80 + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics] * 100,
+                    zorder=10,
+                    alpha=0.5,
+                )
+                # set the axis labels etc
+                # ax.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
+                # ax.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+                ax.axhline(0.3, 0, 1, color="k", ls=":", lw=0.5)
+                ax.axhline(0.7, 0, 1, color="k", ls=":", lw=0.5)
+
+                if band == 'K':
+                    ax.set_xlabel(f"SpT")
+
+                ax.set_ylabel(f"$Q_{band}$ score")
+                ax.set_title(
+                    f"$Q$ vs. SpT plot for q1_{band.lower()} variables in {fullname_dict[name]}",
+                    fontsize=8
+                )            
+
+                ax.set_xlim(-0.1, 10.1)
+                ax.set_ylim(-0.3, 0.98)
+                # ax.invert_yaxis()
+
+                spt_array = np.array([get_SpT_from_num(int(x)) for x in ax.get_xticks()])
+                ax.xaxis.set_tick_params(labelbottom=True)
+                ax.set_xticklabels(spt_array)
 
 
             # Exploring Q, M
