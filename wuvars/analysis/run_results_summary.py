@@ -569,6 +569,155 @@ if __name__ == "__main__":
 
                 # Building that in soon...
 
+            ####################
+            ####################
+            ####################
+            ####################
+            # Here's my workspace.
+            # I have been making Q, M plots (sometimes with three-color info)
+            # by sticking to the v2 variables.
+            # I'd like to expand this to ~all variables~ that are at least q1_k.
+            # In other words: their K band is 'good' in a meaningful sense and
+            # they are known as variables, either:
+            # - stetson/automatic
+            # - periodic
+            # - subjective
+
+            # Because I'm gonna show their Q_K and M_K stats, it doesn't much
+            # matter whether their variability was ~found~ at K band. Just that
+            # they ~are variable~ and ~have valid data at K~.
+
+            # So. How do I `select all variables`?
+            # combine the selections, right?
+
+            variable = periodics | subjectives | approved_v1
+            q1_k = q["q1_k"]
+            q1_h = q["q1_h"]            
+            approved_q1_k = q["q1_k"][match.approved["SOURCEID"]]
+            approved_q1_h = q["q1_h"][match.approved["SOURCEID"]]            
+            ir_exc_sid = match.approved["SOURCEID"][ir_exc]
+
+            new_fig, new_ax = plt.subplots(figsize=(6,6))
+
+            # for condition, color in zip([ir_exc[approved_q1_k], ~ir_exc[approved_q1_k]], ['k', 'r']):
+            #     new_ax.scatter(
+            #         qm["Q_K"][q1_k][condition],
+            #         qm["M_K"][q1_k][condition],
+            #         c=color,
+            #         s=10 + match.approved["range_KAPERMAG3"][approved_q1_k][condition] * 100,
+            #         ec="k",
+            #         lw=0.5,
+            #     )
+
+
+            # TODO: what's a criterion that's Q1_K AND VARIABLE? we need that. Don't include
+            # nonvariables in these plots ...
+            new_ax.scatter(
+                qm["Q_K"][approved_q1_k & variable],
+                qm["M_K"][approved_q1_k & variable],
+                c='k',
+                s=10 + match.approved["range_KAPERMAG3"][approved_q1_k & variable] * 100,
+                ec="k",
+                lw=0.5,
+            )
+
+            new_ax.scatter(
+                qm["Q_K"][approved_q1_k & variable & ir_exc.data],
+                qm["M_K"][approved_q1_k & variable & ir_exc.data],
+                c='r',
+                s=10 + match.approved["range_KAPERMAG3"][ir_exc.data & approved_q1_k & variable] * 100,
+                ec="k",
+                lw=0.5,
+            )
+
+
+            new_ax.scatter(
+                qm["Q_K"][v_per.index][q1_k],
+                qm["M_K"][v_per.index][q1_k],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80 + match.approved["range_KAPERMAG3"][approved_q1_k & periodics] * 100,
+                zorder=10,
+                alpha=0.5,
+            )
+
+            new_ax.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
+            new_ax.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+
+            new_ax.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
+            new_ax.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
+
+            new_ax.set_xlabel("$Q_K$ score")
+            new_ax.set_ylabel("$M_K$ score")
+            new_ax.set_title(
+                f"$M$ vs. $Q$ plot for q1_k variables in {fullname_dict[name]}"
+            )            
+
+            new_ax.set_xlim(-0.3, 0.98)
+            new_ax.set_ylim(1.275, -1.275)
+
+            new_fig_h, new_ax_h = plt.subplots(figsize=(6,6))
+
+            # for condition, color in zip([ir_exc[approved_q1_k], ~ir_exc[approved_q1_k]], ['k', 'r']):
+            #     new_ax_h.scatter(
+            #         qm["Q_K"][q1_k][condition],
+            #         qm["M_K"][q1_k][condition],
+            #         c=color,
+            #         s=10 + match.approved["range_KAPERMAG3"][approved_q1_k][condition] * 100,
+            #         ec="k",
+            #         lw=0.5,
+            #     )
+
+
+            # TODO: what's a criterion that's Q1_K AND VARIABLE? we need that. Don't include
+            # nonvariables in these plots ...
+            new_ax_h.scatter(
+                qm["Q_H"][approved_q1_h & variable],
+                qm["M_H"][approved_q1_h & variable],
+                c='k',
+                s=10 + match.approved["range_HAPERMAG3"][approved_q1_h & variable] * 100,
+                ec="k",
+                lw=0.5,
+            )
+
+            new_ax_h.scatter(
+                qm["Q_H"][approved_q1_h & variable & ir_exc.data],
+                qm["M_H"][approved_q1_h & variable & ir_exc.data],
+                c='r',
+                s=10 + match.approved["range_HAPERMAG3"][ir_exc.data & approved_q1_h & variable] * 100,
+                ec="k",
+                lw=0.5,
+            )
+
+
+            new_ax_h.scatter(
+                qm["Q_H"][v_per.index][q1_h],
+                qm["M_H"][v_per.index][q1_h],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80 + match.approved["range_HAPERMAG3"][approved_q1_h & periodics] * 100,
+                zorder=10,
+                alpha=0.5,
+            )
+
+            new_ax_h.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
+            new_ax_h.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+
+            new_ax_h.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
+            new_ax_h.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
+
+            new_ax_h.set_xlabel("$Q_H$ score")
+            new_ax_h.set_ylabel("$M_H$ score")
+            new_ax_h.set_title(
+                f"$M$ vs. $Q$ plot for q1_h variables in {fullname_dict[name]}"
+            )            
+
+            new_ax_h.set_xlim(-0.3, 0.98)
+            new_ax_h.set_ylim(1.275, -1.275)
+
+
             # Exploring Q, M
 
             vanilla_v_per = v_per[v_per["Method"] != "poly4"]
