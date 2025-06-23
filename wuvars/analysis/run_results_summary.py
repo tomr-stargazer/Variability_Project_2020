@@ -772,15 +772,15 @@ if __name__ == "__main__":
             # Q vs SpT (J, H, K)
             # these plots will use the ssame coding for ir exc, periodicity, and amplitude as the above.
 
-            fig_Q_vs_SpT, axes_Q_vs_SpT = plt.subplots(nrows=3, sharex=True, sharey=True)
+            fig_Q_vs_M, axes_Q_vs_M = plt.subplots(nrows=3, sharex=True, sharey=True, figsize=(5,10))
 
-            for ax, band in zip(axes_Q_vs_SpT, ['J', 'H', 'K']):
+            for ax, band in zip(axes_Q_vs_M, ['J', 'H', 'K']):
 
-                q1_b = q[f"q1_{band}"]
+                q1_b = q[f"q1_{band.lower()}"]
                 approved_q1_b = q1_b[match.approved["SOURCEID"]]
 
                 # draw all the points
-                new_ax.scatter(
+                ax.scatter(
                     qm[f"Q_{band}"][approved_q1_b & variable],
                     qm[f"M_{band}"][approved_q1_b & variable],
                     c='k',
@@ -790,7 +790,7 @@ if __name__ == "__main__":
                 )                
 
                 # draw just the red ones
-                new_ax.scatter(
+                ax.scatter(
                     qm[f"Q_{band}"][approved_q1_b & variable & ir_exc.data],
                     qm[f"M_{band}"][approved_q1_b & variable & ir_exc.data],
                     c='r',
@@ -800,7 +800,7 @@ if __name__ == "__main__":
                 )                
 
                 # draw the little circles
-                new_ax.scatter(
+                ax.scatter(
                     qm[f"Q_{band}"][v_per.index][q1_b],
                     qm[f"M_{band}"][v_per.index][q1_b],
                     ec="k",
@@ -811,17 +811,22 @@ if __name__ == "__main__":
                     alpha=0.5,
                 )
                 # set the axis labels etc
-                new_ax.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
-                new_ax.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+                ax.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
+                ax.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+                ax.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
+                ax.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
 
-                new_ax.set_xlabel("$Q_K$ score")
-                new_ax.set_ylabel("$M_K$ score")
-                new_ax.set_title(
-                    f"$M$ vs. $Q$ plot for q1_k variables in {fullname_dict[name]}"
+
+                ax.set_xlabel(f"$Q_{band}$ score")
+                ax.set_ylabel(f"$M_{band}$ score")
+                ax.set_title(
+                    f"$M$ vs. $Q$ plot for q1_{band.lower()} variables in {fullname_dict[name]}",
+                    fontsize=8
                 )            
 
-                new_ax.set_xlim(-0.3, 0.98)
-                new_ax.set_ylim(1.275, -1.275)
+                ax.set_xlim(-0.3, 0.98)
+                ax.set_ylim(1.275, -1.275)
+
 
                 # The above has not yet been updated for SpT
 
