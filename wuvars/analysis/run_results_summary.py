@@ -593,9 +593,118 @@ if __name__ == "__main__":
             variable = periodics | subjectives | approved_v1
             q1_k = q["q1_k"]
             q1_h = q["q1_h"]            
+            q1_j = q["q1_j"]                        
             approved_q1_k = q["q1_k"][match.approved["SOURCEID"]]
             approved_q1_h = q["q1_h"][match.approved["SOURCEID"]]            
+            approved_q1_j = q["q1_j"][match.approved["SOURCEID"]]            
             ir_exc_sid = match.approved["SOURCEID"][ir_exc]
+
+            new_fig_j, new_ax_j = plt.subplots(figsize=(6,6))
+
+            new_ax_j.scatter(
+                qm["Q_J"][approved_q1_j & variable],
+                qm["M_J"][approved_q1_j & variable],
+                c='k',
+                s=10 + match.approved["range_JAPERMAG3"][approved_q1_j & variable] * 100,
+                ec="k",
+                lw=0.5,
+            )
+
+            new_ax_j.scatter(
+                qm["Q_J"][approved_q1_j & variable & ir_exc.data],
+                qm["M_J"][approved_q1_j & variable & ir_exc.data],
+                c='r',
+                s=10 + match.approved["range_JAPERMAG3"][ir_exc.data & approved_q1_j & variable] * 100,
+                ec="k",
+                lw=0.5,
+            )
+
+
+            new_ax_j.scatter(
+                qm["Q_J"][v_per.index][q1_j],
+                qm["M_J"][v_per.index][q1_j],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80 + match.approved["range_JAPERMAG3"][approved_q1_j & periodics] * 100,
+                zorder=10,
+                alpha=0.5,
+            )
+
+            new_ax_j.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
+            new_ax_j.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+
+            new_ax_j.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
+            new_ax_j.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
+
+            new_ax_j.set_xlabel("$Q_J$ score")
+            new_ax_j.set_ylabel("$M_J$ score")
+            new_ax_j.set_title(
+                f"$M$ vs. $Q$ plot for q1_j variables in {fullname_dict[name]}"
+            )            
+
+            new_ax_j.set_xlim(-0.3, 0.98)
+            new_ax_j.set_ylim(1.275, -1.275)
+
+
+
+            new_fig_h, new_ax_h = plt.subplots(figsize=(6,6))
+
+            # for condition, color in zip([ir_exc[approved_q1_k], ~ir_exc[approved_q1_k]], ['k', 'r']):
+            #     new_ax_h.scatter(
+            #         qm["Q_K"][q1_k][condition],
+            #         qm["M_K"][q1_k][condition],
+            #         c=color,
+            #         s=10 + match.approved["range_KAPERMAG3"][approved_q1_k][condition] * 100,
+            #         ec="k",
+            #         lw=0.5,
+            #     )
+
+
+            new_ax_h.scatter(
+                qm["Q_H"][approved_q1_h & variable],
+                qm["M_H"][approved_q1_h & variable],
+                c='k',
+                s=10 + match.approved["range_HAPERMAG3"][approved_q1_h & variable] * 100,
+                ec="k",
+                lw=0.5,
+            )
+
+            new_ax_h.scatter(
+                qm["Q_H"][approved_q1_h & variable & ir_exc.data],
+                qm["M_H"][approved_q1_h & variable & ir_exc.data],
+                c='r',
+                s=10 + match.approved["range_HAPERMAG3"][ir_exc.data & approved_q1_h & variable] * 100,
+                ec="k",
+                lw=0.5,
+            )
+
+
+            new_ax_h.scatter(
+                qm["Q_H"][v_per.index][q1_h],
+                qm["M_H"][v_per.index][q1_h],
+                ec="k",
+                lw=0.5,
+                c="None",
+                s=80 + match.approved["range_HAPERMAG3"][approved_q1_h & periodics] * 100,
+                zorder=10,
+                alpha=0.5,
+            )
+
+            new_ax_h.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
+            new_ax_h.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+
+            new_ax_h.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
+            new_ax_h.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
+
+            new_ax_h.set_xlabel("$Q_H$ score")
+            new_ax_h.set_ylabel("$M_H$ score")
+            new_ax_h.set_title(
+                f"$M$ vs. $Q$ plot for q1_h variables in {fullname_dict[name]}"
+            )            
+
+            new_ax_h.set_xlim(-0.3, 0.98)
+            new_ax_h.set_ylim(1.275, -1.275)
 
             new_fig, new_ax = plt.subplots(figsize=(6,6))
 
@@ -657,65 +766,65 @@ if __name__ == "__main__":
             new_ax.set_xlim(-0.3, 0.98)
             new_ax.set_ylim(1.275, -1.275)
 
-            new_fig_h, new_ax_h = plt.subplots(figsize=(6,6))
 
-            # for condition, color in zip([ir_exc[approved_q1_k], ~ir_exc[approved_q1_k]], ['k', 'r']):
-            #     new_ax_h.scatter(
-            #         qm["Q_K"][q1_k][condition],
-            #         qm["M_K"][q1_k][condition],
-            #         c=color,
-            #         s=10 + match.approved["range_KAPERMAG3"][approved_q1_k][condition] * 100,
-            #         ec="k",
-            #         lw=0.5,
-            #     )
+            # Okay. Now we are going to make six additional plots:
+            # M vs SpT (J, H, K) 
+            # Q vs SpT (J, H, K)
+            # these plots will use the ssame coding for ir exc, periodicity, and amplitude as the above.
 
+            fig_Q_vs_SpT, axes_Q_vs_SpT = plt.subplots(nrows=3, sharex=True, sharey=True)
 
-            # TODO: what's a criterion that's Q1_K AND VARIABLE? we need that. Don't include
-            # nonvariables in these plots ...
-            new_ax_h.scatter(
-                qm["Q_H"][approved_q1_h & variable],
-                qm["M_H"][approved_q1_h & variable],
-                c='k',
-                s=10 + match.approved["range_HAPERMAG3"][approved_q1_h & variable] * 100,
-                ec="k",
-                lw=0.5,
-            )
+            for ax, band in zip(axes_Q_vs_SpT, ['J', 'H', 'K']):
 
-            new_ax_h.scatter(
-                qm["Q_H"][approved_q1_h & variable & ir_exc.data],
-                qm["M_H"][approved_q1_h & variable & ir_exc.data],
-                c='r',
-                s=10 + match.approved["range_HAPERMAG3"][ir_exc.data & approved_q1_h & variable] * 100,
-                ec="k",
-                lw=0.5,
-            )
+                q1_b = q[f"q1_{band}"]
+                approved_q1_b = q1_b[match.approved["SOURCEID"]]
 
+                # draw all the points
+                new_ax.scatter(
+                    qm[f"Q_{band}"][approved_q1_b & variable],
+                    qm[f"M_{band}"][approved_q1_b & variable],
+                    c='k',
+                    s=10 + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
+                    ec="k",
+                    lw=0.5,
+                )                
 
-            new_ax_h.scatter(
-                qm["Q_H"][v_per.index][q1_h],
-                qm["M_H"][v_per.index][q1_h],
-                ec="k",
-                lw=0.5,
-                c="None",
-                s=80 + match.approved["range_HAPERMAG3"][approved_q1_h & periodics] * 100,
-                zorder=10,
-                alpha=0.5,
-            )
+                # draw just the red ones
+                new_ax.scatter(
+                    qm[f"Q_{band}"][approved_q1_b & variable & ir_exc.data],
+                    qm[f"M_{band}"][approved_q1_b & variable & ir_exc.data],
+                    c='r',
+                    s=10 + match.approved[f"range_{band}APERMAG3"][ir_exc.data & approved_q1_b & variable] * 100,
+                    ec="k",
+                    lw=0.5,
+                )                
 
-            new_ax_h.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
-            new_ax_h.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
+                # draw the little circles
+                new_ax.scatter(
+                    qm[f"Q_{band}"][v_per.index][q1_b],
+                    qm[f"M_{band}"][v_per.index][q1_b],
+                    ec="k",
+                    lw=0.5,
+                    c="None",
+                    s=80 + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics] * 100,
+                    zorder=10,
+                    alpha=0.5,
+                )
+                # set the axis labels etc
+                new_ax.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
+                new_ax.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
 
-            new_ax_h.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
-            new_ax_h.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
+                new_ax.set_xlabel("$Q_K$ score")
+                new_ax.set_ylabel("$M_K$ score")
+                new_ax.set_title(
+                    f"$M$ vs. $Q$ plot for q1_k variables in {fullname_dict[name]}"
+                )            
 
-            new_ax_h.set_xlabel("$Q_H$ score")
-            new_ax_h.set_ylabel("$M_H$ score")
-            new_ax_h.set_title(
-                f"$M$ vs. $Q$ plot for q1_h variables in {fullname_dict[name]}"
-            )            
+                new_ax.set_xlim(-0.3, 0.98)
+                new_ax.set_ylim(1.275, -1.275)
 
-            new_ax_h.set_xlim(-0.3, 0.98)
-            new_ax_h.set_ylim(1.275, -1.275)
+                # The above has not yet been updated for SpT
+
 
 
             # Exploring Q, M
