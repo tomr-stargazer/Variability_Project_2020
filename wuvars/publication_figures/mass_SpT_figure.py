@@ -5,6 +5,10 @@ I had seriously prototyped such a figure here:
 
 /Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes/Prototyping a mass-SpT figure.ipynb
 
+and also, in part, here:
+
+/Users/tsrice/Documents/Variability_Project_2020/wuvars/analysis/prototypes/Playing%20with%20Baraffe%20Isochrones.ipynb
+
 """
 
 import matplotlib as mpl
@@ -30,12 +34,11 @@ df = pd.read_csv(csv_filename)
 
 def make_mass_SpT_figure():
 
+    ages = [1, 2, 3, 5]
+
     fig, ax = plt.subplots(figsize=(5, 5), dpi=300)
     plt.grid(True, linestyle="--", lw=0.25)
 
-    # ages = [0.5, 2.0, 5.0, 10.0]
-    ages = [1, 2.0, 3, 5.0]
-    # ages = [0.5]
     lw_array = [0.5, 0.75, 1.0, 1.25]
     ms_array = [2, 3, 4, 5]
     colors = [f"C{x}" for x in range(6)]
@@ -95,29 +98,74 @@ def make_mass_SpT_figure():
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_ticks([0.01, 0.02, 0.03, 0.05, 0.08, 0.1, 0.15, 0.2, 0.3, 0.5, 0.8])
 
+    # Now to workshop the baby axes
 
-    # # fig.add_ax()
-    # ax_bounds = ax.get_position().bounds
-    # left = ax_bounds[0]
+    ax_bounds = ax.get_position().bounds
+    left = ax_bounds[0]
 
-    # left_buffer = left
-    # right_buffer = 1 - (ax_bounds[0] + ax_bounds[2])
-    # total = 1 - (left_buffer + right_buffer)
-    # sum_width = total - (left_buffer + right_buffer)/2
-    # half_width = sum_width/2
+    left_buffer = left
+    right_buffer = 1 - (ax_bounds[0] + ax_bounds[2])
+    total = 1 - (left_buffer + right_buffer)
+    sum_width = total - (left_buffer + right_buffer) / 2
+    half_width = sum_width / 2
 
-    # bottom = -half_width
-    # width = half_width
-    # height = half_width
+    bottom = -half_width
+    width = half_width
+    height = half_width
 
-    # ax_left = fig.add_axes([left, bottom, width, height])
-    # ax_right = fig.add_axes([left + width + (left_buffer + right_buffer)/2, bottom, width, height])
+    ax_left = fig.add_axes([left, bottom, width, height])
+    ax_right = fig.add_axes(
+        [left + width + (left_buffer + right_buffer) / 2, bottom, width, height]
+    )
 
-    # ax_left.tick_params(axis='both', labelsize=6)
-    # ax_right.tick_params(axis='both', labelsize=6)
+    ax_left.tick_params(axis="both", labelsize=6)
+    ax_right.tick_params(axis="both", labelsize=6)
 
-    # ax_left
+    # LEFT
 
+    ax_left.grid(True, linestyle="--", lw=0.25)
+
+    for age, lw in zip(ages, lw_array):
+
+        myr_x = load_isochrone_generic(age)
+
+        mass = myr_x[:, 0]
+        teff = myr_x[:, 1]
+        Mk = myr_x[:, -1]
+        M = myr_x[:, 0]
+
+        u = M <= 0.8
+
+        ax_left.plot(mass[u], teff[u], "k", lw=lw, label=f"{age} Myr")
+
+    ax_left.set_ylabel(r"$T_{\rm{eff}}$ (K)", fontsize=8)
+    ax_left.set_xlabel("Mass (M$_{\odot})$", fontsize=8)
+    ax_left.legend(fontsize=6)
+
+    ax_left.semilogx()
+    ax_left.xaxis.set_major_formatter(ScalarFormatter())
+    ax_left.xaxis.set_ticks([0.01, 0.02, 0.05, 0.1, 0.2, 0.5])
+    ax_left.axvline(0.08, zorder=-10, alpha=0.1, lw=5)
+    ax_left.set_xlim(0.01, 0.81)
+
+    # RIGHT
+
+    ax_right.grid(True, linestyle="--", lw=0.25)
+
+    spt_array = df["SpTnum"]
+    for col in df.columns[2:-1]:
+        ax_right.plot(spt_array, df[col].values, ".-", lw=0.75, ms=5, label=col)
+
+    ax_right.legend(fontsize=6)
+
+    ax_right.set_xticks(ax.get_xticks())
+    ax_right.set_xlim(ax.get_xlim())
+    ax_right.set_xticklabels(
+        np.array([get_SpT_from_num(int(x)) for x in ax_right.get_xticks()])
+    )
+    ax_right.set_ylim(1500, 4000)
+    ax_right.set_ylabel(r"$T_{\rm{eff}}$ (K)", fontsize=8)
+    ax_right.set_xlabel("Spectral Type", fontsize=8)
 
     plt.savefig("XXX_spectral_type_v_mass_logy_altered.pdf")
 
