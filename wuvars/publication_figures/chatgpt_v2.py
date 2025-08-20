@@ -45,6 +45,9 @@ except Exception:
     reproject_interp = None
 
 
+CACHE_DIR = "wise_fits_cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
+
 # -------------------------------
 # User-configurable parameters
 # -------------------------------
@@ -56,7 +59,7 @@ ra_ic348, dec_ic348 = 56.135, 32.158
 
 TARGETS = ["NGC 1333", "IC 348"]
 SURVEYS = ["DSS2/red", "2MASS/K", "AllWISE/W1", "AllWISE/W3", "SFD"]  # new dust map
-FOV_DEG = 5.0  # Field of view in degrees (width=height)
+FOV_DEG = 7.0  # Field of view in degrees (width=height)
 PIXELS = 1800  # Output image size (square)
 DISTANCE_PC = 300.0  # Assumed distance to Perseus (used for scale bar)
 
@@ -221,8 +224,6 @@ def sfd_cutout(center: SkyCoord, fov_deg: float, pixels: int):
     return data, wcs
 
 
-
-
 def make_wise_rgb(center, fov_deg=5.0, pixels=1800):
     surveys = ["AllWISE/W1", "AllWISE/W2", "AllWISE/W3"]
     bands = []
@@ -240,6 +241,52 @@ def make_wise_rgb(center, fov_deg=5.0, pixels=1800):
 
     # stack into RGB (R=W3, G=W2, B=W1)
     rgb = np.dstack([bands[2], bands[1], bands[0]])
+    rgb = np.clip(rgb, 0, 1)
+    return rgb, wcs
+
+
+def get_wise_band(center, fov_deg, pixels, survey):
+    """
+    Returns (data, WCS) for a single WISE band.
+    Downloads the FITS once, then reuses the local file.
+    """
+    # Make a safe filename
+    safe_name = survey.replace("/", "_") + ".fits"
+    filepath = os.path.join(CACHE_DIR, safe_name)
+
+    if os.path.exists(filepath):
+        # Load from cache
+        with fits.open(filepath) as hdul:
+            data = hdul[0].data
+            wcs = WCS(hdul[0].header)
+        print(f"Loaded {survey} from cache.")
+    else:
+        # Fetch from HiPS service
+        data, wcs = hips2fits_cutout(center, fov_deg, pixels, survey)
+        # Save to cache
+        hdu = fits.PrimaryHDU(data=data, header=wcs.to_header())
+        hdu.writeto(filepath, overwrite=True)
+        print(f"Downloaded and cached {survey}.")
+
+    return data, wcs
+
+
+def make_wise_rgb_cached(
+    center, fov_deg=5.0, pixels=1800, percentile_interval=99.5, asinh_a=0.1
+):
+    surveys = ["AllWISE/W1", "AllWISE/W2", "AllWISE/W3"]
+    bands = []
+
+    for s in surveys:
+        data, wcs = get_wise_band(center, fov_deg, pixels, s)
+
+        # Percentile + asinh stretch
+        interval = PercentileInterval(percentile_interval)
+        vmin, vmax = interval.get_limits(data)
+        norm_data = AsinhStretch(a=asinh_a)((data - vmin) / (vmax - vmin))
+        bands.append(norm_data)
+
+    rgb = np.dstack([bands[2], bands[1], bands[0]])  # R=W3, G=W2, B=W1
     rgb = np.clip(rgb, 0, 1)
     return rgb, wcs
 
@@ -318,12 +365,130 @@ if __name__ == "__main__":
 
             print(f"✅ Saved {outfile}")
 
+    # WISE3 grayscale
+
+    if False:
+
+        survey = "AllWISE/W3"
+        hips = survey
+        mode = "inverted"
+        fov_deg = 7.0
+        pixels = 1800
+        data, wcs = get_wise_band(center, fov_deg, pixels, survey)
+
+        fig = plt.figure(figsize=(6.5, 6.5))
+        ax = plt.subplot(projection=wcs)
+
+        cmap = "gray_r"  # inverted colormap
+
+        # image
+        norm = simple_norm(data, "sqrt", percent=99.5)
+        ax.imshow(data, origin="lower", cmap=cmap, norm=norm)
+
+        # coords
+        ax.set_xlabel("RA (J2000)")
+        ax.set_ylabel("Dec (J2000)")
+        ax.coords.grid(True, ls=":", alpha=0.5)
+
+        # title
+        ax.set_title(f"{hips} ({mode})")
+
+        corners = wcs.calc_footprint()
+
+        # Doing a thing with y limits.
+        dec_min_world = 30.125
+        dec_max_world = 33.25
+        ra_min_world, ra_max_world = np.max(corners[0:2, 0]), np.min(corners[2:4, 0])
+
+        # Convert world coordinates to pixel coordinates
+        # The origin argument should be 0 for standard Python array indexing
+        pix_bl = wcs.world_to_pixel_values(ra_min_world, dec_min_world)
+        pix_tr = wcs.world_to_pixel_values(ra_max_world, dec_max_world)
+
+        # Extract pixel coordinates for setting limits
+        x_min_pixel, y_min_pixel = pix_bl
+        x_max_pixel, y_max_pixel = pix_tr
+
+        # Set the limits using the pixel coordinates
+        ax.set_xlim(x_min_pixel + 60, x_max_pixel - 20)  # hacky
+        ax.set_ylim(y_min_pixel, y_max_pixel)
+
+        boxes = [
+            {
+                "ra": (52.72826210855102, 51.685525993509465),
+                "dec": (30.84072309236323, 31.73142495998769),
+                "color": "cyan",
+                "label": "NGC 1333",
+            },
+            {
+                "ra": (56.67586712644869, 55.624367919373086),
+                "dec": (31.762148439083123, 32.65672727683106),
+                "color": "cyan",
+                "label": "IC 348",
+            },
+        ]
+        # Overlay boxes
+        for b in boxes:
+            # Compute lower-left corner in RA/Dec
+            ra0, ra1 = sorted(b["ra"])
+            dec0, dec1 = sorted(b["dec"])
+            width = ra1 - ra0
+            height = dec1 - dec0
+
+            rect = patches.Rectangle(
+                (ra0, dec0),
+                width,
+                height,
+                transform=ax.get_transform("icrs"),
+                edgecolor=b["color"],
+                facecolor="none",
+                lw=2,
+                label=b["label"],
+            )
+            ax.add_patch(rect)
+
+        # save
+        safe_name = hips.replace("/", "_")
+        outfile = f"{outdir}/{safe_name}_{mode}_custom.pdf"
+        plt.savefig(outfile, dpi=300, bbox_inches="tight")
+
+        print(f"✅ Saved {outfile}")
+
+    # Three color
+
     # --- Example plotting ---
-    rgb_image, wcs = make_wise_rgb(center, FOV_DEG, PIXELS)
+    # rgb_image, wcs = make_wise_rgb(center, FOV_DEG, PIXELS)
+    rgb_image, wcs = make_wise_rgb_cached(
+        center, FOV_DEG, PIXELS, percentile_interval=99.5, asinh_a=0.1
+    )
 
     fig = plt.figure(figsize=(6.5, 6.5))
     ax = plt.subplot(projection=wcs)
     ax.imshow(rgb_image, origin="lower")
+    # ax.coords[1].set_limits(30.5, 33.5)
+
+    corners = wcs.calc_footprint()
+
+    # Doing a thing with y limits.
+    dec_min_world = 30.125
+    dec_max_world = 33.25
+    ra_min_world, ra_max_world = np.max(corners[0:2, 0]), np.min(corners[2:4, 0])
+
+    # Convert world coordinates to pixel coordinates
+    # The origin argument should be 0 for standard Python array indexing
+    pix_bl = wcs.world_to_pixel_values(ra_min_world, dec_min_world)
+    pix_tr = wcs.world_to_pixel_values(ra_max_world, dec_max_world)
+
+    # Extract pixel coordinates for setting limits
+    x_min_pixel, y_min_pixel = pix_bl
+    x_max_pixel, y_max_pixel = pix_tr
+
+    # Set the limits using the pixel coordinates
+    ax.set_xlim(x_min_pixel + 60, x_max_pixel - 20)  # hacky
+    ax.set_ylim(y_min_pixel, y_max_pixel)
+    # ax.set_xlim(x_min_pixel, x_max_pixel)
+    # ax.set_ylim(y_min_pixel, y_max_pixel)
+
     ax.set_xlabel("RA (J2000)")
     ax.set_ylabel("Dec (J2000)")
     ax.coords.grid(True, ls=":", alpha=0.5)
@@ -335,14 +500,14 @@ if __name__ == "__main__":
             "ra": (52.72826210855102, 51.685525993509465),
             "dec": (30.84072309236323, 31.73142495998769),
             "color": "cyan",
-            "label": "NGC 1333"
+            "label": "NGC 1333",
         },
         {
             "ra": (56.67586712644869, 55.624367919373086),
             "dec": (31.762148439083123, 32.65672727683106),
             "color": "cyan",
-            "label": "IC 348"
-        }
+            "label": "IC 348",
+        },
     ]
     # Overlay boxes
     for b in boxes:
@@ -360,8 +525,11 @@ if __name__ == "__main__":
             edgecolor=b["color"],
             facecolor="none",
             lw=2,
-            label=b["label"]
+            label=b["label"],
         )
         ax.add_patch(rect)
+
+    outfile = f"{outdir}/WISE_3color.pdf"
+    plt.savefig(outfile, dpi=300, bbox_inches="tight")
 
     plt.show()
