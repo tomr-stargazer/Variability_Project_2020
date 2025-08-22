@@ -6,6 +6,7 @@ Copied from `map_figure_Perseus_regions.py`.
 """
 import os
 import warnings
+from io import BytesIO
 
 import astropy.constants as c
 import astropy.units as u
@@ -13,6 +14,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import requests
 import wuvars.analysis.variability_selection as sv
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -21,6 +23,7 @@ from astropy.visualization import (AsinhStretch, ImageNormalize,
                                    ZScaleInterval, simple_norm)
 from astropy.wcs import WCS
 from astroquery.simbad import Simbad
+from matplotlib.patches import ConnectionPatch
 from wuvars.analysis.bd_matching_ic348 import lowmass_ic_joint_matches
 from wuvars.analysis.bd_matching_ngc1333 import lowmass_ngc_joint_matches
 from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
@@ -28,6 +31,7 @@ from wuvars.analysis.spectral_type_to_number import get_SpT_from_num
 from wuvars.analysis.variability_selection_curved import (curve_Stetson, sv_hk,
                                                           sv_jh, sv_jhk, sv_jk)
 from wuvars.data import photometry, quality_classes, spreadsheet
+from wuvars.publication_figures.make_figures import figure_export_path
 
 warnings.filterwarnings("ignore")
 
@@ -188,6 +192,26 @@ def midpoint(coords):
     return SkyCoord(ra=ra_mid * u.deg, dec=dec_mid * u.deg, frame="fk5")
 
 
+def hips2fits_cutout(center, fov_deg, pixels, hips, projection="TAN"):
+    """Fetch a FITS cutout from hips2fits and return (data, WCS)."""
+    url = "https://alasky.u-strasbg.fr/hips-image-services/hips2fits"
+    params = {
+        "hips": hips,
+        "width": pixels,
+        "height": pixels,
+        "fov": fov_deg,
+        "projection": projection,
+        "coordsys": "icrs",
+        "ra": center.ra.deg,
+        "dec": center.dec.deg,
+        "format": "fits",
+    }
+    r = requests.get(url, params=params)
+    r.raise_for_status()
+    hdul = fits.open(BytesIO(r.content))
+    return hdul[0].data, WCS(hdul[0].header)
+
+
 def get_wise_band(center, fov_deg, pixels, survey):
     """
     Returns (data, WCS) for a single WISE band.
@@ -325,6 +349,7 @@ def maps_v4_plus_WISEcolor():
             facecolor="none",
             lw=2,
             label=b["label"],
+            zorder=100
         )
         ax_per.add_patch(rect)
 
@@ -408,14 +433,57 @@ def maps_v4_plus_WISEcolor():
     ax_ngc.set_aspect(1 / np.cos(np.radians(31)))
     ax_ic.set_aspect(1 / np.cos(np.radians(31)))
 
-    plt.savefig("new_test_IC348_NGC1333_map.png", bbox_inches="tight")
-    plt.savefig("new_test_IC348_NGC1333_map.pdf", bbox_inches="tight")
+    ### WE want some lines.
+
+    # Let's break this down into pieces. TO use
+
+    four_ra_dec_pairs = [
+        (boxes[1]['ra'][0], boxes[1]['dec'][1]),
+        (boxes[1]['ra'][1], boxes[1]['dec'][1]),
+        (boxes[0]['ra'][0], boxes[0]['dec'][1]),
+        (boxes[0]['ra'][1], boxes[0]['dec'][1]),
+    ]
+
+    four_axes = [ax_ic, ax_ic, ax_ngc, ax_ngc]
+
+    for (ra_dec, ax) in zip(four_ra_dec_pairs, four_axes):
+
+        xyA = ax_per.wcs.world_to_pixel_values(*ra_dec)
+        coordsA = "data"
+
+        xyB = ra_dec
+        coordsB = "data"
+
+        con = ConnectionPatch(
+            xyA=xyA, coordsA=coordsA, axesA=ax_per,
+            xyB=xyB, coordsB=coordsB, axesB=ax,
+            color='0.5', lw=0.5, linestyle='-'
+            )
+        fig.add_artist(con)
+
+    # fig.plot([0.25, 0.2], [0.75, 0.25], "-", c="0.5", lw=0.5, transform=fig.transFigure)
+
+    # ax_per.transData.transform((x_data, y_data))
+
+    # TODO: rename, move these
+
+    from wuvars.publication_figures.make_figures import figure_export_path
+
+
+    plt.savefig("XXX_new_test_IC348_NGC1333_map.png", bbox_inches="tight")
+    # plt.savefig("XXX_new_test_IC348_NGC1333_map.pdf", bbox_inches="tight")
+
+    fig.savefig(
+        os.path.join(figure_export_path, "Figure_2_Map_Perseus.pdf"), bbox_inches="tight"
+    )
 
     return fig
 
 
 if __name__ == "__main__":
     if True:
+        fig = maps_v4_plus_WISEcolor()
+    if False:
         fig = maps_v4()
         # legacy_NGC1333_map_figure()
         # legacy_IC348_map_figure()
