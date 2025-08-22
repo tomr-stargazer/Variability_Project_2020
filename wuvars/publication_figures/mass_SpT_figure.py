@@ -11,10 +11,13 @@ and also, in part, here:
 
 """
 
+import os
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
 from matplotlib.ticker import ScalarFormatter
 from wuvars.analysis.spectral_type_to_number import (get_num_from_SpT,
                                                      get_SpT_from_num)
@@ -22,6 +25,7 @@ from wuvars.analysis.spectral_type_to_temperature import (
     get_SpT_from_Teff, get_SpT_from_Teff_HH14)
 from wuvars.publication_figures.HR_diagram_NGC_IC import (
     extract_age_array_Gyr, load_isochrone_generic)
+from wuvars.publication_figures.make_figures import figure_export_path
 
 mpl.rcParams["xtick.direction"] = "in"
 mpl.rcParams["ytick.direction"] = "in"
@@ -41,6 +45,8 @@ def make_mass_SpT_figure():
 
     lw_array = [0.5, 0.75, 1.0, 1.25]
     ms_array = [2, 3, 4, 5]
+
+    markers = ['o', 's', 'D', '^', 'v', 'x']
     colors = [f"C{x}" for x in range(6)]
 
     for age, lw, ms in list(zip(ages, lw_array, ms_array))[::-1]:
@@ -49,7 +55,7 @@ def make_mass_SpT_figure():
         teff = iso[:, 1]
 
         spt_array = df["SpTnum"]
-        for col, color in zip(df.columns[2:-1], colors):
+        for col, color, marker in zip(df.columns[2:-1], colors, markers):
             #        print(col)
 
             nonnan = ~np.isnan(df[col].values)
@@ -72,17 +78,18 @@ def make_mass_SpT_figure():
             ax.plot(
                 SpTs[small],
                 mass[small],
-                ".",
+                marker,
                 color=color,
                 lw=lw,
-                ms=ms,
+                ms=ms/1.75,
                 label=col,
                 zorder=ms,
             )
 
         if age == ages[-1]:
-            ax.legend()
+            author_legend = ax.legend(title=r"SpT$-T_{\rm{eff}}$ ref.")
 
+    ax.add_artist(author_legend)
     ax.axhline(0.08, zorder=-10, alpha=0.1, lw=5)
 
     ax.set_xlim(-0.25, 12.25)
@@ -97,6 +104,19 @@ def make_mass_SpT_figure():
 
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_ticks([0.01, 0.02, 0.03, 0.05, 0.08, 0.1, 0.15, 0.2, 0.3, 0.5, 0.8])
+
+    ax.tick_params(axis="y", labelsize=8)
+
+    # custom legend
+    handles = [
+        Line2D([0], [0], marker="o", color="k", markersize=s/1.75, linestyle="none")
+        for s in ms_array
+    ]
+    labels = [f"{age} Myr" for age in ages]
+    size_legend = ax.legend(handles, labels, title="Model ages", loc="lower left")
+
+    # Add legend manually to the axes
+    ax.add_artist(size_legend)
 
     # Now to workshop the baby axes
 
@@ -153,8 +173,8 @@ def make_mass_SpT_figure():
     ax_right.grid(True, linestyle="--", lw=0.25)
 
     spt_array = df["SpTnum"]
-    for col in df.columns[2:-1]:
-        ax_right.plot(spt_array, df[col].values, ".-", lw=0.75, ms=5, label=col)
+    for col, marker in zip(df.columns[2:-1], markers):
+        ax_right.plot(spt_array, df[col].values, "-", marker=marker, lw=0.75, ms=5/2, label=col)
 
     ax_right.legend(fontsize=6)
 
@@ -167,7 +187,16 @@ def make_mass_SpT_figure():
     ax_right.set_ylabel(r"$T_{\rm{eff}}$ (K)", fontsize=8)
     ax_right.set_xlabel("Spectral Type", fontsize=8)
 
-    plt.savefig("XXX_spectral_type_v_mass_logy_altered.pdf")
+    # post-hoc adjustment
+    ax_left.set_ylim(1850, 4100)
+    ax_right.set_ylim(1850, 4100)
+
+    ax_left.locator_params(axis="y", nbins=5)
+    ax_right.locator_params(axis="y", nbins=5)
+
+    fig.savefig(
+        os.path.join(figure_export_path, "Figure_1_Mass_v_SpT.pdf"), bbox_inches="tight"
+    )
 
     return fig
 
