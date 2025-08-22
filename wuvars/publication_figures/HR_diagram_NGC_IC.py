@@ -630,6 +630,252 @@ def make_fig_3_HR_diagram():
     return fig
 
 
+def make_fig_3a_3b_HR_diagram():
+    """
+    Figure 3 is a combined HR diagram / observational summary of the objects in this study.
+
+    3a: CMD
+    3b: histogram, HR diagram, 
+
+    """
+
+    # This part pulls up the source information from our position-matching scheme.
+    ngc_match = match_ngc()
+    ic_match = match_ic()
+
+    spread_dict = {
+        "ngc": spreadsheet.load_wserv_v2(7),
+        "ic": spreadsheet.load_wserv_v2(8),
+    }
+    match_dict = {"ngc": ngc_match, "ic": ic_match}
+    fullname_dict = {"ngc": "NGC 1333", "ic": "IC 348"}
+    names = ["ic", "ngc"]
+
+    # This part sets up the figure.
+
+    plt.rcParams["font.size"] = 6
+
+    fig = plt.figure(figsize=(8, 8), dpi=300)
+
+    # There will be eight subplots. Let's prototype.
+
+    # cmd_axes = [fig.add_subplot(2, 2, 1), fig.add_subplot(2, 2, 2)]
+    # hist_axes = [fig.add_subplot(6, 2, 6 + 1), fig.add_subplot(6, 2, 6 + 2)]
+    # hr_axes = [fig.add_subplot(6, 2, 8 + 1), fig.add_subplot(6, 2, 8 + 2)]
+    # sigma_axes = [fig.add_subplot(6, 2, 10 + 1), fig.add_subplot(6, 2, 10 + 2)]
+
+    # CMD
+    cmd1 = fig.add_subplot(2, 2, 1)
+    cmd2 = fig.add_subplot(2, 2, 2, sharex=cmd1, sharey=cmd1)
+    cmd_axes = [cmd1, cmd2]
+
+    # Hist
+    hist1 = fig.add_subplot(6, 2, 7)
+    hist2 = fig.add_subplot(6, 2, 8, sharex=hist1, sharey=hist1)
+    hist_axes = [hist1, hist2]
+
+    # HR
+    hr1 = fig.add_subplot(6, 2, 9)
+    hr2 = fig.add_subplot(6, 2, 10, sharex=hr1, sharey=hr1)
+    hr_axes = [hr1, hr2]
+
+    # Sigma
+    sigma1 = fig.add_subplot(6, 2, 11)
+    sigma2 = fig.add_subplot(6, 2, 12, sharex=sigma1, sharey=sigma1)
+    sigma_axes = [sigma1, sigma2]
+
+    # (This'll be a loop, eventually)
+    for i in range(len(names)):
+        name = names[i]
+        cmd_ax = cmd_axes[i]
+        hist_ax = hist_axes[i]
+        hr_ax = hr_axes[i]
+        sigma_ax = sigma_axes[i]
+
+        fullname = fullname_dict[name]
+        match = match_dict[name]
+        spread = spread_dict[name]
+        ir_exc = match.approved["IRexc"] == "yes"
+
+        ################
+        # Draw the CMD #
+        ################
+
+        # 1. the data
+
+        cmd_ax.plot(
+            match.approved["median_HMKPNT"][~ir_exc],
+            match.approved["median_KAPERMAG3"][~ir_exc],
+            "ks",
+            ms=1,
+            label="no IR exc",
+        )
+        cmd_ax.plot(
+            match.approved["median_HMKPNT"][ir_exc],
+            match.approved["median_KAPERMAG3"][ir_exc],
+            "rD",
+            ms=1,
+            label="with IR exc",
+        )
+        # cmd_ax.plot(
+        #     spread["median"]["HMKPNT"],
+        #     spread["median"]["KAPERMAG3"],
+        #     "k,",
+        #     alpha=0.1,
+        #     zorder=-1,
+        # )
+        cmd_ax.set_title(f"{fullname}")
+        cmd_ax.set_xlabel("$H-K$ color", labelpad=-0.04)
+        cmd_ax.set_ylabel("$K$ mag")
+        # cmd_ax.set_xlim(0, 4.05)
+        cmd_ax.set_xlim(0, 2.5)
+        cmd_ax.set_ylim(18.5, 9)
+
+        if i == 0:
+            dot_legend = cmd_ax.legend(bbox_to_anchor=(1.0, 0.85), loc="upper right")
+            cmd_ax.add_artist(dot_legend)
+
+        # 2. the theory
+
+        lws = [0.2, 0.75]
+        ages = [1, 8]
+
+        isochrone_lines = []
+        for age, lw in zip(ages, lws):
+
+            myr_x = load_isochrone_generic(age)
+
+            M_k = myr_x[:, 10]
+            color = myr_x[:, 9] - myr_x[:, 10]
+
+            isochrone_lines.append(
+                cmd_ax.plot(color, M_k + distmod, "k-", lw=lw, label=f"{age} Myr")[0]
+            )
+
+            # But let's also do three masses... 0.5, 0.08, 0.01
+
+        #
+        masses = [0.01, 0.08, 0.2][::-1]
+        myr_0_5 = load_isochrone_generic(0.5)
+        mass_array = myr_0_5[:, 0]
+        lw_array = [0.5, 1, 1.5][::-1]
+
+        all_ages_Gyr = extract_age_array_Gyr(filepath)
+
+        for j, (mass, lw) in enumerate(zip(masses, lw_array)):
+            # get the evolutionary track for all ages
+            all_isochrones = []
+            for age in all_ages_Gyr[all_ages_Gyr < 0.5]:
+                all_isochrones.append(load_isochrone_generic(age * 1e3))
+            myr_stack = np.vstack(all_isochrones).reshape(len(all_isochrones), 30, 11)
+
+            mass_index = np.where(mass == mass_array)[0]
+            mi = mass_index
+
+            Mk_i = myr_stack[:, mi, -1]
+            Mh_i = myr_stack[:, mi, -2]
+
+            isochrone_lines.append(
+                cmd_ax.plot(
+                    Mh_i - Mk_i,
+                    Mk_i + distmod,
+                    "C0--",
+                    lw=lw,
+                    label=f"{mass} M$_{{\odot}}$",
+                )[0]
+            )
+
+        # plt.gca().invert_yaxis()
+        if i == 0:
+
+            age_legend = cmd_ax.legend(
+                handles=isochrone_lines,
+                labels=[x.get_label() for x in isochrone_lines],
+                title="$d=300$ pc",
+                loc="lower right",
+                bbox_to_anchor=(-0.05, 0.0),
+            )
+            cmd_ax.add_artist(age_legend)
+
+        ######################
+        # Draw the histogram #
+        ######################
+
+        hist_ax.hist(
+            match.approved["SpT"],
+            range=[0, 15],
+            bins=np.arange(0, 15, 0.5),
+            edgecolor="k",
+            linewidth=0.5,
+            facecolor="None",
+            histtype="stepfilled",
+            label="all targets: " f"$n$={len(match.approved)}",
+        )
+        hist_ax.hist(
+            match.statistical["SpT"],
+            edgecolor="k",
+            facecolor="0.5",
+            # hatch="..",
+            range=[0, 15],
+            bins=np.arange(0, 15, 0.5),
+            histtype="stepfilled",
+            label="high-quality photometry \n($\sigma_{K} \\leq 0.05$ mag): "
+            f"$n$={len(match.statistical)}",
+        )
+
+        hist_ax.set_xlim(0, 14)
+        hist_ax.set_ylabel("Number of sources")
+        hist_ax.set_xlabel("Spectral Type")
+        hist_ax.legend()
+
+        spt_array = np.array([get_SpT_from_num(int(x)) for x in hist_ax.get_xticks()])
+        hist_ax.xaxis.set_tick_params(labelbottom=True)
+        hist_ax.set_xticklabels(spt_array)
+
+        hist_ax.grid(True, axis="x", ls=":")
+
+        #######################
+        # Draw the HR diagram #
+        #######################
+
+        hr_ax.plot(
+            match.approved["SpT"], match.approved["median_KAPERMAG3"], "k.", ms=2
+        )
+        hr_ax.set_xlim(0, 14)
+        hr_ax.set_ylabel("median $K$ mag")
+        hr_ax.set_xlabel("Spectral Type")
+        hr_ax.grid(True, axis="x", ls=":")
+
+        spt_array = np.array([get_SpT_from_num(int(x)) for x in hr_ax.get_xticks()])
+        hr_ax.xaxis.set_tick_params(labelbottom=True)
+        hr_ax.set_xticklabels(spt_array)
+
+        if i == 0:
+            hr_ax.invert_yaxis()
+
+        sigma_ax.plot(
+            match.approved["SpT"], match.approved["median_KAPERMAG3ERR"], "k.", ms=2
+        )
+        sigma_ax.set_xlim(0, 14)
+        sigma_ax.semilogy()
+        sigma_ax.set_xlabel("Spectral Type")
+        sigma_ax.set_ylabel("$\sigma_{K}$ (mag)")
+
+        # ax.set_xticklabels(spt_array)
+        sigma_ax.set_xticklabels(spt_array)
+        sigma_ax.grid(True, axis="x", ls=":")
+        sigma_ax.axhline(0.05, lw=0.5, ls="--")
+
+    plt.show()
+    fig.savefig(
+        os.path.join(figure_export_path, "Figure_3_CMD_HR_diagram.pdf"),
+        bbox_inches="tight",
+    )
+
+    return fig
+
+
 if __name__ == "__main__":
     # mock_lalchand_figure()
-    fig = make_fig_3_HR_diagram()
+    # fig = make_fig_3_HR_diagram()
+    figs = make_fig_3a_3b_HR_diagram()
