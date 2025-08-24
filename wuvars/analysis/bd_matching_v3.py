@@ -117,6 +117,9 @@ def match_ngc():
     # get the coordinates into a usable state
     L16_T2_coordinates = coords_from_Luhman_table(L16_T2)
 
+    L16_T2_index = np.arange(len(L16_T2))
+    L16_T2.add_column(L16_T2_index, index=0, name="L16_T2_index")
+
     # This column contains the 'adopted' spectral type for each source.
     L16_SpT = L16_T2["Adopt"]
 
@@ -129,6 +132,7 @@ def match_ngc():
         # This exception applies to any 'masked' entries, which should be treated as NaN.
         except IndexError:
             L16_SpT_num.append(np.nan)
+
 
     L16_T2["SpT"] = L16_SpT_num
     ngc_Teff = np.array([get_Teff_from_SpT(x) for x in L16_T2["SpT"]])
@@ -243,6 +247,9 @@ def match_ic():
 
     # get the coordinates into a usable state
     L16_T1_coordinates = coords_from_Luhman_table(L16_T1)
+
+    L16_T1_index = np.arange(len(L16_T1))
+    L16_T1.add_column(L16_T1_index, index=0, name="L16_T1_index")
 
     # This column contains the 'adopted' spectral type for each source.
     L16_SpT = L16_T1["Adopt"]
