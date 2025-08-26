@@ -128,8 +128,8 @@ onc_match = match_onc()
 ngc_match = match_ngc()
 ic_match = match_ic()
 
-for _attr in ("approved", "statistical"):
-    augment_oncmatch_with_disk_column(onc_match, _attr)
+# for _attr in ("approved", "statistical"):
+#     augment_oncmatch_with_disk_column(onc_match, _attr)
 
 reference_dict = {5: onc_match, 7: ngc_match, 8: ic_match}
 short_names = {5: "ONC", 7: "NGC", 8: "IC"}
@@ -140,7 +140,7 @@ def select_targets(wserv, attr="approved"):
 
     sourceids = getattr(reference_dict[wserv], attr)["SOURCEID"]
 
-    ds = spread[f"wserv{wserv}"]
+    ds = getattr(spread, f"wserv{wserv}")
     ref = np.in1d(ds.index, sourceids)
 
     return ref
@@ -153,7 +153,7 @@ def select_disks(wserv, attr="approved", choice="yes"):
 
     disked_sourceids = sourceids[disk_yn == choice]
 
-    ds = spread[f"wserv{wserv}"]
+    ds = getattr(spread, f"wserv{wserv}")
     ref = np.in1d(ds.index, disked_sourceids)
 
     return ref
@@ -172,7 +172,7 @@ def select_stetson_variables(wserv, return_v0=False):
         os.path.join(stetson_directory, f"WSERV{wserv}_result_grid_95.npy")
     )
 
-    ds = spread[f"wserv{wserv}"]
+    ds = getattr(spread, f"wserv{wserv}")
     q0 = sv.sq0(ds, n_min, n_max)
     #         q1 = sq1(ds, n_min, n_max)
 
@@ -228,7 +228,7 @@ def select_stetson_variables(wserv, return_v0=False):
 
 def select_periodic_variables(wserv):
 
-    ds = spread[f"wserv{wserv}"]
+    ds = getattr(spread, f"wserv{wserv}")
 
     flags = ["Y", "Yw", "N", "YfY", "?fY", "YfYw", "?fYw", "YfN", "?fN"]
     periodic_flags = [flag for flag in flags if flag[-1] in ("Y", "w")]
@@ -248,7 +248,7 @@ def select_periodic_variables(wserv):
 
 def select_periodic_variables_experimental(wserv):
 
-    ds = spread[f"wserv{wserv}"]
+    ds = getattr(spread, f"wserv{wserv}")
 
     flags = ["Y", "Yw", "N", "YfY", "?fY", "YfYw", "?fYw", "YfN", "?fN"]
     periodic_flags = [flag for flag in flags if flag[-1] in ("Y", "w")]
@@ -269,7 +269,7 @@ def select_periodic_variables_experimental(wserv):
 
 def select_subjective_variables(wserv):
 
-    ds = spread[f"wserv{wserv}"]
+    ds = getattr(spread, f"wserv{wserv}")
 
     q0_variables = subj_sheets[short_names[wserv]]["SOURCEID"][
         subj_sheets[short_names[wserv]]["VARIABLE"] == 1

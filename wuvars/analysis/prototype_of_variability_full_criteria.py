@@ -62,7 +62,7 @@ n_min = 80
 n_max = 160
 
 
-ds = spread[f"wserv{wserv}"]
+ds = getattr(spread, f"wserv{wserv}")
 
 q0 = sv.sq0(ds, n_min, n_max)
 #         q1 = sq1(ds, n_min, n_max)
