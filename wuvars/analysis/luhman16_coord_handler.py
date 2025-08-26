@@ -5,19 +5,25 @@ which provide separate columns for each sexagesimal component of the coordinates
 """
 
 import numpy as np
-from astropy.coordinates import SkyCoord, Angle
 from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 
 
 def coords_from_Luhman_table(table):
 
-    # get the coordinates into a usable state
-    RA = Angle(
-        (table["RAh"].data, table["RAm"].data, table["RAs"].data), unit=u.hourangle
-    )
-    Dec_sign = np.where(table["DE-"] == "+", 1, -1)
-    Dec = Angle((Dec_sign * table["DEd"], table["DEm"], table["DEs"],), unit=u.deg,)
+    # RA strings like "HH MM SS.S..." with native precision
+    ra_str = [
+        f"{int(h):02d} {int(m):02d} {s}"
+        for h, m, s in zip(table["RAh"], table["RAm"], table["RAs"])
+    ]
 
-    coordinates_array = SkyCoord(ra=RA, dec=Dec)
+    # Dec strings like "+DD MM SS.S..." with native precision
+    dec_str = [
+        f"{sign}{int(d):02d} {int(m):02d} {s}"
+        for sign, d, m, s in zip(table["DE-"], table["DEd"], table["DEm"], table["DEs"])
+    ]
+
+    # Use SkyCoord directly on the sexagesimal strings
+    coordinates_array = SkyCoord(ra=ra_str, dec=dec_str, unit=(u.hourangle, u.deg))
 
     return coordinates_array
