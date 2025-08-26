@@ -118,7 +118,7 @@ def maps_v4():
             "rx",
             ms=6,
             mew=1.2,
-            label=f"Unusable lightcurve (n={len(match.rejected['median_RA'])}))",
+            label=f"Unusable lightcurve (n={len(match.rejected['median_RA'])})",
         )
         ax_map.invert_xaxis()
         ax_map.set_xlabel("RA (deg)")
@@ -388,7 +388,7 @@ def maps_v4_plus_WISEcolor():
             "rx",
             ms=6,
             mew=1.2,
-            label=f"Unusable lightcurve (n={len(match.rejected['median_RA'])}))",
+            label=f"Unusable lightcurve (n={len(match.rejected['median_RA'])})",
         )
         ax_map.invert_xaxis()
         ax_map.set_xlabel("RA (deg)")
