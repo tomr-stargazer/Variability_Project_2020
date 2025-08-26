@@ -3,12 +3,12 @@ This module allows you to import a canonical set of quality selections for each
 """
 
 import os
+
 import pandas as pd
-from recordclass import recordclass
-
+from wuvars.analysis.variability_selection import (sq0, sq1, sq1_h, sq1_j,
+                                                   sq1_k, sq2)
+from wuvars.data.custom_recordclass import recordclass
 from wuvars.data.spreadsheet import load_wserv_v2
-from wuvars.analysis.variability_selection import sq0, sq1, sq2, sq1_j, sq1_h, sq1_k
-
 
 wserv_ids = [1, 5, 7, 8, 11]
 n_obs_list = [130, 120, 171, 85, 110]
@@ -35,4 +35,3 @@ def load_q(wserv):
     q1_k = sq1_k(ds, n_min_dict[wserv], n_max_dict[wserv])
 
     return Qualityset(q2, q1, q1_j, q1_h, q1_k, q0)
-
