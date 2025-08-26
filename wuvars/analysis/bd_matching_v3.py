@@ -49,6 +49,7 @@ This supersedes the 0.37'' radius I used in v2.
 
 
 import os
+import pdb
 
 import astropy.table
 import matplotlib.pyplot as plt
@@ -276,6 +277,14 @@ def match_ic():
 
     # IC 348 is WSERV8
     spread = spreadsheet.load_wserv_v2(8)
+
+    if int(astropy.__version__.split('.')[0]) > 4:
+
+        new_sid_1 = 44989782440582
+        new_sid_2 = 44989782499851
+
+        spread = spread.drop(index=[new_sid_1, new_sid_2])
+
     sm = spread["median"]
     sv = spread["variability"]
     ss = spread["std"]
@@ -297,6 +306,16 @@ def match_ic():
     sep_constraint = d2d < max_sep
 
     matches_sm = sm.iloc[idx[sep_constraint]]
+
+    if int(astropy.__version__.split('.')[0]) > 4:
+
+        # take what WOULD have been 
+        classic_sid_1 = 44989782440583
+        classic_sid_2 = 44989782496441
+
+        assert classic_sid_1 in matches_sm.index
+        assert classic_sid_2 in matches_sm.index
+
     matches_sm = matches_sm.rename(columns=lambda name: "median_" + name)
     matches_sv = sv.iloc[idx[sep_constraint]]
     matches_sv = matches_sv.rename(columns=lambda name: "var_" + name)
@@ -341,6 +360,8 @@ def match_ic():
 
     ic_match.approved = joint_matches[approved_criteria]
     ic_match.rejected = joint_matches[rejected_criteria]
+
+    assert len(ic_match.rejected) == len(rejected_sources_ic_new) + len(rejected_sources_ic_old)
 
     statistical_criteria = (
         approved_criteria
