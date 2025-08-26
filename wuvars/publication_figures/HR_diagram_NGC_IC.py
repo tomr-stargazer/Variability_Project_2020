@@ -655,7 +655,12 @@ def make_fig_3a_3b_HR_diagram():
 
     plt.rcParams["font.size"] = 6
 
-    fig = plt.figure(figsize=(8, 8), dpi=300)
+    # fig = plt.figure(figsize=(8, 8), dpi=300)
+    fig_cmd = plt.figure(figsize=(7.5, 3.5), dpi=300)
+    fig_hr = plt.figure(figsize=(7, 3.75), dpi=300)
+
+    fig_cmd.subplots_adjust(wspace=0.1)
+    fig_hr.subplots_adjust(wspace=0.15)
 
     # There will be eight subplots. Let's prototype.
 
@@ -665,23 +670,23 @@ def make_fig_3a_3b_HR_diagram():
     # sigma_axes = [fig.add_subplot(6, 2, 10 + 1), fig.add_subplot(6, 2, 10 + 2)]
 
     # CMD
-    cmd1 = fig.add_subplot(2, 2, 1)
-    cmd2 = fig.add_subplot(2, 2, 2, sharex=cmd1, sharey=cmd1)
+    cmd1 = fig_cmd.add_subplot(1, 2, 1)
+    cmd2 = fig_cmd.add_subplot(1, 2, 2, sharex=cmd1, sharey=cmd1)
     cmd_axes = [cmd1, cmd2]
 
     # Hist
-    hist1 = fig.add_subplot(6, 2, 7)
-    hist2 = fig.add_subplot(6, 2, 8, sharex=hist1, sharey=hist1)
+    hist1 = fig_hr.add_subplot(3, 2, -6 + 7)
+    hist2 = fig_hr.add_subplot(3, 2, -6 + 8, sharex=hist1, sharey=hist1)
     hist_axes = [hist1, hist2]
 
     # HR
-    hr1 = fig.add_subplot(6, 2, 9)
-    hr2 = fig.add_subplot(6, 2, 10, sharex=hr1, sharey=hr1)
+    hr1 = fig_hr.add_subplot(3, 2, -6 + 9)
+    hr2 = fig_hr.add_subplot(3, 2, -6 + 10, sharex=hr1, sharey=hr1)
     hr_axes = [hr1, hr2]
 
     # Sigma
-    sigma1 = fig.add_subplot(6, 2, 11)
-    sigma2 = fig.add_subplot(6, 2, 12, sharex=sigma1, sharey=sigma1)
+    sigma1 = fig_hr.add_subplot(3, 2, -6 + 11)
+    sigma2 = fig_hr.add_subplot(3, 2, -6 + 12, sharex=sigma1, sharey=sigma1)
     sigma_axes = [sigma1, sigma2]
 
     # (This'll be a loop, eventually)
@@ -724,9 +729,10 @@ def make_fig_3a_3b_HR_diagram():
         #     alpha=0.1,
         #     zorder=-1,
         # )
-        cmd_ax.set_title(f"{fullname}")
-        cmd_ax.set_xlabel("$H-K$ color", labelpad=-0.04)
-        cmd_ax.set_ylabel("$K$ mag")
+        cmd_ax.set_title(f"{fullname}", fontsize=8)
+        cmd_ax.set_xlabel("$H-K$ color", fontsize=8)
+        if i == 0:
+            cmd_ax.set_ylabel("$K$ mag", fontsize=8)
         # cmd_ax.set_xlim(0, 4.05)
         cmd_ax.set_xlim(0, 2.5)
         cmd_ax.set_ylim(18.5, 9)
@@ -819,12 +825,13 @@ def make_fig_3a_3b_HR_diagram():
             range=[0, 15],
             bins=np.arange(0, 15, 0.5),
             histtype="stepfilled",
-            label="high-quality photometry \n($\sigma_{K} \\leq 0.05$ mag): "
+            label="high-quality photometry \n($\sigma_{K} \\leq 0.05$ mag, no\nerror flags): "
             f"$n$={len(match.statistical)}",
         )
 
         hist_ax.set_xlim(0, 14)
-        hist_ax.set_ylabel("Number of sources")
+        if i == 0:
+            hist_ax.set_ylabel("Number of sources")
         hist_ax.set_xlabel("Spectral Type")
         hist_ax.legend()
 
@@ -833,6 +840,8 @@ def make_fig_3a_3b_HR_diagram():
         hist_ax.set_xticklabels(spt_array)
 
         hist_ax.grid(True, axis="x", ls=":")
+        hist_ax.set_title(f"{fullname}", fontsize=8)
+
 
         #######################
         # Draw the HR diagram #
@@ -842,7 +851,8 @@ def make_fig_3a_3b_HR_diagram():
             match.approved["SpT"], match.approved["median_KAPERMAG3"], "k.", ms=2
         )
         hr_ax.set_xlim(0, 14)
-        hr_ax.set_ylabel("median $K$ mag")
+        if i == 0:
+            hr_ax.set_ylabel("median $K$ mag")
         hr_ax.set_xlabel("Spectral Type")
         hr_ax.grid(True, axis="x", ls=":")
 
@@ -859,7 +869,8 @@ def make_fig_3a_3b_HR_diagram():
         sigma_ax.set_xlim(0, 14)
         sigma_ax.semilogy()
         sigma_ax.set_xlabel("Spectral Type")
-        sigma_ax.set_ylabel("$\sigma_{K}$ (mag)")
+        if i == 0:
+            sigma_ax.set_ylabel("$\sigma_{K}$ (mag)")
 
         # ax.set_xticklabels(spt_array)
         sigma_ax.set_xticklabels(spt_array)
@@ -867,12 +878,20 @@ def make_fig_3a_3b_HR_diagram():
         sigma_ax.axhline(0.05, lw=0.5, ls="--")
 
     plt.show()
-    fig.savefig(
-        os.path.join(figure_export_path, "Figure_3_CMD_HR_diagram.pdf"),
+    # fig.savefig(
+    #     os.path.join(figure_export_path, "Figure_3_CMD_HR_diagram.pdf"),
+    #     bbox_inches="tight",
+    # )
+    # Save both figures
+    fig_cmd.savefig(
+        os.path.join(figure_export_path, "Figure_3a_CMD.pdf"),
         bbox_inches="tight",
     )
-
-    return fig
+    fig_hr.savefig(
+        os.path.join(figure_export_path, "Figure_3b_Hist_HR_Sigma.pdf"),
+        bbox_inches="tight",
+    )
+    return fig_cmd, fig_hr
 
 
 if __name__ == "__main__":
