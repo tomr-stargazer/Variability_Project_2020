@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import wuvars.analysis.variability_selection as sv
-from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
+from wuvars.analysis.bd_matching_v3 import (match_ic, match_ngc,
+                                            rejected_sources_ic_new,
+                                            rejected_sources_ic_old)
 from wuvars.analysis.spectral_type_to_number import get_SpT_from_num
 from wuvars.analysis.variability_selection_curved import (curve_Stetson, sv_hk,
                                                           sv_jh, sv_jhk, sv_jk)
@@ -75,6 +77,8 @@ if __name__ == "__main__":
         print(
             f"({len(match.rejected)} light curves were rejected by manual inspection)"
         )
+        if name == 'ic':
+            assert len(match.rejected) == len(rejected_sources_ic_new) + len(rejected_sources_ic_old)
 
         # let's divide up by infrared excess
         ir_exc = match.approved["IRexc"] == "yes"
