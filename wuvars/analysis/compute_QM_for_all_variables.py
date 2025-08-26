@@ -70,6 +70,8 @@ if __name__ == "__main__":
 
         region_data = []
 
+        print(f"About to calculate for {len(match.approved)} objects in {name}")
+
         for i, sid in enumerate(match.approved["SOURCEID"]):
 
             M_dict = compute_M(dataset, sid)
