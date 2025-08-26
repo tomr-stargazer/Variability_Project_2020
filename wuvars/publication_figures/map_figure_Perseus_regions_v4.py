@@ -178,8 +178,8 @@ def resolve_targets(names):
         result = custom.query_object(name)
         if result is None:
             raise ValueError(f"Could not resolve target: {name}")
-        ra_deg = float(result["RA_d"][0])
-        dec_deg = float(result["DEC_d"][0])
+        ra_deg = float(result['ra'][0])
+        dec_deg = float(result['dec'][0])
         coords.append(SkyCoord(ra=ra_deg * u.deg, dec=dec_deg * u.deg, frame="fk5"))
     return coords
 
