@@ -31,4 +31,9 @@ if __name__ == "__main__":
 
     # Figure 3:
 
+    from HR_diagram_NGC_IC import make_fig_3a_3b_HR_diagram
+
+    make_fig_3a_3b_HR_diagram()
+
+
     # (What is it?)
