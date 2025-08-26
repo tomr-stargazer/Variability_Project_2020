@@ -4,20 +4,16 @@ This is a script which generates the Stetson threshold vs magnitude plots.
 """
 
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import wuvars.analysis.variability_selection as vs
 from wuvars.analysis.moving_average_variability_threshold import (
-    moving_average_percentile_monotonic,
-    moving_average_percentile,
-)
-from wuvars.analysis.stetson_vs_mag_selection_fns import (
-    onc_selection_fn,
-    ngc_selection_fn,
-    ic_selection_fn,
-)
+    moving_average_percentile, moving_average_percentile_monotonic)
+from wuvars.analysis.stetson_vs_mag_selection_fns import (ic_selection_fn,
+                                                          ngc_selection_fn,
+                                                          onc_selection_fn)
 from wuvars.data import spreadsheet
 
 spread = spreadsheet.load_v2()
@@ -44,7 +40,7 @@ if __name__ == "__main__":
         zip(wserv_ids, n_min_list, n_max_list, min_Stetson_list)
     )[1:-1]:
 
-        ds = spread[f"wserv{wserv}"]
+        ds = getattr(spread, f"wserv{wserv}")
 
         q0 = vs.sq0(ds, n_min, n_max)
         q1 = vs.sq1(ds, n_min, n_max)
