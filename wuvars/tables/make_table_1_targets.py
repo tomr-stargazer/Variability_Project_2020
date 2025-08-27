@@ -112,6 +112,14 @@ name_columns = [
     "AlvesdeOliveira",
 ]
 
+# Collapse mags into "value ± err" strings
+def format_mag(val, err):
+    if np.isfinite(val) and np.isfinite(err):
+        return f"{val:.2f} ± {err:.2f}"
+    elif np.isfinite(val):
+        return f"{val:.2f}"
+    else:
+        return "..."
 
 def make_table_1_targets(verbose=False):
     """
@@ -144,12 +152,11 @@ def make_table_1_targets(verbose=False):
     # please output the full table to ApJ-compliant MRT,
     #  plus a 10-row sample (first ten rows) output to LaTeX
 
-    rows = []
-
     for region_key in region_keys:  # "ngc", "ic"
-        approved = match_dict[region_key].approved
-
         if verbose: print(region_key)
+
+        rows = []
+        approved = match_dict[region_key].approved
 
         for i, row in enumerate(approved):
 
@@ -196,18 +203,19 @@ def make_table_1_targets(verbose=False):
 
             # Answer: there are four sources where we have `null` (at J and/or H) and 
             #         L16 has data. 
-            #         Therefore
+            #         Therefore...
+            #         we should use our data if we can, flag if we can't and use Luhman.
+            #         I mean... do we need to flag...?
 
             # - IR excess status (from L16)
             ir_flag = row["IRexc"]
 
             rows.append(
                 (
-                    source_name,
                     shorthand,
+                    source_name,
                     other_names,
                     other_names_latex,
-                    region_name,
                     ra_deg,
                     dec_deg,
                     SpT,
@@ -231,11 +239,10 @@ def make_table_1_targets(verbose=False):
             table = Table(
                 rows=rows,
                 names=(
-                    "Canonical",
                     "ShortName",
+                    "FullName",
                     "OtherNames",
                     "OtherNamesLaTeX",
-                    "Region",
                     "RA",
                     "Dec",
                     "SpT",
@@ -282,61 +289,57 @@ def make_table_1_targets(verbose=False):
             for col in ("Jmag", "Hmag", "Kmag", "e_Jmag", "e_Hmag", "e_Kmag"):
                 table[col].unit = u.mag
 
-    # Output paths
-    outpath_mrt = os.path.join(table_export_path, "table1_targets_mrt.txt")
-    outpath_tex = os.path.join(table_export_path, "table1_targets_sample.tex")
+        # Output paths
+        outpath_mrt = os.path.join(table_export_path, f"table1_targets_{region_key}_mrt.txt")
+        outpath_tex = os.path.join(table_export_path, f"table1_targets_{region_key}_sample.tex")
 
-    table_tex = table.copy()
+        table_tex = table.copy()
 
-    table.remove_columns("OtherNamesLaTeX")
+        table.remove_columns("OtherNamesLaTeX")
 
-    # --- Write MRT version ---
-    ascii.write(table, outpath_mrt, format="mrt", overwrite=True)
+        # --- Write MRT version ---
+        ascii.write(table, outpath_mrt, format="mrt", overwrite=True)
 
-    # Trying something here...
-    # --- Build LaTeX-friendly copy ---
-    coords = SkyCoord(ra=table_tex["RA"], dec=table_tex["Dec"])
+        # Trying something here...
+        # --- Build LaTeX-friendly copy ---
+        coords = SkyCoord(ra=table_tex["RA"], dec=table_tex["Dec"])
 
-    table_tex["RA"] = coords.ra.to_string(unit=u.hour, sep=":", precision=1,
-                                          pad=True, alwayssign=False)
-    table_tex["Dec"] = coords.dec.to_string(unit=u.deg, sep=":", precision=2,
-                                            pad=True, alwayssign=True)
-
-    # Collapse mags into "value ± err" strings
-    def format_mag(val, err):
-        if np.isfinite(val) and np.isfinite(err):
-            return f"{val:.2f} ± {err:.2f}"
-        elif np.isfinite(val):
-            return f"{val:.2f}"
-        else:
-            return "..."
-
-    jcol = [format_mag(v, e) for v, e in zip(table["Jmag"], table["e_Jmag"])]
-    hcol = [format_mag(v, e) for v, e in zip(table["Hmag"], table["e_Hmag"])]
-    kcol = [format_mag(v, e) for v, e in zip(table["Kmag"], table["e_Kmag"])]
-
-    # Drop separate error columns
-    table_tex.remove_columns(["Jmag","e_Jmag","Hmag","e_Hmag","Kmag","e_Kmag"])
-    table_tex.remove_columns(["Jmag2","e_Jmag2","Hmag2","e_Hmag2","Kmag2","e_Kmag2"])
-    table_tex.remove_columns(["OtherNames"])
-    table_tex["J (mag)"] = jcol
-    table_tex["H (mag)"] = hcol
-    table_tex["K (mag)"] = kcol
-
-    # Rename some headers for publication readability
-    table_tex.rename_column("RA", "RA (J2000)")
-    table_tex.rename_column("Dec", "Dec (J2000)")
-    table_tex.rename_column("IRexcess", "IR excess")
-
-    table_tex.rename_column("Canonical", "Name")
-    table_tex.rename_column("OtherNamesLaTeX", "Other Names")    
+        table_tex["RA"] = coords.ra.to_string(unit=u.hour, sep=":", precision=1,
+                                              pad=True, alwayssign=False)
+        table_tex["Dec"] = coords.dec.to_string(unit=u.deg, sep=":", precision=2,
+                                                pad=True, alwayssign=True)
 
 
-    # Write LaTeX sample (first 10 rows)
-    ascii.write(table_tex[:10], outpath_tex, format="aastex", overwrite=True)
 
-    print(f"Wrote full MRT table to {outpath_mrt}")
-    print(f"Wrote LaTeX sample to {outpath_tex}")
+        jcol = [format_mag(v, e) for v, e in zip(table["Jmag"], table["e_Jmag"])]
+        hcol = [format_mag(v, e) for v, e in zip(table["Hmag"], table["e_Hmag"])]
+        kcol = [format_mag(v, e) for v, e in zip(table["Kmag"], table["e_Kmag"])]
+
+        # Drop separate error columns
+        table_tex.remove_columns(["Jmag","e_Jmag","Hmag","e_Hmag","Kmag","e_Kmag"])
+        table_tex.remove_columns(["Jmag2","e_Jmag2","Hmag2","e_Hmag2","Kmag2","e_Kmag2"])
+        table_tex.remove_columns(["OtherNames"])
+        table_tex["J (mag)"] = jcol
+        table_tex["H (mag)"] = hcol
+        table_tex["K (mag)"] = kcol
+
+        # Rename some headers for publication readability
+        table_tex.rename_column("RA", "RA (J2000)")
+        table_tex.rename_column("Dec", "Dec (J2000)")
+        table_tex.rename_column("IRexcess", "IR excess")
+
+        table_tex.rename_column("FullName", "Name")
+        table_tex.rename_column("OtherNamesLaTeX", "Other Names")    
+
+
+        # Write LaTeX sample (first 10 rows)
+        ascii.write(table_tex[:10], outpath_tex, format="aastex", overwrite=True)
+
+        print(f"Wrote full MRT table to {outpath_mrt}")
+        print(f"Wrote LaTeX sample to {outpath_tex}")
+
+
+
 
 if __name__ == "__main__":
     make_table_1_targets(verbose=True)
