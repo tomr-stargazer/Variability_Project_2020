@@ -1266,7 +1266,9 @@ def simple_phased_lc_scatter_gridspec(
 
 
 # Trying something!
-def cody_singleax_lc_brokenaxes(dg, sid, date_offset=None, pad=5, xlims=None, breaks=None):
+def cody_singleax_lc_brokenaxes(
+    dg, sid, date_offset=None, pad=5, xlims=None, breaks=None
+):
     # dg: astropy table that has been grouped by SOURCEID
 
     dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
@@ -1310,11 +1312,20 @@ def cody_singleax_lc_brokenaxes(dg, sid, date_offset=None, pad=5, xlims=None, br
 
     fig.ax_j = ax_j
 
-
     offset = k.mean() - j.mean()
     # ax_j.errorbar(date, h, yerr=h_e, fmt="go", ecolor="k", ms=2, elinewidth=0.5)
     ax_j.errorbar(date, j, yerr=j_e, fmt="k.", ecolor="k", ms=2, elinewidth=0.25)
-    ax_j.errorbar(date, k-offset, yerr=k_e, fmt=".", color='0.75', ecolor="0.75", ms=5, elinewidth=0.5, zorder=-1)
+    ax_j.errorbar(
+        date,
+        k - offset,
+        yerr=k_e,
+        fmt=".",
+        color="0.75",
+        ecolor="0.75",
+        ms=5,
+        elinewidth=0.5,
+        zorder=-1,
+    )
     ax_j.invert_yaxis()
 
     ax_j.set_ylabel("J", labelpad=40, fontdict={"rotation": "horizontal"})
@@ -1326,7 +1337,7 @@ def cody_singleax_lc_brokenaxes(dg, sid, date_offset=None, pad=5, xlims=None, br
 
 
 def trim_bottom_labels(ax, threshold=0.1):
-    ax.tick_params(labelbottom=False) 
+    ax.tick_params(labelbottom=False)
 
     # Get bottom y tick label
     labels = ax.get_yticklabels()
@@ -1336,7 +1347,6 @@ def trim_bottom_labels(ax, threshold=0.1):
         labels[0][0].set_visible(False)
     # if labels:
     #     bottom_label = labels[0][0] # not sure why it's twice
-
 
     #     # Get position in axis coordinates
     #     pos_data = bottom_label.get_position()  # (x, y) in data units
@@ -1353,10 +1363,20 @@ def trim_bottom_labels(ax, threshold=0.1):
 
     return None
 
+
 def eightpanel_lc(
-    dg, sid, period, date_offset=None, phase_offset=0, color_by="date", pad=5, xlims=None, breaks=None,
-    detrended_dg=None,  **kwargs
-    ):
+    dg,
+    sid,
+    period,
+    date_offset=None,
+    phase_offset=0,
+    color_by="date",
+    pad=5,
+    xlims=None,
+    breaks=None,
+    detrended_dg=None,
+    **kwargs,
+):
     """
     This is a joint 'straight-lc' and 'phase-folded-lc' in which the latter has detrending applied.
 
@@ -1389,7 +1409,6 @@ def eightpanel_lc(
 
     # fig setup
 
-
     fig = plt.figure(figsize=(20, 6), dpi=80, facecolor="w", edgecolor="k")
 
     gs0 = fig.add_gridspec(1, 3, width_ratios=[6, 6, 3], wspace=0.2)
@@ -1420,7 +1439,6 @@ def eightpanel_lc(
             breaks = [50, 350]
         xlims = produce_xlims(date, breaks=breaks, pad=pad)
 
-
     ax_j = brokenaxes(xlims=xlims, subplot_spec=gs_left[0, 0], **bax_kwargs)
     ax_h = brokenaxes(xlims=xlims, subplot_spec=gs_left[1, 0], **bax_kwargs)
     ax_k = brokenaxes(xlims=xlims, subplot_spec=gs_left[2, 0], **bax_kwargs)
@@ -1450,22 +1468,14 @@ def eightpanel_lc(
 
     # data setup part 2
 
-    bands = ['J', 'H', "K"]
+    bands = ["J", "H", "K"]
 
     mags = {}
     errs = {}
     mags_detrended = {}
 
-    lc_axes = {
-        'J': ax_j,
-        'H': ax_h,
-        'K': ax_k
-    }
-    phase_axes = {
-        'J': ax_j_phase,
-        'H': ax_h_phase,
-        'K': ax_k_phase
-    }
+    lc_axes = {"J": ax_j, "H": ax_h, "K": ax_k}
+    phase_axes = {"J": ax_j_phase, "H": ax_h_phase, "K": ax_k_phase}
 
     for band in bands:
         mags[band] = dat[f"{band}APERMAG3"]
@@ -1478,21 +1488,17 @@ def eightpanel_lc(
 
     for band in bands:
 
-
-
         lc_axes[band].scatter(
-                date,
-                mags[band],
-                c=color_array,
-                # vmin=date.min(),
-                # vmax=date.max(),
-                s=18,
-                edgecolors="k",
-                linewidths=0.5,
-                **kwargs,
-            )
-
-
+            date,
+            mags[band],
+            c=color_array,
+            # vmin=date.min(),
+            # vmax=date.max(),
+            s=18,
+            edgecolors="k",
+            linewidths=0.5,
+            **kwargs,
+        )
 
         lc_axes[band].errorbar(
             date,
@@ -1505,7 +1511,6 @@ def eightpanel_lc(
             zorder=-1,
             alpha=0.5,
         )
-
 
     # do the folded part
 
@@ -1528,13 +1533,13 @@ def eightpanel_lc(
 
     # do the colors
 
-    j = mags['J']
-    h = mags['H']
-    k = mags['K']
+    j = mags["J"]
+    h = mags["H"]
+    k = mags["K"]
 
-    j_e = errs['J']
-    h_e = errs['H']
-    k_e = errs['K']
+    j_e = errs["J"]
+    h_e = errs["H"]
+    k_e = errs["K"]
 
     ax_jhk.scatter(
         h - k,
