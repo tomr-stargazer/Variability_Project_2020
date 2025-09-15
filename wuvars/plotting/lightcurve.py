@@ -3,13 +3,11 @@ I plan to put some light curve plotting code here.
 
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
-
-from matplotlib.gridspec import GridSpec
+import numpy as np
 from brokenaxes import brokenaxes
-from wuvars.plotting.lightcurve_helpers import produce_xlims, orion_cmap
-
+from matplotlib.gridspec import GridSpec
+from wuvars.plotting.lightcurve_helpers import orion_cmap, produce_xlims
 
 onc_date_offset = 54034.0
 ngc_date_offset = 56141
@@ -1260,6 +1258,354 @@ def simple_phased_lc_scatter_gridspec(
     ax_k.set_xlabel(f"Phase (Period={period:.2f}d)")
 
     ax_jhk.set_xlabel("H-K")
+    ax_jhk.set_ylabel("J-H")  # , {'rotation':'horizontal'})
+    ax_khk.set_xlabel("H-K")
+    ax_khk.set_ylabel("K")  # , {'rotation':'horizontal'})
+
+    return fig
+
+
+# Trying something!
+def cody_singleax_lc_brokenaxes(dg, sid, date_offset=None, pad=5, xlims=None, breaks=None):
+    # dg: astropy table that has been grouped by SOURCEID
+
+    dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
+
+    # set up data
+
+    if date_offset is None:
+        date_offset = np.floor(np.min(dat["MEANMJDOBS"]))
+    date = dat["MEANMJDOBS"] - date_offset
+
+    j = dat["JAPERMAG3"]
+    h = dat["HAPERMAG3"]
+    k = dat["KAPERMAG3"]
+
+    j_e = dat["JAPERMAG3ERR"]
+    h_e = dat["HAPERMAG3ERR"]
+    k_e = dat["KAPERMAG3ERR"]
+
+    # set up plot
+    # OUR brokenaxes changes will all go here
+    # need:
+    #   - how much MJD to subtract
+    #   - where to put the breaks (+how many breaks)
+    #   - ... that's p much it, right?
+
+    fig = plt.figure(figsize=(5, 1), dpi=240, facecolor="w", edgecolor="k")
+    bax_kwargs = dict(despine=False, d=0.0075, tilt=60, wspace=0.04)
+
+    if xlims is None:
+        if breaks is None:
+            # baked-in default since I was prototyping on IC348; possibly a bad default
+            breaks = [50, 350]
+        xlims = produce_xlims(date, breaks=breaks, pad=pad)
+        print(xlims)
+
+    ax_j = brokenaxes(xlims=xlims, fig=fig, **bax_kwargs)
+
+    # Make the broken zones gray. (Uses some details from  )
+    ax_j.big_ax.set_zorder(-100)
+    ax_j.big_ax.set_facecolor("0.9")
+
+    fig.ax_j = ax_j
+
+
+    offset = k.mean() - j.mean()
+    # ax_j.errorbar(date, h, yerr=h_e, fmt="go", ecolor="k", ms=2, elinewidth=0.5)
+    ax_j.errorbar(date, j, yerr=j_e, fmt="k.", ecolor="k", ms=2, elinewidth=0.25)
+    ax_j.errorbar(date, k-offset, yerr=k_e, fmt=".", color='0.75', ecolor="0.75", ms=5, elinewidth=0.5, zorder=-1)
+    ax_j.invert_yaxis()
+
+    ax_j.set_ylabel("J", labelpad=40, fontdict={"rotation": "horizontal"})
+
+    # \u2212 is a proper minus sign (better than the hyphen character `-`)
+    ax_j.set_xlabel(f"MJD \u2212 {date_offset}", labelpad=20)
+
+    return fig
+
+
+def trim_bottom_labels(ax, threshold=0.1):
+    ax.tick_params(labelbottom=False) 
+
+    # Get bottom y tick label
+    labels = ax.get_yticklabels()
+    try:
+        labels[0].set_visible(False)
+    except AttributeError:
+        labels[0][0].set_visible(False)
+    # if labels:
+    #     bottom_label = labels[0][0] # not sure why it's twice
+
+
+    #     # Get position in axis coordinates
+    #     pos_data = bottom_label.get_position()  # (x, y) in data units
+
+    #     try
+    #     pos_pix = ax.transData.transform(pos_data)
+    #     pos_axes = ax.transAxes.inverted().transform(pos_pix)
+
+    #     # Check vertical coordinate (axis coords)
+    #     if pos_axes[1] <= threshold:
+    #         bottom_label.set_visible(False)
+
+    # ax.get_yticklabels()[0].set_visible(False)
+
+    return None
+
+def eightpanel_lc(
+    dg, sid, period, date_offset=None, phase_offset=0, color_by="date", pad=5, xlims=None, breaks=None,
+    detrended_dg=None,  **kwargs
+    ):
+    """
+    This is a joint 'straight-lc' and 'phase-folded-lc' in which the latter has detrending applied.
+
+    This is intended for making a publication FigureSet.
+
+    Borrows code largely from the following places:
+    - simple_phased_lc_scatter_gridspec
+    - simple_lc_scatter_brokenaxes
+
+    """
+
+    dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
+
+    # data setup part 1
+
+    if date_offset is None:
+        date_offset = np.floor(np.min(dat["MEANMJDOBS"]))
+    date = dat["MEANMJDOBS"] - date_offset
+    phase = ((date % period) / period + phase_offset) % 1.0
+
+    if color_by == "date":
+        color_array = date
+    elif color_by == "phase":
+        color_array = phase
+    else:
+        raise ValueError("`color_by` option must be 'date' or 'phase'")
+
+    if detrended_dg is None:
+        detrended_dg = dat
+
+    # fig setup
+
+
+    fig = plt.figure(figsize=(20, 6), dpi=80, facecolor="w", edgecolor="k")
+
+    gs0 = fig.add_gridspec(1, 3, width_ratios=[6, 6, 3], wspace=0.2)
+
+    gs_left = gs0[0].subgridspec(3, 1, hspace=0)
+    gs_center = gs0[1].subgridspec(3, 1, hspace=0)
+    gs_right = gs0[2].subgridspec(1, 2, width_ratios=(2, 0.075), wspace=0.15)
+
+    gs01 = gs_right[0].subgridspec(2, 1, hspace=0)
+
+    # ax_j = fig.add_subplot(gs_left[0, 0])
+    # ax_h = fig.add_subplot(gs_left[1, 0])
+    # ax_k = fig.add_subplot(gs_left[2, 0])
+
+    bax_kwargs = dict(despine=False, d=0.0075, tilt=60, wspace=0.04)
+
+    # xlims = (
+    #     (56848 - date_offset, 56900 - date_offset),
+    #     (56920 - date_offset, 57080 - date_offset),
+    #     (57200 - date_offset, 57250 - date_offset),
+    # )
+
+    # xlims = ((0, 30), (80, 225), (370,390))
+    # xlims = [(0.0, 21.0), (84.0, 222.0), (377.0, 385.0)]
+    if xlims is None:
+        if breaks is None:
+            # baked-in default since I was prototyping on IC348; possibly a bad default
+            breaks = [50, 350]
+        xlims = produce_xlims(date, breaks=breaks, pad=pad)
+
+
+    ax_j = brokenaxes(xlims=xlims, subplot_spec=gs_left[0, 0], **bax_kwargs)
+    ax_h = brokenaxes(xlims=xlims, subplot_spec=gs_left[1, 0], **bax_kwargs)
+    ax_k = brokenaxes(xlims=xlims, subplot_spec=gs_left[2, 0], **bax_kwargs)
+
+    # Make the broken zones gray. (Uses some details from ...? )
+    ax_j.big_ax.set_zorder(-100)
+    ax_h.big_ax.set_zorder(-100)
+    ax_k.big_ax.set_zorder(-100)
+    ax_j.big_ax.set_facecolor("0.9")
+    ax_h.big_ax.set_facecolor("0.9")
+    ax_k.big_ax.set_facecolor("0.9")
+
+    ax_j_phase = fig.add_subplot(gs_center[0, 0])
+    ax_h_phase = fig.add_subplot(gs_center[1, 0])
+    ax_k_phase = fig.add_subplot(gs_center[2, 0])
+
+    ax_khk = fig.add_subplot(gs01[0, 0])
+    ax_jhk = fig.add_subplot(gs01[1, 0])
+
+    trim_bottom_labels(ax_j)
+    trim_bottom_labels(ax_h)
+
+    trim_bottom_labels(ax_j_phase)
+    trim_bottom_labels(ax_h_phase)
+
+    trim_bottom_labels(ax_khk)
+
+    # data setup part 2
+
+    bands = ['J', 'H', "K"]
+
+    mags = {}
+    errs = {}
+    mags_detrended = {}
+
+    lc_axes = {
+        'J': ax_j,
+        'H': ax_h,
+        'K': ax_k
+    }
+    phase_axes = {
+        'J': ax_j_phase,
+        'H': ax_h_phase,
+        'K': ax_k_phase
+    }
+
+    for band in bands:
+        mags[band] = dat[f"{band}APERMAG3"]
+        errs[band] = dat[f"{band}APERMAG3ERR"]
+        mags_detrended[band] = detrended_dg[f"{band}APERMAG3"]
+
+    # this section is to start doing the plotting work
+
+    # do the linear lc part (uses brokenaxes)
+
+    for band in bands:
+
+
+
+        lc_axes[band].scatter(
+                date,
+                mags[band],
+                c=color_array,
+                # vmin=date.min(),
+                # vmax=date.max(),
+                s=18,
+                edgecolors="k",
+                linewidths=0.5,
+                **kwargs,
+            )
+
+
+
+        lc_axes[band].errorbar(
+            date,
+            mags[band],
+            yerr=errs[band],
+            fmt="None",
+            ecolor="k",
+            ms=2,
+            elinewidth=0.5,
+            zorder=-1,
+            alpha=0.5,
+        )
+
+
+    # do the folded part
+
+    for band in bands:
+
+        scatter_phase_core(
+            phase_axes[band],
+            date,
+            mags_detrended[band],
+            errs[band],
+            period,
+            offset=phase_offset,
+            c=color_array,
+            s=18,
+            edgecolors="k",
+            linewidths=0.5,
+            ms=4,
+            **kwargs,
+        )
+
+    # do the colors
+
+    j = mags['J']
+    h = mags['H']
+    k = mags['K']
+
+    j_e = errs['J']
+    h_e = errs['H']
+    k_e = errs['K']
+
+    ax_jhk.scatter(
+        h - k,
+        j - h,
+        c=color_array,
+        vmin=date.min(),
+        vmax=date.max(),
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        **kwargs,
+    )
+
+    ax_khk.scatter(
+        h - k,
+        k,
+        c=color_array,
+        vmin=date.min(),
+        vmax=date.max(),
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        **kwargs,
+    )
+
+    ax_jhk.errorbar(
+        h - k,
+        j - h,
+        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
+        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        fmt="None",
+        ecolor="k",
+        ms=2,
+        elinewidth=0.5,
+        zorder=-1,
+        alpha=0.1,
+    )
+
+    ax_khk.errorbar(
+        h - k,
+        k,
+        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
+        yerr=k_e,
+        fmt="None",
+        ecolor="k",
+        ms=2,
+        elinewidth=0.5,
+        zorder=-1,
+        alpha=0.1,
+    )
+
+    # final adjustments
+
+    ax_j.invert_yaxis()
+    ax_h.invert_yaxis()
+    ax_k.invert_yaxis()
+
+    ax_j_phase.invert_yaxis()
+    ax_h_phase.invert_yaxis()
+    ax_k_phase.invert_yaxis()
+
+    ax_khk.invert_yaxis()
+
+    ax_j.set_ylabel("J", labelpad=40, fontdict={"rotation": "horizontal"})
+    ax_h.set_ylabel("H", labelpad=40, fontdict={"rotation": "horizontal"})
+    ax_k.set_ylabel("K", labelpad=40, fontdict={"rotation": "horizontal"})
+
+    ax_k.set_xlabel(f"MJD \u2212 {date_offset}", labelpad=20)
+
+    ax_k_phase.set_xlabel(f"Phase (Period={period:.2f}d)")
+
     ax_jhk.set_ylabel("J-H")  # , {'rotation':'horizontal'})
     ax_khk.set_xlabel("H-K")
     ax_khk.set_ylabel("K")  # , {'rotation':'horizontal'})
