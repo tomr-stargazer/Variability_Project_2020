@@ -13,7 +13,8 @@ import os
 import astropy.table
 from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
 from wuvars.data import photometry, quality_classes, spreadsheet
-from wuvars.plotting.lightcurve import eightpanel_lc
+from wuvars.plotting.lightcurve import (eightpanel_lc, ic348_eightpanel_lc,
+                                        ngc1333_eightpanel_lc)
 from wuvars.publication_figures.make_figures import figure_export_path
 
 ngc_match = match_ngc()
@@ -30,8 +31,9 @@ spread_dict = {"ngc": spreadsheet.load_wserv_v2(7), "ic": spreadsheet.load_wserv
 q_dict = {"ngc": quality_classes.load_q(7), "ic": quality_classes.load_q(8)}
 data_dict = {
     "ngc": photometry.group_wserv_v2(photometry.load_wserv_v2(7)),
-    "ic": photometry.group_wserv_v2(photometry.load_wserv_v2(8))
+    "ic": photometry.group_wserv_v2(photometry.load_wserv_v2(8)),
 }
+lc_fn_dict = {"ngc": ngc1333_eightpanel_lc, "ic": ic348_eightpanel_lc}
 
 # load up that ecsv
 variability_tables = {
@@ -42,24 +44,37 @@ variability_tables = {
         os.path.join(figure_export_path, "table2_variability_ic_ecsv.ecsv")
     ),
 }
+cmap_dict = {"ngc": "jet", "ic": "jet_r"}
 
 
 # make a periodic figure
 def make_periodic_lc_figure(region_key, row, plotting=False):
 
     print(f"We're making a periodic figure in {region_key}")
-    sid = row['SourceID']
-    name = row['Name']
-    period = row['Period']
-    detrend = row['PeriodDetrendMethod']
-    bestband = row['PeriodBand']
+    sid = row["SourceID"]
+    name = row["Name"]
+    period = row["Period"]
+    detrend = row["PeriodDetrendMethod"]
+    bestband = row["PeriodBand"]
 
     print(f"{sid = !s}, {name = !s}, {period=:.3f}, {bestband = !s}, {detrend = !s}")
 
     # okay! so in principle we have everything we need to make the figure...
 
     if plotting:
-        fig = eightpanel_lc()
+
+        dg = data_dict[region_key]
+
+
+        # This is where we would do some detrend stuff.
+
+        fig = lc_fn_dict[region_key](dg, sid, period)
+
+        """
+            fig_lc = ic348_simple_lc_scatter_brokenaxes(dat, sid, cmap='jet_r')    
+            fig_lc = ngc1333_simple_lc_scatter_brokenaxes(dat, sid, cmap='jet')
+        """
+
     else:
         return None
 
@@ -80,8 +95,7 @@ def make_periodic_lc_figures(sample_only=True):
 
         print("")
         print(f"Doing thigns for {fullname_dict[region_key]}")
-        print("") 
-
+        print("")
 
         figureset_path_per = os.path.join(
             figure_export_path, f"Figure7Set_{region_key}"
@@ -91,9 +105,9 @@ def make_periodic_lc_figures(sample_only=True):
         # grab the table.
         variability_table = variability_tables[region_key]
 
-        periodic = variability_table['Periodic'] == 'Y'
+        periodic = variability_table["Periodic"] == "Y"
         variability_table_per = variability_table[periodic]
-    
+
         # loop over the table
         for i, row in enumerate(variability_table_per):
 
@@ -101,20 +115,22 @@ def make_periodic_lc_figures(sample_only=True):
 
             print(f"{i=}")
 
-            if i>3: break
+            if i > 10:
+                break
 
-
-            # print the name of the source, its SOURCEID, 
+            # print the name of the source, its SOURCEID,
             # its period, and the detrending method.
-            # Plot it. First in the stupidest possible way, 
+            # Plot it. First in the stupidest possible way,
             #  but eventually with the cool fancy aspect.
-            fig = make_periodic_lc_figure(region_key, row, plotting=True)
+            fig = make_periodic_lc_figure(
+                region_key, row, plotting=True, cmap=cmap_dict[region_key]
+            )
 
             filename = os.path.join(figureset_path_per, f"{row['Name']}_lc.pdf")
             print(f"Saving fig to... {filename}")
 
             if saving:
-                fig.savefig(filename, bbox_inches='tight')
+                fig.savefig(filename, bbox_inches="tight")
 
     pass
 
