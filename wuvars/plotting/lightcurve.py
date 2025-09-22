@@ -1336,15 +1336,16 @@ def cody_singleax_lc_brokenaxes(
     return fig
 
 
-def trim_bottom_labels(ax, threshold=0.1):
+def trim_bottom_labels(ax, remove_yticklabel=False, threshold=0.1):
     ax.tick_params(labelbottom=False)
 
-    # Get bottom y tick label
-    labels = ax.get_yticklabels()
-    try:
-        labels[0].set_visible(False)
-    except AttributeError:
-        labels[0][0].set_visible(False)
+    if remove_yticklabel:
+        # Get bottom y tick label
+        labels = ax.get_yticklabels()
+        try:
+            labels[0].set_visible(False)
+        except AttributeError:
+            labels[0][0].set_visible(False)
     # if labels:
     #     bottom_label = labels[0][0] # not sure why it's twice
 
@@ -1457,14 +1458,6 @@ def eightpanel_lc(
 
     ax_khk = fig.add_subplot(gs01[0, 0])
     ax_jhk = fig.add_subplot(gs01[1, 0])
-
-    trim_bottom_labels(ax_j)
-    trim_bottom_labels(ax_h)
-
-    trim_bottom_labels(ax_j_phase)
-    trim_bottom_labels(ax_h_phase)
-
-    trim_bottom_labels(ax_khk)
 
     # data setup part 2
 
@@ -1612,7 +1605,44 @@ def eightpanel_lc(
     ax_k_phase.set_xlabel(f"Phase (Period={period:.2f}d)")
 
     ax_jhk.set_ylabel("J-H")  # , {'rotation':'horizontal'})
-    ax_khk.set_xlabel("H-K")
+    ax_jhk.set_xlabel("H-K")
     ax_khk.set_ylabel("K")  # , {'rotation':'horizontal'})
 
+    trim_bottom_labels(ax_j, remove_yticklabel=True)
+    trim_bottom_labels(ax_h, remove_yticklabel=True)
+
+    trim_bottom_labels(ax_j_phase, remove_yticklabel=True)
+    trim_bottom_labels(ax_h_phase, remove_yticklabel=True)
+
+    trim_bottom_labels(ax_khk, remove_yticklabel=True)
+
+    fig.ax_j = ax_j
+    fig.ax_h = ax_h
+    fig.ax_k = ax_k
+
+    fig.ax_j_phase = ax_j_phase
+    fig.ax_h_phase = ax_h_phase
+    fig.ax_k_phase = ax_k_phase
+
+    fig.ax_jhk = ax_jhk
+    fig.ax_khk = ax_khk
+
     return fig
+    
+
+def ic348_eightpanel_lc(
+    *args, date_offset=ic_date_offset, xlims=ic348_xlims, **kwargs
+):
+
+    return eightpanel_lc(
+        *args, date_offset=date_offset, xlims=xlims, **kwargs
+    )
+
+
+def ngc1333_eightpanel_lc(
+    *args, date_offset=ngc_date_offset, xlims=ngc1333_xlims, **kwargs
+):
+
+    return eightpanel_lc(
+        *args, date_offset=date_offset, xlims=xlims, **kwargs
+    )
