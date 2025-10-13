@@ -154,6 +154,11 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
         return_dg["period"][bulk_update_selection] = period
         return_dg["detrend"][bulk_update_selection] = detrend
         return_dg["bestband"][bulk_update_selection] = bestband
+
+        time = return_dg["MEANMJDOBS"][bulk_update_selection]
+        phase = (time % period) / period
+        return_dg["phase"][bulk_update_selection] = phase
+
         for k in range(5):
             for band in ["J", "H", "K"]:
                 try:
@@ -180,10 +185,6 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
                 return_dg["SOURCEID"] == sid
             )
 
-            phase = (timestamp % period) / period
-
-            return_dg["phase"][update_row_selection] = phase
-
             return_dg["j_corr"][update_row_selection] = phot_row["JAPERMAG3"]
             return_dg["h_corr"][update_row_selection] = phot_row["HAPERMAG3"]
             return_dg["k_corr"][update_row_selection] = phot_row["KAPERMAG3"]
@@ -204,3 +205,9 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
             print(f"Wrote to {filename}")
 
         return return_dg
+
+
+if __name__ == "__main__":
+
+    make_detrended_photometry_dataset("ic")
+    make_detrended_photometry_dataset("ngc")
