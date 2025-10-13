@@ -1548,6 +1548,188 @@ def eightpanel_lc(
         except TypeError as e:
 
             print("Error encountered when trying to plot trend:", e)
+def ngc1333_eightpanel_lc(
+    *args, date_offset=ngc_date_offset, xlims=ngc1333_xlims, **kwargs
+):
+
+    return eightpanel_lc(
+        *args, date_offset=date_offset, xlims=xlims, **kwargs
+    )
+
+def eightpanel_lc_v2(
+    dg,
+    sid,
+    period=None,
+    date_offset=None,
+    phase_offset=0,
+    color_by="date",
+    pad=5,
+    xlims=None,
+    breaks=None,
+    plot_fit=True,
+    **kwargs,
+):
+    """
+    VERSION 2: designed to work specifically and solely with the output of 
+    create_detrended_phased_photometry_dataset_periodics.py.
+
+    This is a joint 'straight-lc' and 'phase-folded-lc' in which the latter has detrending applied.
+
+    This is intended for making a publication FigureSet.
+
+    Borrows code largely from the following places:
+    - simple_phased_lc_scatter_gridspec
+    - simple_lc_scatter_brokenaxes
+
+    """
+
+    dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
+
+    if period is None:
+        period = dat['period'][0]
+
+    # data setup part 1
+
+    if date_offset is None:
+        date_offset = np.floor(np.min(dat["MEANMJDOBS"]))
+    date = dat["MEANMJDOBS"] - date_offset
+    # phase = ((date % period) / period + phase_offset) % 1.0
+    phase = dat['phase'] + phase_offset
+
+    if color_by == "date":
+        color_array = date
+    elif color_by == "phase":
+        color_array = phase
+    else:
+        raise ValueError("`color_by` option must be 'date' or 'phase'")
+
+    # fig setup
+
+    fig = plt.figure(figsize=(20, 6), dpi=80, facecolor="w", edgecolor="k")
+
+    gs0 = fig.add_gridspec(1, 3, width_ratios=[6, 6, 3], wspace=0.2)
+
+    gs_left = gs0[0].subgridspec(3, 1, hspace=0)
+    gs_center = gs0[1].subgridspec(3, 1, hspace=0)
+    gs_right = gs0[2].subgridspec(1, 2, width_ratios=(2, 0.075), wspace=0.15)
+
+    gs01 = gs_right[0].subgridspec(2, 1, hspace=0)
+
+    # ax_j = fig.add_subplot(gs_left[0, 0])
+    # ax_h = fig.add_subplot(gs_left[1, 0])
+    # ax_k = fig.add_subplot(gs_left[2, 0])
+
+    bax_kwargs = dict(despine=False, d=0.0075, tilt=60, wspace=0.04)
+
+    # xlims = (
+    #     (56848 - date_offset, 56900 - date_offset),
+    #     (56920 - date_offset, 57080 - date_offset),
+    #     (57200 - date_offset, 57250 - date_offset),
+    # )
+
+    # xlims = ((0, 30), (80, 225), (370,390))
+    # xlims = [(0.0, 21.0), (84.0, 222.0), (377.0, 385.0)]
+    if xlims is None:
+        if breaks is None:
+            # baked-in default since I was prototyping on IC348; possibly a bad default
+            breaks = [50, 350]
+        xlims = produce_xlims(date, breaks=breaks, pad=pad)
+
+    ax_j = brokenaxes(xlims=xlims, subplot_spec=gs_left[0, 0], **bax_kwargs)
+    ax_h = brokenaxes(xlims=xlims, subplot_spec=gs_left[1, 0], **bax_kwargs)
+    ax_k = brokenaxes(xlims=xlims, subplot_spec=gs_left[2, 0], **bax_kwargs)
+
+    # Make the broken zones gray. (Uses some details from ...? )
+    ax_j.big_ax.set_zorder(-100)
+    ax_h.big_ax.set_zorder(-100)
+    ax_k.big_ax.set_zorder(-100)
+    ax_j.big_ax.set_facecolor("0.9")
+    ax_h.big_ax.set_facecolor("0.9")
+    ax_k.big_ax.set_facecolor("0.9")
+
+    ax_j_phase = fig.add_subplot(gs_center[0, 0])
+    ax_h_phase = fig.add_subplot(gs_center[1, 0])
+    ax_k_phase = fig.add_subplot(gs_center[2, 0])
+
+    ax_khk = fig.add_subplot(gs01[0, 0])
+    ax_jhk = fig.add_subplot(gs01[1, 0])
+
+    # data setup part 2
+
+    bands = ["J", "H", "K"]
+
+    mags = {}
+    errs = {}
+    mags_detrended = {}
+    fit_params_dict = {}
+
+    lc_axes = {"J": ax_j, "H": ax_h, "K": ax_k}
+    phase_axes = {"J": ax_j_phase, "H": ax_h_phase, "K": ax_k_phase}
+
+    for band in bands:
+        mags[band] = dat[f"{band}APERMAG3"]
+        errs[band] = dat[f"{band}APERMAG3ERR"]
+        mags_detrended[band] = dat[f"{band.lower()}_corr"]
+
+        fit_params = []
+        for n in range(5):
+            fit_param_n = dat[f"{band}_poly_{n}"]
+            if ~np.isnan(fit_param_n):
+                fit_params.append(fit_param_n)
+
+        fit_params_dict[band] = fit_params
+
+    fit_date = date[~(np.isnan(mags_detrended['J']) & np.isnan(mags_detrended['H']) & np.isnan(mags_detrended['K']))]
+
+    # this section is to start doing the plotting work
+
+    # do the linear lc part (uses brokenaxes)
+
+    for band in bands:
+
+        lc_axes[band].scatter(
+            date,
+            mags[band],
+            c=color_array,
+            # vmin=date.min(),
+            # vmax=date.max(),
+            s=18,
+            edgecolors="k",
+            linewidths=0.5,
+            **kwargs,
+        )
+
+        lc_axes[band].errorbar(
+            date,
+            mags[band],
+            yerr=errs[band],
+            fmt="None",
+            ecolor="k",
+            ms=2,
+            elinewidth=0.5,
+            zorder=-1,
+            alpha=0.5,
+        )
+
+        if plot_fit:
+            try:
+                fit_start = fit_date.min() - 20
+                fit_end = fit_date.max() + 20
+
+                fit_xs = np.linspace(fit_start, fit_end, 100)
+                fit_ys = polyval(fit_xs, fit_params_dict[band])
+
+                lc_axes[band].plot(
+                    fit_xs, 
+                    fit_ys,                 
+                    'k--',
+                    lw=0.75,
+                    alpha=0.25,
+                    scaley=False
+                    )
+                
+            except TypeError as e:
+                print("Error encountered when trying to plot trend:", e)
 
     # do the folded part
 
@@ -1675,20 +1857,19 @@ def eightpanel_lc(
 
     return fig
 
-
-def ic348_eightpanel_lc(
+def ic348_eightpanel_lc_v2(
     *args, date_offset=ic_date_offset, xlims=ic348_xlims, **kwargs
 ):
 
-    return eightpanel_lc(
+    return eightpanel_lc_v2(
         *args, date_offset=date_offset, xlims=xlims, **kwargs
     )
 
 
-def ngc1333_eightpanel_lc(
+def ngc1333_eightpanel_lc_v2(
     *args, date_offset=ngc_date_offset, xlims=ngc1333_xlims, **kwargs
 ):
 
-    return eightpanel_lc(
+    return eightpanel_lc_v2(
         *args, date_offset=date_offset, xlims=xlims, **kwargs
     )
