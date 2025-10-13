@@ -87,7 +87,7 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
     # OKAY maybe we should actually first restrict it to just the SOURCEIDs in the var
     return_dg = dg[np.in1d(dg["SOURCEID"], variability_table_per["SourceID"])].copy()
     blank_float_column = np.ones_like(return_dg["MEANMJDOBS"]) * np.nan
-    blank_str_column = np.ones_like(return_dg["MEANMJDOBS"]).astype('str')
+    blank_str_column = np.ones_like(return_dg["MEANMJDOBS"]).astype("str")
 
     new_column_names = [
         "period",
@@ -104,12 +104,18 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
     new_column_names.extend(poly_colnames)
 
     for col_name in new_column_names:
-        if col_name in ['detrend', 'bestband']:
+        if col_name in ["detrend", "bestband"]:
             return_dg.add_column(blank_str_column, name=col_name)
-        elif 'corr' in col_name:
+        elif "corr" in col_name:
             band_up = col_name[0].upper()
-            return_dg.add_column(MaskedColumn(blank_float_column, name=col_name, mask=return_dg[f"{band_up}APERMAG3"].mask))
-        else:    
+            return_dg.add_column(
+                MaskedColumn(
+                    blank_float_column,
+                    name=col_name,
+                    mask=return_dg[f"{band_up}APERMAG3"].mask,
+                )
+            )
+        else:
             return_dg.add_column(blank_float_column, name=col_name)
 
     # loop over the table
@@ -143,15 +149,17 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
         )
 
         # some data can be updated in bulk.
-        bulk_update_selection = (return_dg["SOURCEID"] == sid)
+        bulk_update_selection = return_dg["SOURCEID"] == sid
 
-        return_dg['period'][bulk_update_selection] = period
-        return_dg['detrend'][bulk_update_selection] = detrend
-        return_dg['bestband'][bulk_update_selection] = bestband
+        return_dg["period"][bulk_update_selection] = period
+        return_dg["detrend"][bulk_update_selection] = detrend
+        return_dg["bestband"][bulk_update_selection] = bestband
         for k in range(5):
             for band in ["J", "H", "K"]:
                 try:
-                    return_dg[f'{band}_poly_{k}'][bulk_update_selection] = fit_params_dict[band][k]
+                    return_dg[f"{band}_poly_{k}"][bulk_update_selection] = (
+                        fit_params_dict[band][k]
+                    )
 
                 except IndexError:
                     # usually because of a lower degree polynomial fit
@@ -159,7 +167,6 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
                 except TypeError:
                     # usually because no data, so no polynomial fit?
                     pass
-                
 
         # updating data parameters, one timestamp at a time
         for j, phot_row in enumerate(detrended):
@@ -175,12 +182,11 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
 
             phase = (timestamp % period) / period
 
-            return_dg['phase'][update_row_selection] = phase
+            return_dg["phase"][update_row_selection] = phase
 
-            return_dg['j_corr'][update_row_selection] = phot_row['JAPERMAG3']
-            return_dg['h_corr'][update_row_selection] = phot_row['HAPERMAG3']
-            return_dg['k_corr'][update_row_selection] = phot_row['KAPERMAG3']
-
+            return_dg["j_corr"][update_row_selection] = phot_row["JAPERMAG3"]
+            return_dg["h_corr"][update_row_selection] = phot_row["HAPERMAG3"]
+            return_dg["k_corr"][update_row_selection] = phot_row["KAPERMAG3"]
 
     # now apply masks
     # return_dg['j_corr'].mask = return_dg['JAPERMAG3'].mask
@@ -198,144 +204,3 @@ def make_detrended_photometry_dataset(region_key, verbose=False):
             print(f"Wrote to {filename}")
 
         return return_dg
-
-
-# make a periodic figure
-def _make_periodic_lc_figure(region_key, row, plotting=False, **kwargs):
-
-    print(f"We're making a periodic figure in {region_key}")
-    sid = row["SourceID"]
-    name = row["Name"]
-    period = row["Period"]
-    detrend = row["PeriodDetrendMethod"]
-    bestband = row["PeriodBand"]
-
-    print(f"{sid = !s}, {name = !s}, {period=:.3f}, {bestband = !s}, {detrend = !s}")
-
-    # okay! so in principle we have everything we need to make the figure...
-
-    if plotting:
-
-        dg = data_dict[region_key]
-
-        if detrend == "vanilla":
-            poly_order = 0
-        else:
-            poly_order = int(detrend[-1])
-
-        dat_sid = dg.groups[dg.groups.keys["SOURCEID"] == sid]
-        detrended, fit, fit_params_dict = poly_detrend(
-            dat_sid,
-            date_offset_dict[region_key],
-            data_start=date_breaks_dict[region_key][0],
-            data_end=date_breaks_dict[region_key][1],
-            poly_order=poly_order,
-            normalize=True,
-            extrapolate_detrend=False,
-            return_fit_params=True,
-        )
-
-        # This is where we would do some detrend stuff.
-
-        with mpl.rc_context(
-            {
-                "xtick.direction": "in",
-                "ytick.direction": "in",
-                "xtick.top": True,
-                "ytick.right": True,
-            }
-        ):
-            fig = lc_fn_dict[region_key](
-                dg,
-                sid,
-                period,
-                detrended_dg=detrended,
-                fit_dg=fit,
-                fit_params_dict=fit_params_dict,
-                **kwargs,
-            )
-
-            # EXTREMELY hacky workaround for brokenaxes
-            for ax_band in [fig.ax_j, fig.ax_h, fig.ax_k]:
-                for ax in ax_band.axs:
-
-                    ax.xaxis.set_ticks_position("both")
-                    # ax.xaxis.set_ticklabels([])
-
-                    if len(ax_band.axs) == 1:
-                        # ax.yaxis.set_ticks_position('both')
-                        ax.tick_params(axis="y", left=True, right=True)
-                        ax.tick_params(axis="y", labelright=False)
-
-                    elif ax is ax_band.axs[-1]:
-                        ax.yaxis.set_ticks_position("right")
-                        ax.yaxis.set_ticklabels([])
-
-        """
-            fig_lc = ic348_simple_lc_scatter_brokenaxes(dat, sid, cmap='jet_r')    
-            fig_lc = ngc1333_simple_lc_scatter_brokenaxes(dat, sid, cmap='jet')
-        """
-
-        plt.show()
-
-    else:
-        return None
-
-    return fig
-
-
-def _make_periodic_lc_figures(sample_only=True):
-    """
-    Makes the periodic light curve figures.
-
-    By default, only generates the first one and/or a chosen sample
-    (to be implemented).
-
-    """
-
-    # for each region...
-    for region_key in region_keys:
-
-        print("")
-        print(f"Doing thigns for {fullname_dict[region_key]}")
-        print("")
-
-        figureset_path_per = os.path.join(
-            figure_export_path, f"Figure7Set_{region_key}"
-        )
-        os.makedirs(figureset_path_per, exist_ok=True)
-
-        # grab the table.
-        variability_table = variability_tables[region_key]
-
-        periodic = variability_table["Periodic"] == "Y"
-        variability_table_per = variability_table[periodic]
-
-        # loop over the table
-        for i, row in enumerate(variability_table_per):
-
-            # if i<10:
-            #     continue
-
-            saving = False
-
-            print(f"{i=}")
-
-            if i > 3:
-                break
-
-            # print the name of the source, its SOURCEID,
-            # its period, and the detrending method.
-            # Plot it. First in the stupidest possible way,
-            #  but eventually with the cool fancy aspect.
-            fig = make_periodic_lc_figure(
-                region_key, row, plotting=True, cmap=cmap_dict[region_key]
-            )
-
-            filename = os.path.join(figureset_path_per, f"{row['Name']}_lc.pdf")
-            print(f"Saving fig to... {filename}")
-
-            if saving:
-                fig.savefig(filename, bbox_inches="tight")
-
-    pass
