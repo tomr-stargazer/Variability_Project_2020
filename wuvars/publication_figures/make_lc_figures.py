@@ -9,12 +9,20 @@ This script will do three things:
 """
 
 import os
+import pdb
 
 import astropy.table
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
+from wuvars.analysis.detrending import poly_detrend
 from wuvars.data import photometry, quality_classes, spreadsheet
+from wuvars.data.preferred_photometry import (photometry_wserv7,
+                                              photometry_wserv8)
 from wuvars.plotting.lightcurve import (eightpanel_lc, ic348_eightpanel_lc,
-                                        ngc1333_eightpanel_lc)
+                                        ic_date_offset, ngc1333_eightpanel_lc,
+                                        ngc_date_offset)
 from wuvars.publication_figures.make_figures import figure_export_path
 
 ngc_match = match_ngc()
@@ -30,8 +38,8 @@ index_dict = {"ic": "L16_T1_index", "ngc": "L16_T2_index"}
 spread_dict = {"ngc": spreadsheet.load_wserv_v2(7), "ic": spreadsheet.load_wserv_v2(8)}
 q_dict = {"ngc": quality_classes.load_q(7), "ic": quality_classes.load_q(8)}
 data_dict = {
-    "ngc": photometry.group_wserv_v2(photometry.load_wserv_v2(7)),
-    "ic": photometry.group_wserv_v2(photometry.load_wserv_v2(8)),
+    "ngc": photometry_wserv7,
+    "ic": photometry_wserv8,
 }
 lc_fn_dict = {"ngc": ngc1333_eightpanel_lc, "ic": ic348_eightpanel_lc}
 
@@ -44,11 +52,17 @@ variability_tables = {
         os.path.join(figure_export_path, "table2_variability_ic_ecsv.ecsv")
     ),
 }
-cmap_dict = {"ngc": "jet", "ic": "jet_r"}
+# cmap_dict = {"ngc": "jet", "ic": "jet_r"}
+
+cmap_dict = {"ngc": "magma_r", "ic": "magma_r"}
+
+
+date_offset_dict = {"ngc": ngc_date_offset, "ic": ic_date_offset}
+date_breaks_dict = {"ngc": (0, np.inf), "ic": (60, 250)}
 
 
 # make a periodic figure
-def make_periodic_lc_figure(region_key, row, plotting=False):
+def make_periodic_lc_figure(region_key, row, plotting=False, **kwargs):
 
     print(f"We're making a periodic figure in {region_key}")
     sid = row["SourceID"]
@@ -65,15 +79,65 @@ def make_periodic_lc_figure(region_key, row, plotting=False):
 
         dg = data_dict[region_key]
 
+        if detrend == "vanilla":
+            poly_order = 0
+        else:
+            poly_order = int(detrend[-1])
+
+        dat_sid = dg.groups[dg.groups.keys["SOURCEID"] == sid]
+        detrended, fit, fit_params_dict = poly_detrend(
+            dat_sid,
+            date_offset_dict[region_key],
+            data_start=date_breaks_dict[region_key][0],
+            data_end=date_breaks_dict[region_key][1],
+            poly_order=poly_order,
+            normalize=True,
+            extrapolate_detrend=False,
+            return_fit_params=True,
+        )
 
         # This is where we would do some detrend stuff.
 
-        fig = lc_fn_dict[region_key](dg, sid, period)
+        with mpl.rc_context(
+            {
+                "xtick.direction": "in",
+                "ytick.direction": "in",
+                "xtick.top": True,
+                "ytick.right": True,
+            }
+        ):
+            fig = lc_fn_dict[region_key](
+                dg,
+                sid,
+                period,
+                detrended_dg=detrended,
+                fit_dg=fit,
+                fit_params_dict=fit_params_dict,
+                **kwargs,
+            )
+
+            # EXTREMELY hacky workaround for brokenaxes
+            for ax_band in [fig.ax_j, fig.ax_h, fig.ax_k]:
+                for ax in ax_band.axs:
+
+                    ax.xaxis.set_ticks_position("both")
+                    # ax.xaxis.set_ticklabels([])
+
+                    if len(ax_band.axs) == 1:
+                        # ax.yaxis.set_ticks_position('both')
+                        ax.tick_params(axis="y", left=True, right=True)
+                        ax.tick_params(axis="y", labelright=False)
+
+                    elif ax is ax_band.axs[-1]:
+                        ax.yaxis.set_ticks_position("right")
+                        ax.yaxis.set_ticklabels([])
 
         """
             fig_lc = ic348_simple_lc_scatter_brokenaxes(dat, sid, cmap='jet_r')    
             fig_lc = ngc1333_simple_lc_scatter_brokenaxes(dat, sid, cmap='jet')
         """
+
+        plt.show()
 
     else:
         return None
@@ -111,11 +175,14 @@ def make_periodic_lc_figures(sample_only=True):
         # loop over the table
         for i, row in enumerate(variability_table_per):
 
+            # if i<10:
+            #     continue
+
             saving = False
 
             print(f"{i=}")
 
-            if i > 10:
+            if i > 3:
                 break
 
             # print the name of the source, its SOURCEID,
