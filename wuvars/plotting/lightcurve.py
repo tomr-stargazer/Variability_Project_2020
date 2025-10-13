@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from brokenaxes import brokenaxes
 from matplotlib.gridspec import GridSpec
-from numpy.polynomial.polynomial import polyfit, polyval
+from numpy.polynomial.polynomial import polyval
 from wuvars.plotting.lightcurve_helpers import orion_cmap, produce_xlims
 
 onc_date_offset = 54034.0
@@ -62,14 +62,14 @@ def simple_lc(dg, sid):
     ax_jhk.errorbar(
         h - k,
         j - h,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
-        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
         fmt="k.",
         alpha=0.1,
     )
 
     ax_khk.errorbar(
-        h - k, k, xerr=(h_e ** 2 + k_e ** 2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
+        h - k, k, xerr=(h_e**2 + k_e**2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
     )
 
     ax_j.invert_yaxis()
@@ -177,14 +177,14 @@ def simple_lc_scatter(dg, sid, begin=0, **kwargs):
     ax_jhk.errorbar(
         h - k,
         j - h,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
-        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
         fmt="k.",
         alpha=0.1,
     )
 
     ax_khk.errorbar(
-        h - k, k, xerr=(h_e ** 2 + k_e ** 2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
+        h - k, k, xerr=(h_e**2 + k_e**2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
     )
 
     ax_j.invert_yaxis()
@@ -301,14 +301,14 @@ def simple_lc_brokenaxes(dg, sid, date_offset=None, pad=5, xlims=None, breaks=No
     ax_jhk.errorbar(
         h - k,
         j - h,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
-        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
         fmt="k.",
         alpha=0.1,
     )
 
     ax_khk.errorbar(
-        h - k, k, xerr=(h_e ** 2 + k_e ** 2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
+        h - k, k, xerr=(h_e**2 + k_e**2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
     )
 
     ax_j.invert_yaxis()
@@ -552,8 +552,8 @@ def simple_lc_scatter_brokenaxes(
     ax_jhk.errorbar(
         h - k,
         j - h,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
-        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
         fmt="None",
         ecolor="k",
         ms=2,
@@ -565,7 +565,7 @@ def simple_lc_scatter_brokenaxes(
     ax_khk.errorbar(
         h - k,
         k,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
         yerr=k_e,
         fmt="None",
         ecolor="k",
@@ -689,12 +689,12 @@ def plot_phase_core(
 def scatter_phase_core(
     ax, t, x, xerr, period, offset=0, ms=6, sym="o", hide=False, **kwargs
 ):
-    """ 
+    """
     Scatter-plots a period-folded lightcurve on a given axes object.
 
     Also plots errorbars underneath.
     Doesn't assume anything about your data (e.g., that it's in magnitudes)
-    
+
     Parameters
     ----------
     ax : plt.Axes
@@ -715,12 +715,12 @@ def scatter_phase_core(
         Suggested kwargs: `c` for color-array, `cmap` for colormap choice,
         `vmin` and `vmax` for the limits of colormap. Also possible:
         s (size), other things too I guess.
-        
+
     Returns
     -------
     period : float
         The input period, unchanged.
-    
+
     """
 
     # Calculate the "phase" variable as a function of time and the period.
@@ -820,14 +820,14 @@ def simple_phased_lc(dg, sid, period, offset=0):
     ax_jhk.errorbar(
         h - k,
         j - h,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
-        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
         fmt="k.",
         alpha=0.1,
     )
 
     ax_khk.errorbar(
-        h - k, k, xerr=(h_e ** 2 + k_e ** 2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
+        h - k, k, xerr=(h_e**2 + k_e**2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
     )
 
     ax_j.invert_yaxis()
@@ -934,14 +934,14 @@ def simple_phased_lc_scatter(dg, sid, period, offset=0, begin=0, **kwargs):
     ax_jhk.errorbar(
         h - k,
         j - h,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
-        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
         fmt="k.",
         alpha=0.1,
     )
 
     ax_khk.errorbar(
-        h - k, k, xerr=(h_e ** 2 + k_e ** 2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
+        h - k, k, xerr=(h_e**2 + k_e**2) ** 0.5, yerr=k_e, fmt="k.", alpha=0.1
     )
 
     ax_j.invert_yaxis()
@@ -1224,8 +1224,8 @@ def simple_phased_lc_scatter_gridspec(
     ax_jhk.errorbar(
         h - k,
         j - h,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
-        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
         fmt="None",
         ecolor="k",
         ms=2,
@@ -1237,7 +1237,7 @@ def simple_phased_lc_scatter_gridspec(
     ax_khk.errorbar(
         h - k,
         k,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
         yerr=k_e,
         fmt="None",
         ecolor="k",
@@ -1377,8 +1377,6 @@ def eightpanel_lc(
     xlims=None,
     breaks=None,
     detrended_dg=None,
-    fit_dg=None,
-    fit_params_dict=None,
     **kwargs,
 ):
     """
@@ -1410,10 +1408,6 @@ def eightpanel_lc(
 
     if detrended_dg is None:
         detrended_dg = dat
-        detrended_date = date
-    else:
-        detrended_date = detrended_dg["MEANMJDOBS"] - date_offset
-        phase = ((detrended_date % period) / period + phase_offset) % 1.0        
 
     # fig setup
 
@@ -1473,7 +1467,6 @@ def eightpanel_lc(
     mags = {}
     errs = {}
     mags_detrended = {}
-    errs_detrended = {}
 
     lc_axes = {"J": ax_j, "H": ax_h, "K": ax_k}
     phase_axes = {"J": ax_j_phase, "H": ax_h_phase, "K": ax_k_phase}
@@ -1482,7 +1475,6 @@ def eightpanel_lc(
         mags[band] = dat[f"{band}APERMAG3"]
         errs[band] = dat[f"{band}APERMAG3ERR"]
         mags_detrended[band] = detrended_dg[f"{band}APERMAG3"]
-        errs_detrended[band] = detrended_dg[f"{band}APERMAG3ERR"]
 
     # this section is to start doing the plotting work
 
@@ -1514,47 +1506,142 @@ def eightpanel_lc(
             alpha=0.5,
         )
 
-        try:
+    # do the folded part
 
-            # vanilla first
-            fit_date = fit_dg["MEANMJDOBS"] - date_offset
-            fit_mag = fit_dg[f"{band}APERMAG3"]
+    for band in bands:
 
-            # OR!!!
-            if fit_params_dict is not None:
-                fit_start = fit_date.min() - 20
-                fit_end = fit_date.max() + 20
+        scatter_phase_core(
+            phase_axes[band],
+            date,
+            mags_detrended[band],
+            errs[band],
+            period,
+            offset=phase_offset,
+            c=color_array,
+            s=18,
+            edgecolors="k",
+            linewidths=0.5,
+            ms=4,
+            **kwargs,
+        )
 
-                fit_dates_computed = np.linspace(fit_start, fit_end, 100)
-                fit_mags_computed = polyval(fit_dates_computed, fit_params_dict[band]) 
+    # do the colors
 
-                fit_date_plot = fit_dates_computed
-                fit_mag_plot = fit_mags_computed           
+    j = mags["J"]
+    h = mags["H"]
+    k = mags["K"]
 
-            else:
+    j_e = errs["J"]
+    h_e = errs["H"]
+    k_e = errs["K"]
 
-                fit_date_plot = fit_date
-                fit_mag_plot = fit_mag
+    ax_jhk.scatter(
+        h - k,
+        j - h,
+        c=color_array,
+        vmin=date.min(),
+        vmax=date.max(),
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        **kwargs,
+    )
 
-            lc_axes[band].plot(
-                fit_date_plot,
-                fit_mag_plot,
-                'k--',
-                lw=0.75,
-                alpha=0.25,
-                scaley=False
-                )
+    ax_khk.scatter(
+        h - k,
+        k,
+        c=color_array,
+        vmin=date.min(),
+        vmax=date.max(),
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        **kwargs,
+    )
 
-        except TypeError as e:
+    ax_jhk.errorbar(
+        h - k,
+        j - h,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
+        fmt="None",
+        ecolor="k",
+        ms=2,
+        elinewidth=0.5,
+        zorder=-1,
+        alpha=0.1,
+    )
 
-            print("Error encountered when trying to plot trend:", e)
+    ax_khk.errorbar(
+        h - k,
+        k,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=k_e,
+        fmt="None",
+        ecolor="k",
+        ms=2,
+        elinewidth=0.5,
+        zorder=-1,
+        alpha=0.1,
+    )
+
+    # final adjustments
+
+    ax_j.invert_yaxis()
+    ax_h.invert_yaxis()
+    ax_k.invert_yaxis()
+
+    ax_j_phase.invert_yaxis()
+    ax_h_phase.invert_yaxis()
+    ax_k_phase.invert_yaxis()
+
+    ax_khk.invert_yaxis()
+
+    ax_j.set_ylabel("J", labelpad=40, fontdict={"rotation": "horizontal"})
+    ax_h.set_ylabel("H", labelpad=40, fontdict={"rotation": "horizontal"})
+    ax_k.set_ylabel("K", labelpad=40, fontdict={"rotation": "horizontal"})
+
+    ax_k.set_xlabel(f"MJD \u2212 {date_offset}", labelpad=20)
+
+    ax_k_phase.set_xlabel(f"Phase (Period={period:.2f}d)")
+
+    ax_jhk.set_ylabel("J-H")  # , {'rotation':'horizontal'})
+    ax_jhk.set_xlabel("H-K")
+    ax_khk.set_ylabel("K")  # , {'rotation':'horizontal'})
+
+    trim_bottom_labels(ax_j, remove_yticklabel=True)
+    trim_bottom_labels(ax_h, remove_yticklabel=True)
+
+    trim_bottom_labels(ax_j_phase, remove_yticklabel=True)
+    trim_bottom_labels(ax_h_phase, remove_yticklabel=True)
+
+    trim_bottom_labels(ax_khk, remove_yticklabel=True)
+
+    fig.ax_j = ax_j
+    fig.ax_h = ax_h
+    fig.ax_k = ax_k
+
+    fig.ax_j_phase = ax_j_phase
+    fig.ax_h_phase = ax_h_phase
+    fig.ax_k_phase = ax_k_phase
+
+    fig.ax_jhk = ax_jhk
+    fig.ax_khk = ax_khk
+
+    return fig
+
+
+def ic348_eightpanel_lc(*args, date_offset=ic_date_offset, xlims=ic348_xlims, **kwargs):
+
+    return eightpanel_lc(*args, date_offset=date_offset, xlims=xlims, **kwargs)
+
+
 def ngc1333_eightpanel_lc(
     *args, date_offset=ngc_date_offset, xlims=ngc1333_xlims, **kwargs
 ):
 
-    return eightpanel_lc(
-        *args, date_offset=date_offset, xlims=xlims, **kwargs
-    )
+    return eightpanel_lc(*args, date_offset=date_offset, xlims=xlims, **kwargs)
+
 
 def eightpanel_lc_v2(
     dg,
@@ -1570,7 +1657,7 @@ def eightpanel_lc_v2(
     **kwargs,
 ):
     """
-    VERSION 2: designed to work specifically and solely with the output of 
+    VERSION 2: designed to work specifically and solely with the output of
     create_detrended_phased_photometry_dataset_periodics.py.
 
     This is a joint 'straight-lc' and 'phase-folded-lc' in which the latter has detrending applied.
@@ -1586,7 +1673,7 @@ def eightpanel_lc_v2(
     dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
 
     if period is None:
-        period = dat['period'][0]
+        period = dat["period"][0]
 
     # data setup part 1
 
@@ -1594,12 +1681,16 @@ def eightpanel_lc_v2(
         date_offset = np.floor(np.min(dat["MEANMJDOBS"]))
     date = dat["MEANMJDOBS"] - date_offset
     # phase = ((date % period) / period + phase_offset) % 1.0
-    phase = dat['phase'] + phase_offset
+    phase = dat["phase"] + phase_offset
 
     if color_by == "date":
         color_array = date
+        vmin = date.min()
+        vmax = date.max()
     elif color_by == "phase":
         color_array = phase
+        vmin = 0
+        vmax = 1
     else:
         raise ValueError("`color_by` option must be 'date' or 'phase'")
 
@@ -1673,13 +1764,19 @@ def eightpanel_lc_v2(
 
         fit_params = []
         for n in range(5):
-            fit_param_n = dat[f"{band}_poly_{n}"]
+            fit_param_n = dat[f"{band}_poly_{n}"][0]
             if ~np.isnan(fit_param_n):
                 fit_params.append(fit_param_n)
 
         fit_params_dict[band] = fit_params
 
-    fit_date = date[~(np.isnan(mags_detrended['J']) & np.isnan(mags_detrended['H']) & np.isnan(mags_detrended['K']))]
+    fit_date = date[
+        ~(
+            np.isnan(mags_detrended["J"])
+            & np.isnan(mags_detrended["H"])
+            & np.isnan(mags_detrended["K"])
+        )
+    ]
 
     # this section is to start doing the plotting work
 
@@ -1691,8 +1788,8 @@ def eightpanel_lc_v2(
             date,
             mags[band],
             c=color_array,
-            # vmin=date.min(),
-            # vmax=date.max(),
+            vmin=vmin,
+            vmax=vmax,
             s=18,
             edgecolors="k",
             linewidths=0.5,
@@ -1720,15 +1817,12 @@ def eightpanel_lc_v2(
                 fit_ys = polyval(fit_xs, fit_params_dict[band])
 
                 lc_axes[band].plot(
-                    fit_xs, 
-                    fit_ys,                 
-                    'k--',
-                    lw=0.75,
-                    alpha=0.25,
-                    scaley=False
-                    )
-                
+                    fit_xs, fit_ys, "k--", lw=0.75, alpha=0.25, scaley=False
+                )
+
             except TypeError as e:
+                print("Error encountered when trying to plot trend:", e)
+            except IndexError as e:
                 print("Error encountered when trying to plot trend:", e)
 
     # do the folded part
@@ -1737,18 +1831,18 @@ def eightpanel_lc_v2(
 
         scatter_phase_core(
             phase_axes[band],
-            detrended_date,
+            date,
             mags_detrended[band],
-            errs_detrended[band],
+            errs[band],
             period,
             offset=phase_offset,
-            c=detrended_date, # UGLY - used to be color_array
-            vmin=date.min(),
-            vmax=date.max(),
+            c=color_array,
             s=18,
             edgecolors="k",
             linewidths=0.5,
             ms=4,
+            vmin=vmin,
+            vmax=vmax,
             **kwargs,
         )
 
@@ -1766,8 +1860,8 @@ def eightpanel_lc_v2(
         h - k,
         j - h,
         c=color_array,
-        vmin=date.min(),
-        vmax=date.max(),
+        vmin=vmin,
+        vmax=vmax,
         s=18,
         edgecolors="k",
         linewidths=0.5,
@@ -1778,8 +1872,8 @@ def eightpanel_lc_v2(
         h - k,
         k,
         c=color_array,
-        vmin=date.min(),
-        vmax=date.max(),
+        vmin=vmin,
+        vmax=vmax,
         s=18,
         edgecolors="k",
         linewidths=0.5,
@@ -1789,8 +1883,8 @@ def eightpanel_lc_v2(
     ax_jhk.errorbar(
         h - k,
         j - h,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
-        yerr=(h_e ** 2 + j_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
         fmt="None",
         ecolor="k",
         ms=2,
@@ -1802,7 +1896,7 @@ def eightpanel_lc_v2(
     ax_khk.errorbar(
         h - k,
         k,
-        xerr=(h_e ** 2 + k_e ** 2) ** 0.5,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
         yerr=k_e,
         fmt="None",
         ecolor="k",
@@ -1857,19 +1951,16 @@ def eightpanel_lc_v2(
 
     return fig
 
+
 def ic348_eightpanel_lc_v2(
     *args, date_offset=ic_date_offset, xlims=ic348_xlims, **kwargs
 ):
 
-    return eightpanel_lc_v2(
-        *args, date_offset=date_offset, xlims=xlims, **kwargs
-    )
+    return eightpanel_lc_v2(*args, date_offset=date_offset, xlims=xlims, **kwargs)
 
 
 def ngc1333_eightpanel_lc_v2(
     *args, date_offset=ngc_date_offset, xlims=ngc1333_xlims, **kwargs
 ):
 
-    return eightpanel_lc_v2(
-        *args, date_offset=date_offset, xlims=xlims, **kwargs
-    )
+    return eightpanel_lc_v2(*args, date_offset=date_offset, xlims=xlims, **kwargs)
