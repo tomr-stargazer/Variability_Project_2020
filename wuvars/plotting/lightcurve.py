@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from brokenaxes import brokenaxes
 from matplotlib.gridspec import GridSpec
+from numpy.polynomial.polynomial import polyfit, polyval
 from wuvars.plotting.lightcurve_helpers import orion_cmap, produce_xlims
 
 onc_date_offset = 54034.0
@@ -1376,6 +1377,8 @@ def eightpanel_lc(
     xlims=None,
     breaks=None,
     detrended_dg=None,
+    fit_dg=None,
+    fit_params_dict=None,
     **kwargs,
 ):
     """
@@ -1407,6 +1410,10 @@ def eightpanel_lc(
 
     if detrended_dg is None:
         detrended_dg = dat
+        detrended_date = date
+    else:
+        detrended_date = detrended_dg["MEANMJDOBS"] - date_offset
+        phase = ((detrended_date % period) / period + phase_offset) % 1.0        
 
     # fig setup
 
@@ -1466,6 +1473,7 @@ def eightpanel_lc(
     mags = {}
     errs = {}
     mags_detrended = {}
+    errs_detrended = {}
 
     lc_axes = {"J": ax_j, "H": ax_h, "K": ax_k}
     phase_axes = {"J": ax_j_phase, "H": ax_h_phase, "K": ax_k_phase}
@@ -1474,6 +1482,7 @@ def eightpanel_lc(
         mags[band] = dat[f"{band}APERMAG3"]
         errs[band] = dat[f"{band}APERMAG3ERR"]
         mags_detrended[band] = detrended_dg[f"{band}APERMAG3"]
+        errs_detrended[band] = detrended_dg[f"{band}APERMAG3ERR"]
 
     # this section is to start doing the plotting work
 
@@ -1505,18 +1514,55 @@ def eightpanel_lc(
             alpha=0.5,
         )
 
+        try:
+
+            # vanilla first
+            fit_date = fit_dg["MEANMJDOBS"] - date_offset
+            fit_mag = fit_dg[f"{band}APERMAG3"]
+
+            # OR!!!
+            if fit_params_dict is not None:
+                fit_start = fit_date.min() - 20
+                fit_end = fit_date.max() + 20
+
+                fit_dates_computed = np.linspace(fit_start, fit_end, 100)
+                fit_mags_computed = polyval(fit_dates_computed, fit_params_dict[band]) 
+
+                fit_date_plot = fit_dates_computed
+                fit_mag_plot = fit_mags_computed           
+
+            else:
+
+                fit_date_plot = fit_date
+                fit_mag_plot = fit_mag
+
+            lc_axes[band].plot(
+                fit_date_plot,
+                fit_mag_plot,
+                'k--',
+                lw=0.75,
+                alpha=0.25,
+                scaley=False
+                )
+
+        except TypeError as e:
+
+            print("Error encountered when trying to plot trend:", e)
+
     # do the folded part
 
     for band in bands:
 
         scatter_phase_core(
             phase_axes[band],
-            date,
+            detrended_date,
             mags_detrended[band],
-            errs[band],
+            errs_detrended[band],
             period,
             offset=phase_offset,
-            c=color_array,
+            c=detrended_date, # UGLY - used to be color_array
+            vmin=date.min(),
+            vmax=date.max(),
             s=18,
             edgecolors="k",
             linewidths=0.5,
@@ -1628,7 +1674,7 @@ def eightpanel_lc(
     fig.ax_khk = ax_khk
 
     return fig
-    
+
 
 def ic348_eightpanel_lc(
     *args, date_offset=ic_date_offset, xlims=ic348_xlims, **kwargs
