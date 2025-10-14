@@ -74,7 +74,7 @@ variability_tables = {
 }
 # cmap_dict = {"ngc": "jet", "ic": "jet_r"}
 
-cmap_dict = {"ngc": "magma_r", "ic": "magma_r"}
+cmap_dict = {"ngc": "cubehelix_r", "ic": "cubehelix_r"}
 
 
 date_offset_dict = {"ngc": ngc_date_offset, "ic": ic_date_offset}
@@ -168,7 +168,6 @@ def make_periodic_lc_figure(region_key, row, plotting=False, **kwargs):
 # make a periodic figure
 def make_periodic_lc_figure_v2(region_key, row, plotting=False, **kwargs):
 
-    print(f"We're making a periodic figure in {region_key}")
     sid = row["SourceID"]
     name = row["Name"]
     period = row["Period"]
@@ -198,6 +197,9 @@ def make_periodic_lc_figure_v2(region_key, row, plotting=False, **kwargs):
                 "ytick.direction": "in",
                 "xtick.top": True,
                 "ytick.right": True,
+                "mathtext.fontset": "stix",       # use STIX fonts (Times-compatible)
+                # "font.family": "serif",
+                # "font.serif": ["Times New Roman"],  # or ["Times"]
             }
         ):
             fig = lc_fn_dict_v2[region_key](
@@ -206,7 +208,10 @@ def make_periodic_lc_figure_v2(region_key, row, plotting=False, **kwargs):
                 **kwargs,
             )
 
-            fig.suptitle(f"{sid = !s}, {name = !s}, {period=:.3f}, {bestband = !s}, {detrend = !s}")
+            # fig.suptitle(f"{sid = !s}, {name = !s}, {period=:.3f}, {bestband = !s}, {detrend = !s}")
+
+            fig.ax_j.set_title(f"Short name: {name}, WFCAM ID: {sid}")
+            fig.ax_j_phase.set_title(f"Best band: {bestband}, Detrend method: {detrend}")
 
             # EXTREMELY hacky workaround for brokenaxes
             for ax_band in [fig.ax_j, fig.ax_h, fig.ax_k]:
@@ -249,7 +254,7 @@ def make_periodic_lc_figures(sample_only=True):
     for region_key in region_keys:
 
         print("")
-        print(f"Doing thigns for {fullname_dict[region_key]}")
+        print(f"Making periodic lc figures in {fullname_dict[region_key]}")
         print("")
 
         figureset_path_per = os.path.join(
@@ -276,8 +281,8 @@ def make_periodic_lc_figures(sample_only=True):
 
             # if i <= 30:
             #     continue
-            if i > 3:
-                break
+            # if i > 3:
+            #     break
 
             # print the name of the source, its SOURCEID,
             # its period, and the detrending method.
