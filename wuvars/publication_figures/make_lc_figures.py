@@ -21,12 +21,14 @@ from wuvars.data import photometry, quality_classes, spreadsheet
 from wuvars.data.preferred_photometry import (photometry_wserv7,
                                               photometry_wserv8)
 from wuvars.plotting.lightcurve import (eightpanel_lc, eightpanel_lc_v2,
-                                        ic348_eightpanel_lc,
-                                        ic348_eightpanel_lc_v2, ic_date_offset,
+                                        fivepanel_lc, ic348_eightpanel_lc,
+                                        ic348_eightpanel_lc_v2,
+                                        ic348_fivepanel_lc, ic_date_offset,
                                         ngc1333_eightpanel_lc,
                                         ngc1333_eightpanel_lc_v2,
-                                        ngc_date_offset)
-from wuvars.publication_figures.make_figures import figure_export_path
+                                        ngc1333_fivepanel_lc, ngc_date_offset)
+from wuvars.publication_figures.make_figures import (figure_export_path,
+                                                     figureset_export_path)
 
 ngc_match = match_ngc()
 ic_match = match_ic()
@@ -62,6 +64,7 @@ detrended_data_dict = {
 
 lc_fn_dict = {"ngc": ngc1333_eightpanel_lc, "ic": ic348_eightpanel_lc}
 lc_fn_dict_v2 = {"ngc": ngc1333_eightpanel_lc_v2, "ic": ic348_eightpanel_lc_v2}
+lc_fn_dict_np = {"ngc": ngc1333_fivepanel_lc, "ic": ic348_fivepanel_lc}
 
 # load up that ecsv
 variability_tables = {
@@ -72,6 +75,7 @@ variability_tables = {
         os.path.join(figure_export_path, "table2_variability_ic_ecsv.ecsv")
     ),
 }
+
 # cmap_dict = {"ngc": "jet", "ic": "jet_r"}
 
 cmap_dict = {"ngc": "cubehelix_r", "ic": "cubehelix_r"}
@@ -240,6 +244,53 @@ def make_periodic_lc_figure_v2(region_key, row, plotting=False, **kwargs):
 
     return fig
 
+def make_nonperiodic_lc_figure(region_key, row, plotting=False, **kwargs):
+
+    sid = row["SourceID"]
+    name = row["Name"]
+
+    dg = data_dict[region_key]
+    dat_sid = dg.groups[dg.groups.keys["SOURCEID"] == sid]    
+
+    with mpl.rc_context(
+        {
+            "xtick.direction": "in",
+            "ytick.direction": "in",
+            "xtick.top": True,
+            "ytick.right": True,
+            "mathtext.fontset": "stix",       # use STIX fonts (Times-compatible)
+            # "font.family": "serif",
+            # "font.serif": ["Times New Roman"],  # or ["Times"]
+        }
+    ):
+        fig = lc_fn_dict_np[region_key](
+            dg,
+            sid,
+            **kwargs,
+        )
+
+        # fig.suptitle(f"{sid = !s}, {name = !s}, {period=:.3f}, {bestband = !s}, {detrend = !s}")
+
+        fig.ax_j.set_title(f"Short name: {name}, WFCAM ID: {sid}")
+
+        # EXTREMELY hacky workaround for brokenaxes
+        for ax_band in [fig.ax_j, fig.ax_h, fig.ax_k]:
+            for ax in ax_band.axs:
+
+                ax.xaxis.set_ticks_position("both")
+                # ax.xaxis.set_ticklabels([])
+
+                if len(ax_band.axs) == 1:
+                    # ax.yaxis.set_ticks_position('both')
+                    ax.tick_params(axis="y", left=True, right=True)
+                    ax.tick_params(axis="y", labelright=False)
+
+                elif ax is ax_band.axs[-1]:
+                    ax.yaxis.set_ticks_position("right")
+                    ax.yaxis.set_ticklabels([])
+
+    return fig
+
 
 def make_periodic_lc_figures(sample_only=True):
     """
@@ -250,6 +301,8 @@ def make_periodic_lc_figures(sample_only=True):
 
     """
 
+    sample_id_dict = {"ngc": "139", "ic": "060"}
+
     # for each region...
     for region_key in region_keys:
 
@@ -258,7 +311,7 @@ def make_periodic_lc_figures(sample_only=True):
         print("")
 
         figureset_path_per = os.path.join(
-            figure_export_path, f"Figure7Set_{region_key}"
+            figureset_export_path, f"Figure7Set_{region_key}"
         )
         os.makedirs(figureset_path_per, exist_ok=True)
 
@@ -268,13 +321,22 @@ def make_periodic_lc_figures(sample_only=True):
         periodic = variability_table["Periodic"] == "Y"
         variability_table_per = variability_table[periodic]
 
+        sample_id = sample_id_dict[region_key]
+
         # loop over the table
         for i, row in enumerate(variability_table_per):
+
+            this_is_sample = ("-"+str(sample_id) in row["Name"])
+
+            if sample_only and not this_is_sample:
+                continue
+            elif sample_only:
+                print(f"{sample_only=}. Making figure for {sample_id}")
 
             # if i<10:
             #     continue
 
-            saving = True
+            # saving = True
 
             print(f"{i=}")
 
@@ -292,23 +354,114 @@ def make_periodic_lc_figures(sample_only=True):
                 region_key, row, plotting=True, cmap=cmap_dict[region_key]
             )
 
-            filename = os.path.join(figureset_path_per, f"{row['Name']}_lc")
-            filename_pdf = filename + ".pdf"
-            filename_png = filename + ".png"
-            print(f"Saving fig to... {filename_pdf}")
-            print(f"Saving fig to... {filename_png}")
+            if not sample_only:
+                filename = os.path.join(figureset_path_per, f"{row['Name']}_lc")
+                filename_pdf = filename + ".pdf"
+                filename_png = filename + ".png"
+                print(f"Saving fig to... {filename_pdf}")
+                print(f"Saving fig to... {filename_png}")
 
-            if saving:
                 fig.savefig(filename_pdf, bbox_inches="tight")
                 fig.savefig(filename_png, bbox_inches="tight")
-                plt.close(fig)
+
+            if this_is_sample:
+                sample_filename = os.path.join(figure_export_path, f"Figure7_{region_key}_sample.pdf")
+                print(f"Saving fig to... {sample_filename}")
+                fig.savefig(sample_filename, bbox_inches="tight")
+
+            plt.close(fig)
 
     pass
+
 
 
 def make_nonperiodic_variable_lc_figures(sample_only=True):
+    """
+    Makes the nonperiodic light curve figures.
+
+    By default, only generates the first one and/or a chosen sample
+    (to be implemented).
+
+    """
+
+    sample_id_dict = {"ngc": "169", "ic": "350"}
+
+    # for each region...
+    for region_key in region_keys:
+
+        print("")
+        print(f"Making nonperiodic lc figures in {fullname_dict[region_key]}")
+        print("")
+
+        figureset_path_nonper = os.path.join(
+            figureset_export_path, f"Figure9Set_{region_key}"
+        )
+        os.makedirs(figureset_path_nonper, exist_ok=True)
+
+        # grab the table.
+        variability_table = variability_tables[region_key]
+
+        nonperiodic = variability_table["Periodic"] == "N"
+        variability_table_nonper = variability_table[nonperiodic]
+
+        sample_id = sample_id_dict[region_key]
+
+        # loop over the table
+        for i, row in enumerate(variability_table_nonper):
+
+            this_is_sample = ("-"+str(sample_id) in row["Name"])
+
+            if sample_only and not this_is_sample:
+                continue
+            elif sample_only:
+                print(f"{sample_only=}. Making figure for {sample_id}")
+
+            # if i<10:
+            #     continue
+
+            saving = True
+
+            print(f"{i=}")
+
+
+            # if i <= 30:
+            #     continue
+            # if i > 20:
+            #     break
+
+            # print the name of the source, its SOURCEID,
+            # its period, and the detrending method.
+            # Plot it. First in the stupidest possible way,
+            #  but eventually with the cool fancy aspect.
+            fig = make_nonperiodic_lc_figure(
+                region_key, row, plotting=True, cmap=cmap_dict[region_key]
+            )
+
+            if not sample_only:
+                filename = os.path.join(figureset_path_nonper, f"{row['Name']}_lc")
+                filename_pdf = filename + ".pdf"
+                filename_png = filename + ".png"
+                print(f"Saving fig to... {filename_pdf}")
+                print(f"Saving fig to... {filename_png}")
+
+                if saving:
+                    fig.savefig(filename_pdf, bbox_inches="tight")
+                    fig.savefig(filename_png, bbox_inches="tight")
+
+            if this_is_sample:
+                sample_filename = os.path.join(figure_export_path, f"Figure9_{region_key}_sample.pdf")
+                print(f"Saving fig to... {sample_filename}")
+                fig.savefig(sample_filename, bbox_inches="tight")
+
+            if saving:
+                plt.close(fig)
+            else:
+                plt.show()
 
     pass
+
+
+
 
 
 def make_nonvariable_lc_figures(sample_only=True):
@@ -320,6 +473,6 @@ if __name__ == "__main__":
 
     sample_only = True
 
-    make_periodic_lc_figures(sample_only)
+    # make_periodic_lc_figures(sample_only)
     make_nonperiodic_variable_lc_figures(sample_only)
-    make_nonvariable_lc_figures(sample_only)
+    # make_nonvariable_lc_figures(sample_only)
