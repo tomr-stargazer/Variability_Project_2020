@@ -1980,3 +1980,229 @@ def ngc1333_eightpanel_lc_v2(
 ):
 
     return eightpanel_lc_v2(*args, date_offset=date_offset, xlims=xlims, **kwargs)
+
+def fivepanel_lc(
+    dg,
+    sid,
+    period=None,
+    date_offset=None,
+    phase_offset=0,
+    pad=5,
+    xlims=None,
+    breaks=None,
+    plot_fit=True,
+    **kwargs,
+):
+    """
+    Inspired by the design sensibilities that went into `eightpanel_lc_v2`. 
+    In many ways, a drop-in replacement for simple_lc_scatter_brokenaxes.
+
+    This is intended for making a publication FigureSet.
+
+    """
+
+    dat = dg.groups[dg.groups.keys["SOURCEID"] == sid]
+
+    # data setup part 1
+    if date_offset is None:
+        date_offset = np.floor(np.min(dat["MEANMJDOBS"]))
+    date = dat["MEANMJDOBS"] - date_offset
+
+    color_array = date
+    vmin = date.min()
+    vmax = date.max()
+
+    # fig setup
+
+    fig = plt.figure(figsize=(15, 6), dpi=80, facecolor="w", edgecolor="k")
+
+    gs0 = fig.add_gridspec(1, 2, width_ratios=[6, 2], wspace=0.2)
+
+    gs_left = gs0[0].subgridspec(3, 1, hspace=0)
+    gs_right = gs0[1].subgridspec(1, 2, width_ratios=(2, 0.075), wspace=0.15)
+
+    gs01 = gs_right[0].subgridspec(2, 1, hspace=0)
+
+    # ax_j = fig.add_subplot(gs_left[0, 0])
+    # ax_h = fig.add_subplot(gs_left[1, 0])
+    # ax_k = fig.add_subplot(gs_left[2, 0])
+
+    bax_kwargs = dict(despine=False, d=0.0075, tilt=60, wspace=0.04)
+
+    # xlims = (
+    #     (56848 - date_offset, 56900 - date_offset),
+    #     (56920 - date_offset, 57080 - date_offset),
+    #     (57200 - date_offset, 57250 - date_offset),
+    # )
+
+    # xlims = ((0, 30), (80, 225), (370,390))
+    # xlims = [(0.0, 21.0), (84.0, 222.0), (377.0, 385.0)]
+    if xlims is None:
+        if breaks is None:
+            # baked-in default since I was prototyping on IC348; possibly a bad default
+            breaks = [50, 350]
+        xlims = produce_xlims(date, breaks=breaks, pad=pad)
+
+    ax_j = brokenaxes(xlims=xlims, subplot_spec=gs_left[0, 0], **bax_kwargs)
+    ax_h = brokenaxes(xlims=xlims, subplot_spec=gs_left[1, 0], **bax_kwargs)
+    ax_k = brokenaxes(xlims=xlims, subplot_spec=gs_left[2, 0], **bax_kwargs)
+
+    # Make the broken zones gray. (Uses some details from ...? )
+    ax_j.big_ax.set_zorder(-100)
+    ax_h.big_ax.set_zorder(-100)
+    ax_k.big_ax.set_zorder(-100)
+    ax_j.big_ax.set_facecolor("0.9")
+    ax_h.big_ax.set_facecolor("0.9")
+    ax_k.big_ax.set_facecolor("0.9")
+
+    ax_khk = fig.add_subplot(gs01[0, 0])
+    ax_jhk = fig.add_subplot(gs01[1, 0], sharex=ax_khk)
+
+    # data setup part 2
+
+    bands = ["J", "H", "K"]
+
+    mags = {}
+    errs = {}
+
+    lc_axes = {"J": ax_j, "H": ax_h, "K": ax_k}
+
+    for band in bands:
+        mags[band] = dat[f"{band}APERMAG3"]
+        errs[band] = dat[f"{band}APERMAG3ERR"]
+
+    # this section is to start doing the plotting work
+
+    # do the linear lc part (uses brokenaxes)
+
+    for band in bands:
+
+        lc_axes[band].scatter(
+            date,
+            mags[band],
+            c=color_array,
+            vmin=vmin,
+            vmax=vmax,
+            s=18,
+            edgecolors="k",
+            linewidths=0.5,
+            **kwargs,
+        )
+
+        lc_axes[band].errorbar(
+            date,
+            mags[band],
+            yerr=errs[band],
+            fmt="None",
+            ecolor="k",
+            ms=2,
+            elinewidth=0.5,
+            zorder=-1,
+            alpha=0.5,
+        )
+
+    # do the colors
+
+    j = mags["J"]
+    h = mags["H"]
+    k = mags["K"]
+
+    j_e = errs["J"]
+    h_e = errs["H"]
+    k_e = errs["K"]
+
+    ax_jhk.scatter(
+        h - k,
+        j - h,
+        c=color_array,
+        vmin=vmin,
+        vmax=vmax,
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        **kwargs,
+    )
+
+    ax_khk.scatter(
+        h - k,
+        k,
+        c=color_array,
+        vmin=vmin,
+        vmax=vmax,
+        s=18,
+        edgecolors="k",
+        linewidths=0.5,
+        **kwargs,
+    )
+
+    ax_jhk.errorbar(
+        h - k,
+        j - h,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=(h_e**2 + j_e**2) ** 0.5,
+        fmt="None",
+        ecolor="k",
+        ms=2,
+        elinewidth=0.5,
+        zorder=-1,
+        alpha=0.1,
+    )
+
+    ax_khk.errorbar(
+        h - k,
+        k,
+        xerr=(h_e**2 + k_e**2) ** 0.5,
+        yerr=k_e,
+        fmt="None",
+        ecolor="k",
+        ms=2,
+        elinewidth=0.5,
+        zorder=-1,
+        alpha=0.1,
+    )
+
+    # final adjustments
+
+    ax_j.invert_yaxis()
+    ax_h.invert_yaxis()
+    ax_k.invert_yaxis()
+
+    ax_khk.invert_yaxis()
+
+    ax_j.set_ylabel("$J$\n(mag)", labelpad=50, fontdict={"rotation": "horizontal", "family":"serif"})
+    ax_h.set_ylabel("$H$", labelpad=40, fontdict={"rotation": "horizontal", "family":"serif"})
+    ax_k.set_ylabel("$K$", labelpad=40, fontdict={"rotation": "horizontal", "family":"serif"})
+
+    ax_k.set_xlabel(f"MJD \u2212 {date_offset}", labelpad=20)
+
+    ax_jhk.set_ylabel("$J-H$", labelpad=20, fontdict={'rotation':'horizontal', "family":"serif"})
+    ax_jhk.set_xlabel("$H-K$", fontdict={"family":"serif"})
+    ax_khk.set_ylabel("$K$", labelpad=10, fontdict={'rotation':'horizontal', "family":"serif"})
+
+    trim_bottom_labels(ax_j, remove_yticklabel=True)
+    trim_bottom_labels(ax_h, remove_yticklabel=True)
+
+    trim_bottom_labels(ax_khk, remove_yticklabel=True)
+
+    fig.ax_j = ax_j
+    fig.ax_h = ax_h
+    fig.ax_k = ax_k
+
+    fig.ax_jhk = ax_jhk
+    fig.ax_khk = ax_khk
+
+    return fig
+
+
+def ic348_fivepanel_lc(
+    *args, date_offset=ic_date_offset, xlims=ic348_xlims, **kwargs
+):
+
+    return fivepanel_lc(*args, date_offset=date_offset, xlims=xlims, **kwargs)
+
+
+def ngc1333_fivepanel_lc(
+    *args, date_offset=ngc_date_offset, xlims=ngc1333_xlims, **kwargs
+):
+
+    return fivepanel_lc(*args, date_offset=date_offset, xlims=xlims, **kwargs)
