@@ -3,6 +3,7 @@ I plan to put some light curve plotting code here.
 
 """
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from brokenaxes import brokenaxes
@@ -1698,7 +1699,7 @@ def eightpanel_lc_v2(
 
     fig = plt.figure(figsize=(20, 6), dpi=80, facecolor="w", edgecolor="k")
 
-    gs0 = fig.add_gridspec(1, 3, width_ratios=[6, 6, 3], wspace=0.2)
+    gs0 = fig.add_gridspec(1, 3, width_ratios=[6, 3, 2], wspace=0.2)
 
     gs_left = gs0[0].subgridspec(3, 1, hspace=0)
     gs_center = gs0[1].subgridspec(3, 1, hspace=0)
@@ -1918,17 +1919,32 @@ def eightpanel_lc_v2(
 
     ax_khk.invert_yaxis()
 
-    ax_j.set_ylabel("J", labelpad=40, fontdict={"rotation": "horizontal"})
-    ax_h.set_ylabel("H", labelpad=40, fontdict={"rotation": "horizontal"})
-    ax_k.set_ylabel("K", labelpad=40, fontdict={"rotation": "horizontal"})
+    mpl.rcParams.update({
+        "mathtext.fontset": "stix",       # use STIX fonts (Times-compatible)
+        "font.family": "serif",
+        "font.serif": ["Times New Roman"],  # or ["Times"]
+    })
+
+    ax_j.set_ylabel("$J$\n(mag)", labelpad=50, fontdict={"rotation": "horizontal", "family":"serif"})
+    ax_h.set_ylabel("$H$", labelpad=40, fontdict={"rotation": "horizontal", "family":"serif"})
+    ax_k.set_ylabel("$K$", labelpad=40, fontdict={"rotation": "horizontal", "family":"serif"})
 
     ax_k.set_xlabel(f"MJD \u2212 {date_offset}", labelpad=20)
 
-    ax_k_phase.set_xlabel(f"Phase (Period={period:.2f}d)")
+    ax_j_phase.set_ylabel("$\\Delta\\,J$\n(mag)",labelpad=10, fontdict={"rotation": "horizontal", "family": "serif"})
+    ax_h_phase.set_ylabel("$\\Delta\\,H$",labelpad=10, fontdict={"rotation": "horizontal", "family":"serif"})
+    ax_k_phase.set_ylabel("$\\Delta\\,K$",labelpad=10, fontdict={"rotation": "horizontal", "family":"serif"})
 
-    ax_jhk.set_ylabel("J-H")  # , {'rotation':'horizontal'})
-    ax_jhk.set_xlabel("H-K")
-    ax_khk.set_ylabel("K")  # , {'rotation':'horizontal'})
+    ax_k_phase.set_xlabel(f"Phase (Period={period:.3f} d)")
+
+    ax_jhk.set_ylabel("$J-H$", labelpad=20, fontdict={'rotation':'horizontal', "family":"serif"})
+    ax_jhk.set_xlabel("$H-K$", fontdict={"family":"serif"})
+    ax_khk.set_ylabel("$K$", labelpad=10, fontdict={'rotation':'horizontal', "family":"serif"})
+
+    for band in bands:
+        max_extent = np.max(np.abs(phase_axes[band].get_ylim()))
+        phase_axes[band].set_ylim( max_extent, -max_extent)
+        phase_axes[band].axhline(0, color='k', lw=0.25, alpha=0.5)
 
     trim_bottom_labels(ax_j, remove_yticklabel=True)
     trim_bottom_labels(ax_h, remove_yticklabel=True)
