@@ -1,5 +1,5 @@
 """
-A simple script which pulls in a handful of literature period surveys and 
+A simple script which pulls in a handful of literature period surveys and
 compares our periods to them.
 
 References the IPython notebook `Exploring literature periods.ipynb` a lot.
@@ -117,12 +117,8 @@ f1 = astropy.table.Table.read(
     "../literature_periods/Fritzewski16_Long-term photometry of IC 348 with the Young Exoplanet Transit Initiative network _ Oxford Academic.html",
     format="ascii.html",
 )
-f1_ra_deg = f1[
-    "RA\n            .",
-]
-f1_de_deg = f1[
-    "Dec.\n            .",
-]
+f1_ra_deg = f1["RA\n            .",]
+f1_de_deg = f1["Dec.\n            .",]
 
 f1_periods = f1["P\n            ."]
 
@@ -145,7 +141,7 @@ fla_4 = astropy.table.Table.read(
     delimiter="\t",
     header_start=2,
     data_start=4,
-    data_end=25+6,
+    data_end=25 + 6,
 )
 
 fla4_pers = []
@@ -164,7 +160,7 @@ fla1_pers = []
 for row in fla_1:
     if "LRLL " + str(row["LRLL"]) in fla_4["Star ID"]:
         fla_4_match_index = np.int(np.where(row["LRLL"] == fla_4_lrll)[0])
-        fla1_pers.append(fla4_pers[fla_4_match_index].rstrip('^a'))
+        fla1_pers.append(fla4_pers[fla_4_match_index].rstrip("^a"))
     else:
         fla1_pers.append(np.nan)
 
@@ -369,7 +365,13 @@ if __name__ == "__main__":
         alias_plots = []
 
         alias_plots.extend(
-            ax.plot([0.01, 100], [0.01, 100], "k--", lw=0.25, label="$y=x$",)
+            ax.plot(
+                [0.01, 100],
+                [0.01, 100],
+                "k--",
+                lw=0.25,
+                label="$y=x$",
+            )
         )
         alias_plots.extend(
             ax.plot(
@@ -399,8 +401,22 @@ if __name__ == "__main__":
                 label=r"$y = \rm{abs} \left( \pm \left( \frac{1}{x} \pm 1 \right) \right ) ^{-1}$",
             )
         )
-        alias_plots.extend(ax.plot(xs_b, 1 / ys2_inv, "k:", lw=0.1,))
-        alias_plots.extend(ax.plot(xs_c, 1 / ys3_inv, "k:", lw=0.1,))
+        alias_plots.extend(
+            ax.plot(
+                xs_b,
+                1 / ys2_inv,
+                "k:",
+                lw=0.1,
+            )
+        )
+        alias_plots.extend(
+            ax.plot(
+                xs_c,
+                1 / ys3_inv,
+                "k:",
+                lw=0.1,
+            )
+        )
 
         ax.axvline(1, color="k", linestyle=":", lw=0.25)
         ax.axhline(1, color="k", linestyle=":", lw=0.25)
