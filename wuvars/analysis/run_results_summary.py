@@ -2,6 +2,7 @@
 This is a script that runs through and summarizes what's up with our data.
 
 """
+
 import os
 import warnings
 
@@ -77,8 +78,10 @@ if __name__ == "__main__":
         print(
             f"({len(match.rejected)} light curves were rejected by manual inspection)"
         )
-        if name == 'ic':
-            assert len(match.rejected) == len(rejected_sources_ic_new) + len(rejected_sources_ic_old)
+        if name == "ic":
+            assert len(match.rejected) == len(rejected_sources_ic_new) + len(
+                rejected_sources_ic_old
+            )
 
         # let's divide up by infrared excess
         ir_exc = match.approved["IRexc"] == "yes"
@@ -596,20 +599,21 @@ if __name__ == "__main__":
 
             variable = periodics | subjectives | approved_v1
             q1_k = q["q1_k"]
-            q1_h = q["q1_h"]            
-            q1_j = q["q1_j"]                        
+            q1_h = q["q1_h"]
+            q1_j = q["q1_j"]
             approved_q1_k = q["q1_k"][match.approved["SOURCEID"]]
-            approved_q1_h = q["q1_h"][match.approved["SOURCEID"]]            
-            approved_q1_j = q["q1_j"][match.approved["SOURCEID"]]            
+            approved_q1_h = q["q1_h"][match.approved["SOURCEID"]]
+            approved_q1_j = q["q1_j"][match.approved["SOURCEID"]]
             ir_exc_sid = match.approved["SOURCEID"][ir_exc]
 
-            new_fig_j, new_ax_j = plt.subplots(figsize=(6,6))
+            new_fig_j, new_ax_j = plt.subplots(figsize=(6, 6))
 
             new_ax_j.scatter(
                 qm["Q_J"][approved_q1_j & variable],
                 qm["M_J"][approved_q1_j & variable],
-                c='k',
-                s=10 + match.approved["range_JAPERMAG3"][approved_q1_j & variable] * 100,
+                c="k",
+                s=10
+                + match.approved["range_JAPERMAG3"][approved_q1_j & variable] * 100,
                 ec="k",
                 lw=0.5,
             )
@@ -617,12 +621,15 @@ if __name__ == "__main__":
             new_ax_j.scatter(
                 qm["Q_J"][approved_q1_j & variable & ir_exc.data],
                 qm["M_J"][approved_q1_j & variable & ir_exc.data],
-                c='r',
-                s=10 + match.approved["range_JAPERMAG3"][ir_exc.data & approved_q1_j & variable] * 100,
+                c="r",
+                s=10
+                + match.approved["range_JAPERMAG3"][
+                    ir_exc.data & approved_q1_j & variable
+                ]
+                * 100,
                 ec="k",
                 lw=0.5,
             )
-
 
             new_ax_j.scatter(
                 qm["Q_J"][v_per.index][q1_j],
@@ -630,7 +637,8 @@ if __name__ == "__main__":
                 ec="k",
                 lw=0.5,
                 c="None",
-                s=80 + match.approved["range_JAPERMAG3"][approved_q1_j & periodics] * 100,
+                s=80
+                + match.approved["range_JAPERMAG3"][approved_q1_j & periodics] * 100,
                 zorder=10,
                 alpha=0.5,
             )
@@ -645,14 +653,12 @@ if __name__ == "__main__":
             new_ax_j.set_ylabel("$M_J$ score")
             new_ax_j.set_title(
                 f"$M$ vs. $Q$ plot for q1_j variables in {fullname_dict[name]}"
-            )            
+            )
 
             new_ax_j.set_xlim(-0.3, 0.98)
             new_ax_j.set_ylim(1.275, -1.275)
 
-
-
-            new_fig_h, new_ax_h = plt.subplots(figsize=(6,6))
+            new_fig_h, new_ax_h = plt.subplots(figsize=(6, 6))
 
             # for condition, color in zip([ir_exc[approved_q1_k], ~ir_exc[approved_q1_k]], ['k', 'r']):
             #     new_ax_h.scatter(
@@ -664,12 +670,12 @@ if __name__ == "__main__":
             #         lw=0.5,
             #     )
 
-
             new_ax_h.scatter(
                 qm["Q_H"][approved_q1_h & variable],
                 qm["M_H"][approved_q1_h & variable],
-                c='k',
-                s=10 + match.approved["range_HAPERMAG3"][approved_q1_h & variable] * 100,
+                c="k",
+                s=10
+                + match.approved["range_HAPERMAG3"][approved_q1_h & variable] * 100,
                 ec="k",
                 lw=0.5,
             )
@@ -677,12 +683,15 @@ if __name__ == "__main__":
             new_ax_h.scatter(
                 qm["Q_H"][approved_q1_h & variable & ir_exc.data],
                 qm["M_H"][approved_q1_h & variable & ir_exc.data],
-                c='r',
-                s=10 + match.approved["range_HAPERMAG3"][ir_exc.data & approved_q1_h & variable] * 100,
+                c="r",
+                s=10
+                + match.approved["range_HAPERMAG3"][
+                    ir_exc.data & approved_q1_h & variable
+                ]
+                * 100,
                 ec="k",
                 lw=0.5,
             )
-
 
             new_ax_h.scatter(
                 qm["Q_H"][v_per.index][q1_h],
@@ -690,7 +699,8 @@ if __name__ == "__main__":
                 ec="k",
                 lw=0.5,
                 c="None",
-                s=80 + match.approved["range_HAPERMAG3"][approved_q1_h & periodics] * 100,
+                s=80
+                + match.approved["range_HAPERMAG3"][approved_q1_h & periodics] * 100,
                 zorder=10,
                 alpha=0.5,
             )
@@ -705,12 +715,12 @@ if __name__ == "__main__":
             new_ax_h.set_ylabel("$M_H$ score")
             new_ax_h.set_title(
                 f"$M$ vs. $Q$ plot for q1_h variables in {fullname_dict[name]}"
-            )            
+            )
 
             new_ax_h.set_xlim(-0.3, 0.98)
             new_ax_h.set_ylim(1.275, -1.275)
 
-            new_fig, new_ax = plt.subplots(figsize=(6,6))
+            new_fig, new_ax = plt.subplots(figsize=(6, 6))
 
             # for condition, color in zip([ir_exc[approved_q1_k], ~ir_exc[approved_q1_k]], ['k', 'r']):
             #     new_ax.scatter(
@@ -722,14 +732,14 @@ if __name__ == "__main__":
             #         lw=0.5,
             #     )
 
-
             # TODO: what's a criterion that's Q1_K AND VARIABLE? we need that. Don't include
             # nonvariables in these plots ...
             new_ax.scatter(
                 qm["Q_K"][approved_q1_k & variable],
                 qm["M_K"][approved_q1_k & variable],
-                c='k',
-                s=10 + match.approved["range_KAPERMAG3"][approved_q1_k & variable] * 100,
+                c="k",
+                s=10
+                + match.approved["range_KAPERMAG3"][approved_q1_k & variable] * 100,
                 ec="k",
                 lw=0.5,
             )
@@ -737,12 +747,15 @@ if __name__ == "__main__":
             new_ax.scatter(
                 qm["Q_K"][approved_q1_k & variable & ir_exc.data],
                 qm["M_K"][approved_q1_k & variable & ir_exc.data],
-                c='r',
-                s=10 + match.approved["range_KAPERMAG3"][ir_exc.data & approved_q1_k & variable] * 100,
+                c="r",
+                s=10
+                + match.approved["range_KAPERMAG3"][
+                    ir_exc.data & approved_q1_k & variable
+                ]
+                * 100,
                 ec="k",
                 lw=0.5,
             )
-
 
             new_ax.scatter(
                 qm["Q_K"][v_per.index][q1_k],
@@ -750,7 +763,8 @@ if __name__ == "__main__":
                 ec="k",
                 lw=0.5,
                 c="None",
-                s=80 + match.approved["range_KAPERMAG3"][approved_q1_k & periodics] * 100,
+                s=80
+                + match.approved["range_KAPERMAG3"][approved_q1_k & periodics] * 100,
                 zorder=10,
                 alpha=0.5,
             )
@@ -765,20 +779,21 @@ if __name__ == "__main__":
             new_ax.set_ylabel("$M_K$ score")
             new_ax.set_title(
                 f"$M$ vs. $Q$ plot for q1_k variables in {fullname_dict[name]}"
-            )            
+            )
 
             new_ax.set_xlim(-0.3, 0.98)
             new_ax.set_ylim(1.275, -1.275)
 
-
             # Okay. Now we are going to make six additional plots:
-            # M vs SpT (J, H, K) 
+            # M vs SpT (J, H, K)
             # Q vs SpT (J, H, K)
             # these plots will use the ssame coding for ir exc, periodicity, and amplitude as the above.
 
-            fig_Q_vs_M, axes_Q_vs_M = plt.subplots(nrows=3, sharex=True, sharey=True, figsize=(5,10))
+            fig_Q_vs_M, axes_Q_vs_M = plt.subplots(
+                nrows=3, sharex=True, sharey=True, figsize=(5, 10)
+            )
 
-            for ax, band in zip(axes_Q_vs_M, ['J', 'H', 'K']):
+            for ax, band in zip(axes_Q_vs_M, ["J", "H", "K"]):
 
                 q1_b = q[f"q1_{band.lower()}"]
                 approved_q1_b = q1_b[match.approved["SOURCEID"]]
@@ -787,21 +802,26 @@ if __name__ == "__main__":
                 ax.scatter(
                     qm[f"Q_{band}"][approved_q1_b & variable],
                     qm[f"M_{band}"][approved_q1_b & variable],
-                    c='k',
-                    s=10 + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
+                    c="k",
+                    s=10
+                    + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
                     ec="k",
                     lw=0.5,
-                )                
+                )
 
                 # draw just the red ones
                 ax.scatter(
                     qm[f"Q_{band}"][approved_q1_b & variable & ir_exc.data],
                     qm[f"M_{band}"][approved_q1_b & variable & ir_exc.data],
-                    c='r',
-                    s=10 + match.approved[f"range_{band}APERMAG3"][ir_exc.data & approved_q1_b & variable] * 100,
+                    c="r",
+                    s=10
+                    + match.approved[f"range_{band}APERMAG3"][
+                        ir_exc.data & approved_q1_b & variable
+                    ]
+                    * 100,
                     ec="k",
                     lw=0.5,
-                )                
+                )
 
                 # draw the little circles
                 ax.scatter(
@@ -810,7 +830,9 @@ if __name__ == "__main__":
                     ec="k",
                     lw=0.5,
                     c="None",
-                    s=80 + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics] * 100,
+                    s=80
+                    + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics]
+                    * 100,
                     zorder=10,
                     alpha=0.5,
                 )
@@ -820,21 +842,21 @@ if __name__ == "__main__":
                 ax.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
                 ax.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
 
-
                 ax.set_xlabel(f"$Q_{band}$ score")
                 ax.set_ylabel(f"$M_{band}$ score")
                 ax.set_title(
                     f"$M$ vs. $Q$ plot for q1_{band.lower()} variables in {fullname_dict[name]}",
-                    fontsize=8
-                )            
+                    fontsize=8,
+                )
 
                 ax.set_xlim(-0.3, 0.98)
                 ax.set_ylim(1.275, -1.275)
 
+            fig_M_vs_SpT, axes_M_vs_SpT = plt.subplots(
+                nrows=3, sharex=True, sharey=True, figsize=(5, 10)
+            )
 
-            fig_M_vs_SpT, axes_M_vs_SpT = plt.subplots(nrows=3, sharex=True, sharey=True, figsize=(5,10))
-
-            for ax, band in zip(axes_M_vs_SpT, ['J', 'H', 'K']):
+            for ax, band in zip(axes_M_vs_SpT, ["J", "H", "K"]):
 
                 q1_b = q[f"q1_{band.lower()}"]
                 approved_q1_b = q1_b[match.approved["SOURCEID"]]
@@ -843,21 +865,26 @@ if __name__ == "__main__":
                 ax.scatter(
                     match.approved["SpT"][approved_q1_b & variable],
                     qm[f"M_{band}"][approved_q1_b & variable],
-                    c='k',
-                    s=10 + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
+                    c="k",
+                    s=10
+                    + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
                     ec="k",
                     lw=0.5,
-                )                
+                )
 
                 # draw just the red ones
                 ax.scatter(
                     match.approved["SpT"][approved_q1_b & variable & ir_exc.data],
                     qm[f"M_{band}"][approved_q1_b & variable & ir_exc.data],
-                    c='r',
-                    s=10 + match.approved[f"range_{band}APERMAG3"][ir_exc.data & approved_q1_b & variable] * 100,
+                    c="r",
+                    s=10
+                    + match.approved[f"range_{band}APERMAG3"][
+                        ir_exc.data & approved_q1_b & variable
+                    ]
+                    * 100,
                     ec="k",
                     lw=0.5,
-                )                
+                )
 
                 # draw the little circles
                 ax.scatter(
@@ -866,7 +893,9 @@ if __name__ == "__main__":
                     ec="k",
                     lw=0.5,
                     c="None",
-                    s=80 + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics] * 100,
+                    s=80
+                    + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics]
+                    * 100,
                     zorder=10,
                     alpha=0.5,
                 )
@@ -876,27 +905,31 @@ if __name__ == "__main__":
                 # ax.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
                 # ax.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
 
-                if band == 'K':
+                if band == "K":
                     ax.set_xlabel(f"SpT")
 
                 ax.set_ylabel(f"$M_{band}$ score")
                 ax.set_title(
                     f"$M$ vs. SpT plot for q1_{band.lower()} variables in {fullname_dict[name]}",
-                    fontsize=8
-                )            
+                    fontsize=8,
+                )
 
                 ax.set_xlim(-0.1, 10.1)
                 ax.invert_yaxis()
 
-                spt_array = np.array([get_SpT_from_num(int(x)) for x in ax.get_xticks()])
+                spt_array = np.array(
+                    [get_SpT_from_num(int(x)) for x in ax.get_xticks()]
+                )
                 ax.xaxis.set_tick_params(labelbottom=True)
                 ax.set_xticklabels(spt_array)
 
                 # ax.set_ylim(1.275, -1.275)
 
-            fig_Q_vs_SpT, axes_Q_vs_SpT = plt.subplots(nrows=3, sharex=True, sharey=True, figsize=(5,10))
+            fig_Q_vs_SpT, axes_Q_vs_SpT = plt.subplots(
+                nrows=3, sharex=True, sharey=True, figsize=(5, 10)
+            )
 
-            for ax, band in zip(axes_Q_vs_SpT, ['J', 'H', 'K']):
+            for ax, band in zip(axes_Q_vs_SpT, ["J", "H", "K"]):
 
                 q1_b = q[f"q1_{band.lower()}"]
                 approved_q1_b = q1_b[match.approved["SOURCEID"]]
@@ -905,21 +938,26 @@ if __name__ == "__main__":
                 ax.scatter(
                     match.approved["SpT"][approved_q1_b & variable],
                     qm[f"Q_{band}"][approved_q1_b & variable],
-                    c='k',
-                    s=10 + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
+                    c="k",
+                    s=10
+                    + match.approved["range_KAPERMAG3"][approved_q1_b & variable] * 100,
                     ec="k",
                     lw=0.5,
-                )                
+                )
 
                 # draw just the red ones
                 ax.scatter(
                     match.approved["SpT"][approved_q1_b & variable & ir_exc.data],
                     qm[f"Q_{band}"][approved_q1_b & variable & ir_exc.data],
-                    c='r',
-                    s=10 + match.approved[f"range_{band}APERMAG3"][ir_exc.data & approved_q1_b & variable] * 100,
+                    c="r",
+                    s=10
+                    + match.approved[f"range_{band}APERMAG3"][
+                        ir_exc.data & approved_q1_b & variable
+                    ]
+                    * 100,
                     ec="k",
                     lw=0.5,
-                )                
+                )
 
                 # draw the little circles
                 ax.scatter(
@@ -928,7 +966,9 @@ if __name__ == "__main__":
                     ec="k",
                     lw=0.5,
                     c="None",
-                    s=80 + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics] * 100,
+                    s=80
+                    + match.approved[f"range_{band}APERMAG3"][approved_q1_b & periodics]
+                    * 100,
                     zorder=10,
                     alpha=0.5,
                 )
@@ -938,23 +978,24 @@ if __name__ == "__main__":
                 ax.axhline(0.3, 0, 1, color="k", ls=":", lw=0.5)
                 ax.axhline(0.7, 0, 1, color="k", ls=":", lw=0.5)
 
-                if band == 'K':
+                if band == "K":
                     ax.set_xlabel(f"SpT")
 
                 ax.set_ylabel(f"$Q_{band}$ score")
                 ax.set_title(
                     f"$Q$ vs. SpT plot for q1_{band.lower()} variables in {fullname_dict[name]}",
-                    fontsize=8
-                )            
+                    fontsize=8,
+                )
 
                 ax.set_xlim(-0.1, 10.1)
                 ax.set_ylim(-0.3, 0.98)
                 # ax.invert_yaxis()
 
-                spt_array = np.array([get_SpT_from_num(int(x)) for x in ax.get_xticks()])
+                spt_array = np.array(
+                    [get_SpT_from_num(int(x)) for x in ax.get_xticks()]
+                )
                 ax.xaxis.set_tick_params(labelbottom=True)
                 ax.set_xticklabels(spt_array)
-
 
             # Exploring Q, M
 
