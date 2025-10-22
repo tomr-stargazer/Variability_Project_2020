@@ -178,6 +178,9 @@ def make_table_1_targets(verbose=False):
             other_names = build_other_names(row, name_columns)
             other_names_latex = build_other_names_latex(row, name_columns)
 
+            # WFCAM SOURCEID
+            sid = row["SOURCEID"]
+
             # - Region
             region_name = fullname_dict[region_key]
 
@@ -216,6 +219,7 @@ def make_table_1_targets(verbose=False):
                     source_name,
                     other_names,
                     other_names_latex,
+                    sid,
                     ra_deg,
                     dec_deg,
                     SpT,
@@ -243,6 +247,7 @@ def make_table_1_targets(verbose=False):
                     "FullName",
                     "OtherNames",
                     "OtherNamesLaTeX",
+                    "SourceID",
                     "RA",
                     "Dec",
                     "SpT",
@@ -319,6 +324,7 @@ def make_table_1_targets(verbose=False):
         table_tex.remove_columns(["Jmag","e_Jmag","Hmag","e_Hmag","Kmag","e_Kmag"])
         table_tex.remove_columns(["Jmag2","e_Jmag2","Hmag2","e_Hmag2","Kmag2","e_Kmag2"])
         table_tex.remove_columns(["OtherNames"])
+        table_tex.remove_columns("SourceID")        
         table_tex["J (mag)"] = jcol
         table_tex["H (mag)"] = hcol
         table_tex["K (mag)"] = kcol
