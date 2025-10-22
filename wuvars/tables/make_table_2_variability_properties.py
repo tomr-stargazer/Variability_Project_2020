@@ -18,6 +18,12 @@ from astropy.coordinates import SkyCoord
 from astropy.io import ascii
 from astropy.table import Table
 from wuvars.analysis.bd_matching_v3 import match_ic, match_ngc
+from wuvars.analysis.load_periodics_v4 import select_periodic_variables_v4
+from wuvars.analysis.load_subjective_variables import \
+    select_subjective_variables
+from wuvars.analysis.prototype2_of_variability_full_criteria import (
+    select_periodic_variables, select_periodic_variables_experimental,
+    select_stetson_variables)
 from wuvars.analysis.spectral_type_to_number import get_SpT_from_num
 from wuvars.analysis.variability_selection_curved import (curve_Stetson, sv_hk,
                                                           sv_jh, sv_jhk, sv_jk)
@@ -38,6 +44,146 @@ spread_dict = {"ngc": spreadsheet.load_wserv_v2(7), "ic": spreadsheet.load_wserv
 q_dict = {"ngc": quality_classes.load_q(7), "ic": quality_classes.load_q(8)}
 
 
+def make_table_2_variability_properties(verbose=False, n_sample=10):
+    """
+    Makes a table, in both MRT and LaTeX formats
+
+    Lists only objects identified as variable
+
+    Desired columns:
+    - Shorthand name (as in prior table), 
+    - how was it identified as variable (P, A, and/or S)
+    - quality flag status (q2, q1_{bands}, q0)
+    - If periodic, give the period + periodic amplitude
+    -- and whatever detrending was necessary
+    -- and whatever band was best for the period solution
+
+    
+    - (???) Median photometry at J, H, K, with error bars
+
+    - delta J, H, K
+
+    Only `approved` objects appear here. Objects not in `approved` could perhaps
+    be relegated to a table in the appendix.    
+
+    This is explicitly not a table about variability properties. 
+    Nothing on that appears here. Not even data quality flags, etc. 
+    I even feel a little 'borderline' including our median JHK photometry, but
+    it seems like the right place to put it.
+
+    """
+
+    # function goes here
+    # please output the full table to ApJ-compliant MRT,
+    #  plus a 10-row sample (first ten rows) output to LaTeX
+
+    all_tables = {}
+
+    for region_key in region_keys:  # "ngc", "ic"
+        if verbose: print(region_key)
+
+        approved = match_dict[region_key].approved
+        wserv = wserv_dict[region_key]
+
+        v2, v1 = select_stetson_variables(wserv)
+        approved_v1 = v1[approved["SOURCEID"]]
+        approved_v2 = v2[approved["SOURCEID"]]        
+        v_per = select_periodic_variables_v4(wserv)
+        periodics = np.in1d(approved["SOURCEID"], v_per.index)
+        v_subj = select_subjective_variables(wserv)
+        subjectives = np.in1d(approved["SOURCEID"], v_subj.index)
+
+        vars_ = approved_v1 | periodics | subjectives
+
+        if verbose:
+            print(f"Total number of variables: {np.sum(vars_)}/{len(vars_)}")
+            print(f" ({100*np.sum(vars_)/len(approved):.2f}%)")
+
+        # Output paths
+        outpath_mrt = os.path.join(table_export_path, f"table2_variability_{region_key}_mrt.txt")
+        outpath_ecsv = os.path.join(table_export_path, f"table2_variability_{region_key}_ecsv.ecsv")
+        outpath_tex = os.path.join(table_export_path, f"table2_variability_{region_key}_sample.tex")
+
+
+        rows = []
+
+        for i, row in enumerate(approved):
+
+            if verbose: 
+                if i % 10 == 0: 
+                    print(i)
+            #
+
+            # determine if object is variable
+            if not vars_[row['SOURCEID']]:
+                continue
+
+            source_name = (
+                f"{region_shorthand[region_key]}-{row[index_dict[region_key]]:03d}"  # synthetic shorthand
+            )
+
+            # defaults
+            periodic = 'N'
+            period = np.nan
+            per_amp = np.nan
+            per_method = ''
+            per_band = ''
+
+            # determine if object is periodic
+            if row['SOURCEID'] in v_per.index:
+
+                v_per_row = v_per.loc[row['SOURCEID']]                
+
+                periodic = 'Y'
+                period = v_per_row['Period']
+                per_amp = v_per_row['Amp']
+                per_method = v_per_row['Method']
+                per_band = v_per_row['Best Band']
+
+            # row dictionary
+            rows.append(dict(
+                SourceID=row['SOURCEID'],
+                Name=source_name,
+                Periodic=periodic,
+                Period=period,
+                PeriodAmp=per_amp,
+                PeriodDetrendMethod=per_method,
+                PeriodBand=per_band,
+                # StetsonV1=approved_v1[row['SOURCEID']],
+                # StetsonV2=approved_v2[row['SOURCEID']],
+                # Subjective=subjectives[row['SOURCEID']],
+            ))
+
+        # build the MRT table
+        t = Table(rows=rows)
+        table_tex = t.copy()
+
+        t["Period"] = t["Period"].astype('f8')
+        t["PeriodAmp"] = t["PeriodAmp"].astype('f8')
+
+        # t["Period"] = t["Period"].astype(str)
+        # t["PeriodAmp"] = t["PeriodAmp"].astype(str)
+
+        # save MRT
+        t.write(outpath_ecsv, format="ascii.ecsv", overwrite=True)
+        print(f"Wrote {outpath_ecsv}")
+        # t.write(outpath_mrt, format="ascii.mrt", overwrite=True)
+        # print(f"Wrote {outpath_mrt}")
+
+        # make LaTeX sample of first n_sample rows
+        t_sample = table_tex[:n_sample]        
+
+        # formatting adjustments (optional: replace booleans with Y/N, format floats)
+        for col in ['Period', 'PeriodAmp']:
+            if col in t_sample.colnames:
+                t_sample[col].format = ".3f"        
+
+        t_sample.write(outpath_tex, format="ascii.aastex", overwrite=True)     
+        print(f"Wrote {outpath_tex}")
+
+        all_tables[region_key] = (t, t_sample)
+
+    return all_tables                   
 
 if __name__ == "__main__":
-    make_table_1_targets(verbose=True)
+    make_table_2_variability_properties(verbose=True)
