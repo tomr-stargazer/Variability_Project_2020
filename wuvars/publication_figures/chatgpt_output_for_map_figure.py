@@ -46,7 +46,7 @@ except Exception:
 # User-configurable parameters
 # -------------------------------
 TARGETS = ["NGC 1333", "IC 348"]
-SURVEY = "DSS2 Red"                 # Examples: "WISE 3.4", "DSS2 Red", "DSS2 Blue", "2MASS-K"
+SURVEY = "AllWISE/W4"                 # Examples: "WISE 3.4", "DSS2 Red", "DSS2 Blue", "2MASS-K"
 FOV_DEG = 5.0                        # Field of view in degrees (width=height)
 PIXELS = 900                        # Output image size (square), adjust for desired resolution
 DISTANCE_PC = 300.0                  # Assumed distance to Perseus (used for scale bar)
