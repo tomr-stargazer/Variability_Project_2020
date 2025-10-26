@@ -35,10 +35,12 @@ qm_dict = {
     "ic": pd.read_hdf(os.path.join(os.getcwd(), "ic_QM.h5")).set_index("SOURCEID"),
 }
 
-make_figs = True
+make_figs = False
 
+results_table_dict = {"ngc": {}, "ic": {}}
 
 if __name__ == "__main__":
+
     # Let's do the overview of IC 348 and NGC 1333.
     # How many objects were in the original catalog
     print("The input catalogs (total):\n")
@@ -48,12 +50,17 @@ if __name__ == "__main__":
         match = match_dict[name]
         spread = spread_dict[name]
         qm = qm_dict[name]
+        results_table = results_table_dict[name]
 
         # Simple stats on the input catalog
         print(f"{len(match.input_catalog)} objects in the input catalog")
+        results_table["n_members"] = len(match.input_catalog)
+
         valid = match.input_catalog["SpT"] >= 0.0
         print(f"{np.sum(valid)} with an assigned spectral type of M0 or later")
         print("   and are therefore considered for this study.")
+        results_table["n_M0_and_later"] = np.sum(valid)
+
         invalid_nan = np.isnan(match.input_catalog["SpT"])
         invalid_early = match.input_catalog["SpT"] < 0.0
         print(f"({np.sum(invalid_nan)} have no assigned spectral type)")
@@ -78,6 +85,8 @@ if __name__ == "__main__":
         print(
             f"({len(match.rejected)} light curves were rejected by manual inspection)"
         )
+        results_table["n_approved"] = len(match.approved)
+
         if name == "ic":
             assert len(match.rejected) == len(rejected_sources_ic_new) + len(
                 rejected_sources_ic_old
@@ -90,6 +99,8 @@ if __name__ == "__main__":
             f"{np.sum(ir_exc)} of the {len(match.approved)} approved objects have an IR excess"
             f" ({100 * np.sum(ir_exc) / len(match.approved):.1f}%)"
         )
+
+        results_table["n_IR_exc"] = np.sum(ir_exc)
 
         print("")
         if make_figs:
@@ -206,6 +217,9 @@ if __name__ == "__main__":
         print(f"{fullname_dict[name]} Variability analysis")
         print(f"{len(match.approved)} approved")
         print(f"{len(match.statistical)} statistical")
+        # xxx        
+        results_table["n_statistical"] = len(match.statistical)
+
         print(f"{len(match.color)} color")
 
         # borrowed from analysis/prototypes/Prototyping final variable list.ipynb
@@ -249,6 +263,8 @@ if __name__ == "__main__":
             f"Number of approved sources that are v1 variables: {np.sum(approved_v1)}/{len(match.approved)}"
         )
 
+        results_table["n_automatic_vars"] = np.sum(approved_v1)
+
         av1 = match.approved
 
         statistical_v1 = v1[match.statistical["SOURCEID"]]
@@ -257,6 +273,8 @@ if __name__ == "__main__":
             f"Number of statistical sources that are v1 variables: {np.sum(statistical_v1)}/{len(match.statistical)}"
             f" ({100*np.sum(statistical_v1)/len(match.statistical):.2f}%)"
         )
+        results_table["n_automatic_vars_statistical"] = np.sum(statistical_v1)
+
 
         # trying the new one!
         v_per = select_periodic_variables_v4(wserv)
@@ -266,9 +284,18 @@ if __name__ == "__main__":
             f"Number of periodic variables found: {len(v_per)} / {len(match.approved)}"
             f" ({100*len(v_per)/len(match.approved):.2f}%)"
         )
+        results_table["n_periodic_vars"] = len(v_per)
+
         # print(f"Sum of v_per: {np.sum(v_per)}")
 
         periodics = np.in1d(match.approved["SOURCEID"], v_per.index)
+        statistical_periodics = np.in1d(match.statistical["SOURCEID"], v_per.index)
+        print(
+            f"Number of periodic variables found in statistical sample: {np.sum(statistical_periodics)} / {len(match.statistical)}"
+            f" ({100*np.sum(statistical_periodics)/len(match.statistical):.2f}%)"
+        )        
+
+        results_table["n_periodic_vars_statistical"] = np.sum(statistical_periodics)
 
         # now let's select the subjectives
         from wuvars.analysis.load_subjective_variables import (
@@ -277,12 +304,27 @@ if __name__ == "__main__":
 
         v_subj = select_subjective_variables(wserv)
 
+        n_inspected_for_subjective = len(match.approved) - np.sum(approved_v1 | periodics)
+        n_inspected_for_subjective_statistical = len(match.statistical) - np.sum(statistical_v1 | statistical_periodics)
+
         print(
-            f"Number of subjective variables found: {len(v_subj)} / {len(match.approved)}"
-            f" ({100*len(v_subj)/len(match.approved):.2f}%)"
+            f"Number of subjective variables found: {len(v_subj)} / {n_inspected_for_subjective}"
+            # f" ({100*len(v_subj)/len(match.approved):.2f}%)"
         )
 
+        results_table["n_subjective_vars"] = len(v_subj)
+        results_table["n_subjective_inspected"] = n_inspected_for_subjective
+
         subjectives = np.in1d(match.approved["SOURCEID"], v_subj.index)
+        statistical_subjectives = np.in1d(match.statistical["SOURCEID"], v_subj.index)
+
+        print(
+            f"Number of subjective variables found in statistical sample: {np.sum(statistical_subjectives)} / {n_inspected_for_subjective_statistical}" # / {len(match.statistical)}"
+            # f" ({100*np.sum(statistical_subjectives)/len(match.statistical):.2f}%)"
+        )
+
+        results_table["n_subjective_vars_statistical"] = np.sum(statistical_subjectives)
+        results_table["n_subjective_inspected_statistical"] = n_inspected_for_subjective_statistical
 
         # Final count of variables
         # and nonvariables
@@ -292,6 +334,8 @@ if __name__ == "__main__":
         vars = approved_v1 | periodics | subjectives
         print(f"Total number of variables: {np.sum(vars)}/{len(vars)}")
         print(f" ({100*np.sum(vars)/len(match.approved):.2f}%)")
+
+        results_table['n_variables'] = np.sum(vars)
 
         # Total number of objects not designated as variable
         print(f"Total number of not variables: {np.sum(~vars)}/{len(vars)}")
@@ -305,7 +349,12 @@ if __name__ == "__main__":
             match.approved["SOURCEID"], match.statistical["SOURCEID"]
         )
 
-        print(f"{np.sum(vars & statisticals)}")
+        print(f"Total number of statistical variables: {np.sum(vars & statisticals)} / {len(match.statistical)}")
+        print(f" ({100*np.sum(vars & statisticals)/len(match.statistical):.2f}%)")
+
+        results_table['n_variables_statistical'] = np.sum(vars & statisticals)
+
+
 
         # let's make figures.
 
@@ -606,183 +655,6 @@ if __name__ == "__main__":
             approved_q1_j = q["q1_j"][match.approved["SOURCEID"]]
             ir_exc_sid = match.approved["SOURCEID"][ir_exc]
 
-            new_fig_j, new_ax_j = plt.subplots(figsize=(6, 6))
-
-            new_ax_j.scatter(
-                qm["Q_J"][approved_q1_j & variable],
-                qm["M_J"][approved_q1_j & variable],
-                c="k",
-                s=10
-                + match.approved["range_JAPERMAG3"][approved_q1_j & variable] * 100,
-                ec="k",
-                lw=0.5,
-            )
-
-            new_ax_j.scatter(
-                qm["Q_J"][approved_q1_j & variable & ir_exc.data],
-                qm["M_J"][approved_q1_j & variable & ir_exc.data],
-                c="r",
-                s=10
-                + match.approved["range_JAPERMAG3"][
-                    ir_exc.data & approved_q1_j & variable
-                ]
-                * 100,
-                ec="k",
-                lw=0.5,
-            )
-
-            new_ax_j.scatter(
-                qm["Q_J"][v_per.index][q1_j],
-                qm["M_J"][v_per.index][q1_j],
-                ec="k",
-                lw=0.5,
-                c="None",
-                s=80
-                + match.approved["range_JAPERMAG3"][approved_q1_j & periodics] * 100,
-                zorder=10,
-                alpha=0.5,
-            )
-
-            new_ax_j.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
-            new_ax_j.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
-
-            new_ax_j.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
-            new_ax_j.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
-
-            new_ax_j.set_xlabel("$Q_J$ score")
-            new_ax_j.set_ylabel("$M_J$ score")
-            new_ax_j.set_title(
-                f"$M$ vs. $Q$ plot for q1_j variables in {fullname_dict[name]}"
-            )
-
-            new_ax_j.set_xlim(-0.3, 0.98)
-            new_ax_j.set_ylim(1.275, -1.275)
-
-            new_fig_h, new_ax_h = plt.subplots(figsize=(6, 6))
-
-            # for condition, color in zip([ir_exc[approved_q1_k], ~ir_exc[approved_q1_k]], ['k', 'r']):
-            #     new_ax_h.scatter(
-            #         qm["Q_K"][q1_k][condition],
-            #         qm["M_K"][q1_k][condition],
-            #         c=color,
-            #         s=10 + match.approved["range_KAPERMAG3"][approved_q1_k][condition] * 100,
-            #         ec="k",
-            #         lw=0.5,
-            #     )
-
-            new_ax_h.scatter(
-                qm["Q_H"][approved_q1_h & variable],
-                qm["M_H"][approved_q1_h & variable],
-                c="k",
-                s=10
-                + match.approved["range_HAPERMAG3"][approved_q1_h & variable] * 100,
-                ec="k",
-                lw=0.5,
-            )
-
-            new_ax_h.scatter(
-                qm["Q_H"][approved_q1_h & variable & ir_exc.data],
-                qm["M_H"][approved_q1_h & variable & ir_exc.data],
-                c="r",
-                s=10
-                + match.approved["range_HAPERMAG3"][
-                    ir_exc.data & approved_q1_h & variable
-                ]
-                * 100,
-                ec="k",
-                lw=0.5,
-            )
-
-            new_ax_h.scatter(
-                qm["Q_H"][v_per.index][q1_h],
-                qm["M_H"][v_per.index][q1_h],
-                ec="k",
-                lw=0.5,
-                c="None",
-                s=80
-                + match.approved["range_HAPERMAG3"][approved_q1_h & periodics] * 100,
-                zorder=10,
-                alpha=0.5,
-            )
-
-            new_ax_h.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
-            new_ax_h.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
-
-            new_ax_h.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
-            new_ax_h.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
-
-            new_ax_h.set_xlabel("$Q_H$ score")
-            new_ax_h.set_ylabel("$M_H$ score")
-            new_ax_h.set_title(
-                f"$M$ vs. $Q$ plot for q1_h variables in {fullname_dict[name]}"
-            )
-
-            new_ax_h.set_xlim(-0.3, 0.98)
-            new_ax_h.set_ylim(1.275, -1.275)
-
-            new_fig, new_ax = plt.subplots(figsize=(6, 6))
-
-            # for condition, color in zip([ir_exc[approved_q1_k], ~ir_exc[approved_q1_k]], ['k', 'r']):
-            #     new_ax.scatter(
-            #         qm["Q_K"][q1_k][condition],
-            #         qm["M_K"][q1_k][condition],
-            #         c=color,
-            #         s=10 + match.approved["range_KAPERMAG3"][approved_q1_k][condition] * 100,
-            #         ec="k",
-            #         lw=0.5,
-            #     )
-
-            # TODO: what's a criterion that's Q1_K AND VARIABLE? we need that. Don't include
-            # nonvariables in these plots ...
-            new_ax.scatter(
-                qm["Q_K"][approved_q1_k & variable],
-                qm["M_K"][approved_q1_k & variable],
-                c="k",
-                s=10
-                + match.approved["range_KAPERMAG3"][approved_q1_k & variable] * 100,
-                ec="k",
-                lw=0.5,
-            )
-
-            new_ax.scatter(
-                qm["Q_K"][approved_q1_k & variable & ir_exc.data],
-                qm["M_K"][approved_q1_k & variable & ir_exc.data],
-                c="r",
-                s=10
-                + match.approved["range_KAPERMAG3"][
-                    ir_exc.data & approved_q1_k & variable
-                ]
-                * 100,
-                ec="k",
-                lw=0.5,
-            )
-
-            new_ax.scatter(
-                qm["Q_K"][v_per.index][q1_k],
-                qm["M_K"][v_per.index][q1_k],
-                ec="k",
-                lw=0.5,
-                c="None",
-                s=80
-                + match.approved["range_KAPERMAG3"][approved_q1_k & periodics] * 100,
-                zorder=10,
-                alpha=0.5,
-            )
-
-            new_ax.axhline(-0.25, 0, 1, color="k", ls=":", lw=0.5)
-            new_ax.axhline(0.25, 0, 1, color="k", ls=":", lw=0.5)
-
-            new_ax.axvline(0.3, 0, 1, color="k", ls=":", lw=0.5)
-            new_ax.axvline(0.7, 0, 1, color="k", ls=":", lw=0.5)
-
-            new_ax.set_xlabel("$Q_K$ score")
-            new_ax.set_ylabel("$M_K$ score")
-            new_ax.set_title(
-                f"$M$ vs. $Q$ plot for q1_k variables in {fullname_dict[name]}"
-            )
-
-            new_ax.set_xlim(-0.3, 0.98)
-            new_ax.set_ylim(1.275, -1.275)
 
             # Okay. Now we are going to make six additional plots:
             # M vs SpT (J, H, K)
@@ -1002,34 +874,6 @@ if __name__ == "__main__":
             vanilla_v_per = v_per[v_per["Method"] != "poly4"]
             poly_v_per = v_per[v_per["Method"] == "poly4"]
 
-            # first test - can I plot ~anything~
-            fig_qm1, ax_qm1 = plt.subplots(figsize=(6, 6))
-            ax_qm1.plot(qm["Q_K"][v2], qm["M_K"][v2], "k.")
-
-            ax_qm1.plot(
-                qm["Q_K"][poly_v_per.index],
-                qm["M_K"][poly_v_per.index],
-                marker="s",
-                ls="None",
-                mec="g",
-                mfc="None",
-                ms=6,
-            )
-
-            ax_qm1.plot(
-                qm["Q_K"][vanilla_v_per.index],
-                qm["M_K"][vanilla_v_per.index],
-                marker="o",
-                ls="None",
-                mec="k",
-                mfc="None",
-                ms=8,
-            )
-
-            # ax_qm1.set_xlim(-0.5, 1.5)
-
-            ax_qm1.set_title("Prototyping something here.")
-
             # Okay. Some observations.
             # I expected the periodic circles to be HIGHLY concentrated around 0.
             # Not.. spread evenly throughout.
@@ -1229,10 +1073,10 @@ if __name__ == "__main__":
             ax_qm2b.xaxis.set_tick_params(labelbottom=True)
             ax_qm2b.set_xticklabels(qm2b_spt_array)
 
-            # third test -  can I plot stuff from QM versus stuff from period
-            fig_qm3, ax_qm3 = plt.subplots(figsize=(6, 6))
+            # # third test -  can I plot stuff from QM versus stuff from period
+            # fig_qm3, ax_qm3 = plt.subplots(figsize=(6, 6))
 
-            plt.show()
+            # plt.show()
 
             # NOW with ir-excess encoded
             fig_irexc_qm1b, ax_irexc_qm1b = plt.subplots(figsize=(8, 6))
@@ -1377,10 +1221,10 @@ if __name__ == "__main__":
             ax_irexc_qm2b.xaxis.set_tick_params(labelbottom=True)
             ax_irexc_qm2b.set_xticklabels(qm2b_spt_array)
 
-            # third test -  can I plot stuff from QM versus stuff from period
-            fig_irexc_qm3, ax_irexc_qm3 = plt.subplots(figsize=(6, 6))
+            # # third test -  can I plot stuff from QM versus stuff from period
+            # fig_irexc_qm3, ax_irexc_qm3 = plt.subplots(figsize=(6, 6))
 
-            plt.show()
+            # plt.show()
 
         # okay. So, let's re-summarize some things...
         # Variables were selected using 3 criteria:
@@ -1413,3 +1257,7 @@ if __name__ == "__main__":
     # Period trends
     # Amplitude trends
     # (etc)
+
+    df = pd.DataFrame(results_table_dict)
+    df["total"] = df.sum(axis=1)
+    df.to_hdf("variability_results.h5", key="variability_results_table")
