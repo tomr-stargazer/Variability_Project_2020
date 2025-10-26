@@ -43,14 +43,16 @@ output_denser = output_reconstructed
 
 def make_period_injection_fig():
 
-    plt.style.use("default")
-
-    mpl.rcParams["xtick.direction"] = "out"
-    mpl.rcParams["ytick.direction"] = "out"
-    mpl.rcParams["xtick.top"] = False
-    mpl.rcParams["ytick.right"] = False
+    plt.style.use('default')
 
     fig, ax = plt.subplots(1, figsize=(5.5, 4), dpi=150)
+
+    ax.tick_params(
+        direction="out",
+        top=False,
+        right=False
+    )
+
     plt.contourf(
         periods_denser,
         amplitudes_denser,
