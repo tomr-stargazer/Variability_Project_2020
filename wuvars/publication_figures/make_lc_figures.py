@@ -76,6 +76,15 @@ variability_tables = {
     ),
 }
 
+target_tables = {
+    "ngc": astropy.table.Table.read(
+        os.path.join(figure_export_path, "table1_targets_ngc_mrt.txt"), format='mrt'
+    ),
+    "ic": astropy.table.Table.read(
+        os.path.join(figure_export_path, "table1_targets_ic_mrt.txt"), format='mrt'
+    ),
+}
+
 # cmap_dict = {"ngc": "jet", "ic": "jet_r"}
 
 cmap_dict = {"ngc": "cubehelix_r", "ic": "cubehelix_r"}
@@ -247,7 +256,10 @@ def make_periodic_lc_figure_v2(region_key, row, plotting=False, **kwargs):
 def make_nonperiodic_lc_figure(region_key, row, plotting=False, **kwargs):
 
     sid = row["SourceID"]
-    name = row["Name"]
+    try:
+        name = row["Name"]
+    except KeyError:
+        name = row['ShortName']
 
     dg = data_dict[region_key]
     dat_sid = dg.groups[dg.groups.keys["SOURCEID"] == sid]    
@@ -465,6 +477,99 @@ def make_nonperiodic_variable_lc_figures(sample_only=True):
 
 
 def make_nonvariable_lc_figures(sample_only=True):
+    """
+    Makes the nonvariable light curve figures.
+
+    By default, only generates the first one and/or a chosen sample
+    (to be implemented).
+
+    """
+
+    sample_id_dict = {"ngc": "201", "ic": "002"}
+
+    # for each region...
+    for region_key in region_keys:
+
+        print("")
+        print(f"Making nonvariable lc figures in {fullname_dict[region_key]}")
+        print("")
+
+        figureset_path_nonvar = os.path.join(
+            figureset_export_path, f"Figure_A1_Set_{region_key}"
+        )
+        os.makedirs(figureset_path_nonvar, exist_ok=True)
+
+        # grab the table.
+        variability_table = variability_tables[region_key]
+        target_table = target_tables[region_key]
+
+        nonvariable = ~np.in1d(target_table['ShortName'], variability_table['Name'])
+        target_table_nonvar = target_table[nonvariable]
+
+        sample_id = sample_id_dict[region_key]
+
+        # loop over the table
+        for i, row in enumerate(target_table_nonvar):
+
+            try:
+                name = row["Name"]
+            except KeyError:
+                name = row['ShortName']
+
+            this_is_sample = ("-"+str(sample_id) in name)
+
+            if sample_only and not this_is_sample:
+                continue
+            elif sample_only:
+                print(f"{sample_only=}. Making figure for {sample_id}")
+
+            # if i<10:
+            #     continue
+
+            saving = True
+
+            print(f"{i=}")
+
+            try:
+
+                # if i <= 30:
+                #     continue
+                # if i > 3:
+                #     break
+
+                # print the name of the source, its SOURCEID,
+                # its period, and the detrending method.
+                # Plot it. First in the stupidest possible way,
+                #  but eventually with the cool fancy aspect.
+                fig = make_nonperiodic_lc_figure(
+                    region_key, row, plotting=True, cmap=cmap_dict[region_key]
+                )
+
+                if not sample_only:
+                    filename = os.path.join(figureset_path_nonvar, f"{name}_lc")
+                    filename_pdf = filename + ".pdf"
+                    filename_png = filename + ".png"
+                    print(f"Saving fig to... {filename_pdf}")
+                    print(f"Saving fig to... {filename_png}")
+
+                    if saving:
+                        fig.savefig(filename_pdf, bbox_inches="tight")
+                        fig.savefig(filename_png, bbox_inches="tight")
+
+                if this_is_sample:
+                    sample_filename = os.path.join(figure_export_path, f"Figure_A1_{region_key}_sample.pdf")
+                    print(f"Saving fig to... {sample_filename}")
+                    fig.savefig(sample_filename, bbox_inches="tight")
+
+                if saving:
+                    plt.close(fig)
+                else:
+                    plt.show()
+
+            except ValueError as e:
+                print(e)
+
+    pass
 
     pass
 
@@ -473,6 +578,6 @@ if __name__ == "__main__":
 
     sample_only = True
 
-    # make_periodic_lc_figures(sample_only)
+    make_periodic_lc_figures(sample_only)
     make_nonperiodic_variable_lc_figures(sample_only)
-    # make_nonvariable_lc_figures(sample_only)
+    make_nonvariable_lc_figures(sample_only)
