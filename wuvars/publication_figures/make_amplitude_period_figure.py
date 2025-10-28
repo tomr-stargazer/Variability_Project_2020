@@ -39,16 +39,17 @@ ic_match = match_ic()
 
 
 region_keys = ["ic", "ngc", "both"]
-fullname_dict = {"ngc": "NGC 1333", "ic": "IC 348", 'both': "Combined"}
+fullname_dict = {"ngc": "NGC 1333", "ic": "IC 348", "both": "Combined"}
 wserv_dict = {"ngc": 7, "ic": 8}
 
 spread_dict = {"ngc": spreadsheet.load_wserv_v2(7), "ic": spreadsheet.load_wserv_v2(8)}
 match_dict = {"ngc": ngc_match, "ic": ic_match}
 per_dict = {"ngc": ngc_periods, "ic": ic_periods}
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    # def make_the_figure():
+
+def make_periods_v_amp_figure(saving=True):
 
     with mpl.rc_context(
         {
@@ -57,11 +58,12 @@ if __name__ == "__main__":
             "xtick.top": True,
             "ytick.right": True,
             "font.size": 6,
+            "axes.labelsize": 8,
         }
     ):
         fig = plt.figure(figsize=(7.25, 7.5), dpi=150)
 
-        gs = fig.add_gridspec(3, 3)
+        gs = fig.add_gridspec(3, 3, hspace=0.3)
         # , wspace=0.2)
 
         # gs_left = gs0[0].subgridspec(3, 1, hspace=0)
@@ -74,15 +76,6 @@ if __name__ == "__main__":
 
             if region_key == "both":
                 periods = pd.concat([per_dict["ngc"], per_dict["ic"]], axis=0)
-
-                # ngc_match_approved_copy = ngc_match.approved.copy()
-                # ic_match_approved_copy = ic_match.approved.copy()
-
-                # keep_columns = ['IRexc', 'SpT']
-
-                # ngc_match_approved_copy.keep_columns(keep_columns)
-                # ic_match_approved_copy.keep_columns(keep_columns)
-                # approved = astropy.table.vstack([ngc_match_approved_copy, ic_match_approved_copy])
                 approved = astropy.table.vstack([ngc_match.approved, ic_match.approved])
                 spread = pd.concat([spread_dict["ngc"], spread_dict["ic"]], axis=0)
 
@@ -97,14 +90,6 @@ if __name__ == "__main__":
             neither_exc = (
                 (approved["IRexc"] != "yes") & (approved["IRexc"] != "no")
             ).mask
-            # print(
-            #     "Neither:",
-            #     len(approved)
-            #     - np.sum(approved["IRexc"] == "yes")
-            #     - np.sum(approved["IRexc"] == "no"),
-            #     np.sum(neither_exc)
-            #     # np.sum((approved["IRexc"] != "yes") & (approved["IRexc"] != "no"))
-            # )
 
             per_nir_50 = np.nanmedian(periods["Period"][no_ir_exc])
             per_nir_84 = np.nanpercentile(periods["Period"][no_ir_exc], 84)
@@ -143,6 +128,7 @@ if __name__ == "__main__":
                 periods["Amp"][ir_exc],
                 "rs",
                 ms=1.5,
+                alpha=0.35,
                 label="IR excess",
             )
             ax_amp_v_per.plot(
@@ -150,19 +136,12 @@ if __name__ == "__main__":
                 periods["Amp"][no_ir_exc],
                 "kD",
                 ms=1.25,
+                alpha=0.35,
                 label="no IR excess",
             )
-            # ax_amp_v_per.plot(
-            #     periods["Period"][neither_exc],
-            #     periods["Amp"][neither_exc],
-            #     "o",
-            #     color='0.5',
-            #     ms=1.5,
-            #     label="unknown IR excess",
-            # )
+
             ax_amp_v_per.loglog()
             ax_amp_v_per.xaxis.set_major_formatter(mticker.ScalarFormatter())
-            # ax_amp_v_per.yaxis.set_major_formatter(mticker.ScalarFormatter())
 
             ax_amp_v_per.set_xlabel("Period (d)")
             if i == 0:
@@ -225,11 +204,6 @@ if __name__ == "__main__":
                 label="no IR excess",
             )
 
-            # ax_per_hist.axvline(per_ir_50, color="r", linestyle="--")
-            # ax_per_hist.axvline(per_nir_50, color="k", linestyle=":")
-            # ax_amp_hist.axhline(amp_ir_50, color="r", linestyle="--")
-            # ax_amp_hist.axhline(amp_nir_50, color="k", linestyle=":")
-
             ax_amp_v_per.axhline(
                 amp_ir_50,
                 color="r",
@@ -268,10 +242,162 @@ if __name__ == "__main__":
                 clip_on=False,
             )
 
-            # fig.savefig()
-            # return fig
+            ax_pers_binned = fig.add_subplot(gs[1, i])
+
+            ax_pers_binned.plot(
+                periods["SpT"][ir_exc],
+                periods["Period"][ir_exc],
+                "rs",
+                ms=1.5,
+                label="IR excess",
+                alpha=0.35,
+            )
+            ax_pers_binned.plot(
+                periods["SpT"][~ir_exc],
+                periods["Period"][~ir_exc],
+                "kD",
+                ms=1.25,
+                label="no IR excess",
+                alpha=0.35,
+            )
+
+            bin_edges = [0, 3, 6, 9.05]
+            left_edges = bin_edges[:-1]
+            right_edges = bin_edges[1:]
+
+            for left, right in zip(left_edges, right_edges):
+
+                for ir_status, color, offset in zip(
+                    [ir_exc, ~ir_exc], ["r", "k"], [0.2, 0]
+                ):
+
+                    in_this_bin = (approved["SpT"] >= left) & (approved["SpT"] < right)
+
+                    median_period = np.nanmedian(
+                        periods["Period"][ir_status & in_this_bin]
+                    )
+                    per_84 = np.nanpercentile(
+                        periods["Period"][ir_status & in_this_bin], 84
+                    )
+                    per_16 = np.nanpercentile(
+                        periods["Period"][ir_status & in_this_bin], 16
+                    )
+
+                    up_err = per_84 - median_period
+                    down_err = median_period - per_16
+
+                    ax_pers_binned.errorbar(
+                        [(left + right) / 2 + offset],
+                        [median_period],
+                        fmt="o",
+                        color=color,
+                        ms=5,
+                        markerfacecolor="w",
+                        markeredgecolor=color,
+                        yerr=np.array([[down_err, up_err]]).T,
+                    )
+                    ax_pers_binned.hlines(
+                        y=median_period, xmin=left, xmax=right, color=color
+                    )
+
+                    center_dict = {
+                        "verticalalignment": "center",
+                        "horizontalalignment": "center",
+                        "color": color,
+                        "size": 10,
+                    }
+                    ax_pers_binned.text(left, median_period, "[", center_dict)
+                    ax_pers_binned.text(right, median_period, ")", center_dict)
+
+            ax_pers_binned.semilogy()
+            ax_pers_binned.yaxis.set_major_formatter(mticker.ScalarFormatter())
+            if i == 0:
+                ax_pers_binned.set_ylabel("Period (d)")
+                ax_pers_binned.legend()
+            ax_pers_binned.set_ylim(0.5, 70)
+            ax_pers_binned.set_xlabel("Spectral Type")
+            ax_pers_binned.set_xticks([0, 2, 4, 6, 8])
+            ax_pers_binned.set_xticklabels(
+                [f"M{int(x)}" for x in ax_pers_binned.get_xticks()]
+            )
+
+            ax_amps_binned = fig.add_subplot(gs[2, i])
+            ax_amps_binned.plot(
+                periods["SpT"][ir_exc],
+                periods["Amp"][ir_exc],
+                "rs",
+                ms=1.5,
+                label="IR excess",
+                alpha=0.35,
+            )
+            ax_amps_binned.plot(
+                periods["SpT"][~ir_exc],
+                periods["Amp"][~ir_exc],
+                "kD",
+                ms=1.25,
+                label="no IR excess",
+                alpha=0.35,
+            )
+
+            for left, right in zip(left_edges, right_edges):
+
+                for ir_status, color, offset in zip(
+                    [ir_exc, ~ir_exc], ["r", "k"], [0.2, 0]
+                ):
+
+                    in_this_bin = (approved["SpT"] >= left) & (approved["SpT"] < right)
+
+                    median_amp = np.nanmedian(periods["Amp"][ir_status & in_this_bin])
+                    amp_84 = np.nanpercentile(
+                        periods["Amp"][ir_status & in_this_bin], 84
+                    )
+                    amp_16 = np.nanpercentile(
+                        periods["Amp"][ir_status & in_this_bin], 16
+                    )
+
+                    up_err = amp_84 - median_amp
+                    down_err = median_amp - amp_16
+
+                    ax_amps_binned.errorbar(
+                        [(left + right) / 2 + offset],
+                        [median_amp],
+                        fmt="o",
+                        color=color,
+                        ms=5,
+                        markerfacecolor="w",
+                        markeredgecolor=color,
+                        yerr=np.array([[down_err, up_err]]).T,
+                    )
+                    center_dict = {
+                        "verticalalignment": "center",
+                        "horizontalalignment": "center",
+                        "color": color,
+                        "size": 10,
+                    }
+
+                    ax_amps_binned.hlines(
+                        y=median_amp, xmin=left, xmax=right, color=color
+                    )
+                    ax_amps_binned.text(left, median_amp, "[", center_dict)
+                    ax_amps_binned.text(right, median_amp, ")", center_dict)
+
+            ax_amps_binned.set_xlabel("Spectral Type")
+            ax_amps_binned.set_xticks([0, 2, 4, 6, 8])
+            ax_amps_binned.set_xticklabels(
+                [f"M{int(x)}" for x in ax_amps_binned.get_xticks()]
+            )
+            ax_amps_binned.semilogy()
+            ax_amps_binned.set_ylim(0.004, 0.28)
+            if i == 0:
+                ax_amps_binned.set_ylabel("Amplitude (mag)")
+
+    if saving:
+        filename = "Figure_11_periods_v_amp.pdf"
+        filepath = os.path.join(figure_export_path, filename)
+        print(f"Saving to {filepath}...")
+        fig.savefig(filepath, bbox_inches='tight')
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     make_the_figure()
+    make_periods_v_amp_figure(saving=True)
